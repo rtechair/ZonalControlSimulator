@@ -1,4 +1,4 @@
-function [mpc] = addGenerator(mpc, bus_id, Pg_max, Pg_min, num, startup, shutdown, c3, c2, c1, c0)
+function addGenerator(mpc, bus_id, Pg_max, Pg_min, num, startup, shutdown, c3, c2, c1, c0)
 % addGenerator adds a generator to an existing MATPOWER file 'mpc' at the bottom
 % of the list
 %% Input
@@ -6,12 +6,10 @@ function [mpc] = addGenerator(mpc, bus_id, Pg_max, Pg_min, num, startup, shutdow
 % or a subset not including the data for gencost
 % see section Generator Data Format and Generator Cost Data of CASEFORMAT, type "help caseformat"
 % or Matpower manual: Table B-2 Generator Data and Table B-4 Generator Cost data.
-%% Output
-% The updated MATPOWER file 'mpc'
     arguments
         mpc struct
         bus_id (1,1) double {mustBeInteger, mustBePositive}
-        Pg_max (1,1) double {mustBeNonNegative}
+        Pg_max (1,1) double {mustBeNonnegative}
         Pg_min (1,1) double
         num (1,1) double = 2
         startup (1,1) double = 0

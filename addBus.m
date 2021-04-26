@@ -1,13 +1,9 @@
-function[mpc] = addBus(mpc, id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm)
+function addBus(mpc, id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm)
     % addBus adds a bus to an existing MATPOWER file 'mpc' at the bottom
     % of the list
     %% Input
     % All the needed values describing a branch according to MATPOWER
     % manual, see section Bus Data Format of CASEFORMAT, type "help caseformat"
-    %% Output
-    % The updated MATPOWER file 'mpc'
-    %% Help
-    %https://www.mathworks.com/help/matlab/ref/arguments.html
     arguments
         mpc struct      
         id (1,1) double {mustBeInteger, mustBePositive}
