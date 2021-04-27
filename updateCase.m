@@ -46,9 +46,9 @@ PB_VGmin = -10; % -10MW at VG
 new_bus = 10000;
 mpc = addBus(mpc,new_bus,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
 % Create a new generator at bus VG 10000
-mpc = addGenerator(mpc,10000,PG_VGmax,0);
+mpc = addGenerator(mpc,new_bus,PG_VGmax,0);
 % Create a  new battery at bus VG 10000
-mpc = addGenerator(mpc,10000,PB_VGmax,PB_VGmin);
+mpc = addGenerator(mpc,new_bus,PB_VGmax,PB_VGmin);
 % Create a  new generator at bus GR 2076
 mpc = addGenerator(mpc,2076,PG_GRmax,0);
 % Create a  new generator at bus MC 2745
@@ -75,4 +75,6 @@ mpc.branch(end+1,:) = [fbus, new_bus,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,s
 mpc.branch(end+1,:) = [tbus, new_bus,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
 
 % save the updated basecase
-save('case6468rte_mod2','mpc')
+savecase('case6468rte_mod2','mpc')
+
+
