@@ -43,17 +43,18 @@ PB_VGmin = -10; % -10MW at VG
 
 %% Step 1): Add the desired bus and generators
 % Create a new bus: VG 10000
-addBus(mpc,10000,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
+new_bus = 10000;
+mpc = addBus(mpc,new_bus,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
 % Create a new generator at bus VG 10000
-addGenerator(mpc,10000,PG_VGmax,0);
+mpc = addGenerator(mpc,10000,PG_VGmax,0);
 % Create a  new battery at bus VG 10000
-addGenerator(mpc,10000,PB_VGmax,PB_VGmin);
+mpc = addGenerator(mpc,10000,PB_VGmax,PB_VGmin);
 % Create a  new generator at bus GR 2076
-addGenerator(mpc,2076,PG_GRmax,0);
+mpc = addGenerator(mpc,2076,PG_GRmax,0);
 % Create a  new generator at bus MC 2745
-addGenerator(mpc,2745,PG_MCmax,0);
+mpc = addGenerator(mpc,2745,PG_MCmax,0);
 % Create a  new generator at bus TR 4720
-addGenerator(mpc,4720,PG_TRmax,0);
+mpc = addGenerator(mpc,4720,PG_TRmax,0);
 
 %% Step 2): Check if there is a line between MC and GR; take the values and create the lines between MC and VG, and VG and GR
 % look for the branch between MC and GR
@@ -69,7 +70,7 @@ branch_info = num2cell(mpc.branch(branch_idx,:)); %https://stackoverflow.com/que
 % remove the branch
 mpc.branch(branch_idx,:) = [];
 % create the new branches between MC and VG, and VG and GR, with half the values of the old branch
-new_bus = 10000;
+
 mpc.branch(end+1,:) = [fbus, new_bus,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
 mpc.branch(end+1,:) = [tbus, new_bus,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
 
