@@ -1,9 +1,27 @@
 numberOfZones = 1;
 
+%{
+JEAN'S ORDERING
 zone1_bus = [2076 2135 2745 4720  1445 10000]';
-zone2_bus = [];
+zone1_bus_name = ["GR" "GY" "MC" "TR" "CR" "VG"];
 
-zones_bus = {zone1_bus, zone2_bus};
+zone2_bus = [4875 4710 2506 4915 4546 4169]';
+zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
+%}
+
+%PERSONAL ORDERING, the ascending order has no impact regarding
+%the effectiveness of the code
+zone1_bus = [1445 2076 2135 2745 4720 10000];
+zone1_bus_name = ["CR" "GR" "GY" "MC" "TR" "VG"];
+
+zone2_bus = [2506 4169 4546 4710 4875 4915]';
+zone2_bus_name = ["LAZ" "SIS" "SPC" "TRE" "VTV" "VEY"];
+
+
+
+zone3_bus = [];
+
+zones_bus = {zone1_bus, zone2_bus, zone3_bus};
 
 % Check the basecase is available or computable
 if exist('case6468rte_mod2.mat','file') ~= 2
@@ -25,7 +43,7 @@ mapBus_id2idx = getMapBus_id2idx(basecase);
 % while idx2id is immediate using basecase.bus
 mapBus_idx2id = containers.Map(1:size(basecase.bus,1),basecase.bus(:,1));
 
-%%CONVERSION
+%%CONVERSION OF ZONE 1
 % get the list of indices corresponding to where zone1_bus buses are
 % recall zone1_bus = [2076 2135 2745 4720  1445 10000]'
 zone1_bus_idx = cell2mat(values(mapBus_id2idx, num2cell(zone1_bus))); % [2076;2135;2743;4717;1445;6469]
@@ -41,13 +59,26 @@ basecase_int = ext2int(basecase);
 mapBus_ext2int = basecase_int.order.bus.e2i; % 10000x1 sparse double
 mapBus_int2ext = basecase_int.order.bus.i2e; % 6469x1 double
 
-zone1_bus_int_idx = mapBus_ext2int(zone1_bus_idx,1); %mapBus_ext2int(zone1_bus_idx,:)
+zone1_bus_int_idx = mapBus_ext2int(zone1_bus_idx,1); % [1445;2076;2135;2741;4714;6462]
+zone1_bus_back_idx = mapBus_int2ext(zone1_bus_int_idx); % [1445;2076;2135;2743;4717;6469]
 
-zone1_bus_back_idx = mapBus_int2ext(zone1_bus_int_idx);
+zone1_bus_back_id = cell2mat(values(mapBus_idx2id,num2cell(zone1_bus_back_idx))); % [1445;2076;2135;2745;4720;10000]
 
-zone1_bus_back_id = cell2mat(values(mapBus_idx2id,num2cell(zone1_bus_back_idx)));
-% mapBus_idx2id(zone1_bus_back_idx);
+% TODO: investigate why when zone1_bus is a row vector, some resulting
+% variables remain column vectors and not all variables become row vectors
+% too
 
+
+%% CONVERSION OF ZONE 2
+% recall zone2_bus = [2506 4169 4546 4710 4875 4915]'
+zone2_bus_idx = cell2mat(values(mapBus_id2idx, num2cell(zone2_bus))); % [2505;4167;4543;4707;4872;4912]
+zone2_bus_int_idx = mapBus_ext2int(zone2_bus_idx,1); % [2504;4165;4540;4704;4869;4909]
+zone2_bus_back_idx = mapBus_int2ext(zone2_bus_int_idx); % [2505;4167;4543;4707;4872;4912]
+zone2_bus_back_id = cell2mat(values(mapBus_idx2id,num2cell(zone2_bus_back_idx))); % [2506;4169;4546;4710;4875;4915]
+
+
+
+%% HOW CONVERSION WORKS
 %{
 In terms of conversion:
 bus_id
