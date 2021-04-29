@@ -44,7 +44,10 @@ zones_bus = {zone1_bus, zone2_bus, zone3_bus};
 
 handleBasecase();
 
-basecase = loadcase('case6468rte_mod2'); %mpc_ext
+updateCaseForZone2();
+
+
+basecase = loadcase('case6468rte_zone1and2'); %mpc_ext
 
 
 
@@ -102,8 +105,8 @@ a = 1;
 
 function handleBasecase()
     b1 = exist('case6468rte_mod.m','file') == 2; % initial basecase provided by Jean
-    b2 = exist('case6468rte_mod2.mat','file') == 2; % updated basecase for zone 1
-    b3 = exist('case6468rte_mod3.mat','file') == 2; % updated basecase for zone 1 & 2
+    b2 = exist('case6468rte_zone1.mat','file') == 2; % updated basecase for zone 1
+    b3 = exist('case6468rte_zone1and2.mat','file') == 2; % updated basecase for zone 1 & 2
     b_tot = 4*b3 + 2*b2 + b1;
     switch b_tot
         % basecase includes zone 1 and zone 2
@@ -117,6 +120,7 @@ function handleBasecase()
         case {1}
             % so compute the updated basecase
             updateCaseForZone1();
+            updateCaseForZone2();
         otherwise
             disp("ERROR: Both case6468rte_mod2.mat and case6468rte_mod.mat are missing, can't do anything with no basecase")
     end

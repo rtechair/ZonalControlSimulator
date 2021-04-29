@@ -34,35 +34,34 @@ mpc=loadcase('case6468rte_mod');
 
 
 % Define the maximum power output for the production groups and the batteries
-PG_VGmax = 78; % 78MW at VG
-PG_GRmax = 66; % 66MW at GR 2076
-PG_MCmax = 54; % 54MW at MC 2745
-PG_TRmax = 10; % 10MW at TR 4720
-PB_VGmax = 10; % 10MW at VG
-PB_VGmin = -10; % -10MW at VG
+PG_max_VG = 78; % 78MW at VG
+PG_max_GR = 66; % 66MW at GR 2076
+PG_max_MC = 54; % 54MW at MC 2745
+PG_max_TR = 10; % 10MW at TR 4720
+PB_max_VG = 10; % 10MW at VG for the battery, PB_min_VG = - PB_max_VG
 
 %% Step 1): Add the desired bus and generators
 % Create a new bus: VG 10000
-new_bus = 10000;
-mpc = addBus(mpc,new_bus,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
+bus_VG = 10000;
+mpc = addBus(mpc,bus_VG,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
 % Create a new generator at bus VG 10000
-mpc = addGenerator(mpc,new_bus,PG_VGmax,0);
+mpc = addGenerator(mpc,bus_VG,PG_max_VG,0);
 % Create a  new battery at bus VG 10000
-mpc = addGenerator(mpc,new_bus,PB_VGmax,PB_VGmin);
+mpc = addGenerator(mpc,bus_VG,PB_max_VG,- PB_max_VG);
 % Create a  new generator at bus GR 2076
-mpc = addGenerator(mpc,2076,PG_GRmax,0);
+mpc = addGenerator(mpc,2076,PG_max_GR,0);
 % Create a  new generator at bus MC 2745
-mpc = addGenerator(mpc,2745,PG_MCmax,0);
+mpc = addGenerator(mpc,2745,PG_max_MC,0);
 % Create a  new generator at bus TR 4720
-mpc = addGenerator(mpc,4720,PG_TRmax,0);
+mpc = addGenerator(mpc,4720,PG_max_TR,0);
 
 %% Step 2): Check if there is a line between MC and GR; take the values and create the lines between MC and VG, and VG and GR
 % look for the branch between MC and GR
-fbus = 2745; %MC
-tbus = 2076; %GR
+bus_MC = 2745; %MC
+bus_GR = 2076; %GR
 % there is an unique branch between those 2 buses in this direction
 % there is no branch (2076,fbus) that's why the other direction is not tested
-[branch_idx,~]= find(mpc.branch(:,1)==fbus & mpc.branch(:,2)==tbus); 
+[branch_idx,~]= find(mpc.branch(:,1)==bus_MC & mpc.branch(:,2)==bus_GR); 
 
 branch_info = num2cell(mpc.branch(branch_idx,:)); %https://stackoverflow.com/questions/2337126/how-do-i-do-multiple-assignment-in-matlab;
 [~, ~, r,x, b, rateA, rateB, rateC,ratio,angle,status,angmin,angmax] = branch_info{:};
@@ -71,10 +70,10 @@ branch_info = num2cell(mpc.branch(branch_idx,:)); %https://stackoverflow.com/que
 mpc.branch(branch_idx,:) = [];
 % create the new branches between MC and VG, and VG and GR, with half the values of the old branch
 
-mpc.branch(end+1,:) = [fbus, new_bus,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
-mpc.branch(end+1,:) = [tbus, new_bus,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
+mpc.branch(end+1,:) = [bus_MC, bus_VG,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
+mpc.branch(end+1,:) = [bus_GR, bus_VG,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
 
 % save the updated basecase
-savecase('case6468rte_mod2','mpc')
+savecase('case6468rte_zone1','mpc')
 
 
