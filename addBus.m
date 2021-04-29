@@ -23,4 +23,5 @@ function [mpc] = addBus(mpc, id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zon
         minVm (1,1) double {mustBePositive, mustBeLessThanOrEqual(minVm,maxVm)}
     end
     mpc.bus(end+1, :) = [id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm];
+    % this is supposed to be visible only to the experimental branch
 end
