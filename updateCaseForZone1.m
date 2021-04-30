@@ -74,6 +74,6 @@ mpc.branch(end+1,:) = [bus_MC, bus_VG,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,
 mpc.branch(end+1,:) = [bus_GR, bus_VG,r/2,x/2,b/2,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
 
 % save the updated basecase
-savecase('case6468rte_zone1','mpc')
+savecase('case6468rte_zone1',mpc)
 
 

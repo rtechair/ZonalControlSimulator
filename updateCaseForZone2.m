@@ -34,4 +34,4 @@ mpc = addGenerator(mpc, bus_VEY, PG_max_VEY,0);
 mpc = addGenerator(mpc, bus_VTV, PB_max_VTV, - PB_max_VTV);
 
 %save the updated basecase
-savecase('case6468rte_zone1and2','mpc')
+savecase('case6468rte_zone1and2',mpc)
