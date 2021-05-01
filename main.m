@@ -11,23 +11,11 @@ zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
 
 %PERSONAL ORDERING, the ascending order has no impact regarding
 %the effectiveness of the code. 
-% However, selection of column vector instead of row
-%vector is meant for consistency with column vectors obtained using
+% However, selection of column vectors instead of row vectors is meant for consistency with column vectors obtained using
 %MatPower functions 
 % https://matpower.org/docs/ref/
 
 
-%% HOW CONVERSION WORKS
-%{
-In terms of conversion:
-bus_id
-bus_idx     using id2idx
-bus_int_idx using e2i
-Let MatPower do its work
-then convert back:
-bus_idx     using i2e
-bus_id      using idx2id
-%}
 
 zone1_bus = [1445 2076 2135 2745 4720 10000]';
 zone1_bus_name = ["CR" "GR" "GY" "MC" "TR" "VG"];
@@ -44,9 +32,6 @@ zones_bus = {zone1_bus, zone2_bus, zone3_bus};
 
 handleBasecase();
 
-updateCaseForZone2();
-
-
 basecase = loadcase('case6468rte_zone1and2'); %mpc_ext
 
 
@@ -57,21 +42,31 @@ mapBus_id2idx = getMapBus_id2idx(basecase);
 % while idx2id is immediate using basecase.bus
 mapBus_idx2id = containers.Map(1:size(basecase.bus,1),basecase.bus(:,1));
 
-%%CONVERSION OF ZONE 1
-% get the list of indices corresponding to where zone1_bus buses are
-% recall zone1_bus =                                                  [2076 2135 2745 4720  1445 10000]'
-zone1_bus_idx = getValues(mapBus_id2idx, zone1_bus);                % [2076;2135;2743;4717;1445;6469]
-
-
-%this get the matrix corresponding to the subset of basecase.bus of zone 1
-corresponding_zone1_bus_idx = basecase.bus(zone1_bus_idx,:);
-
-
 basecase_int = ext2int(basecase);
-
 
 mapBus_ext2int = basecase_int.order.bus.e2i; % 10000x1 sparse double
 mapBus_int2ext = basecase_int.order.bus.i2e; % 6469x1 double
+
+
+
+%% HOW CONVERSION WORKS
+%{
+In terms of conversion:
+bus_id
+bus_idx     using id2idx
+bus_int_idx using e2i
+Let MatPower do its work
+then convert back:
+bus_idx     using i2e
+bus_id      using idx2id
+%}
+
+
+
+%% CONVERSION OF ZONE 1
+% get the list of indices corresponding to where zone1_bus buses are
+% recall zone1_bus =                                                  [2076 2135 2745 4720  1445 10000]'
+zone1_bus_idx = getValues(mapBus_id2idx, zone1_bus);                % [2076;2135;2743;4717;1445;6469]
 
 zone1_bus_int_idx = mapBus_ext2int(zone1_bus_idx,1);                % [1445;2076;2135;2741;4714;6462]
 zone1_bus_back_idx = mapBus_int2ext(zone1_bus_int_idx);             % [1445;2076;2135;2743;4717;6469]
@@ -81,6 +76,9 @@ zone1_bus_back_id = getValues(mapBus_idx2id,zone1_bus_back_idx);    % [1445;2076
 % variables remain column vectors and not all variables become row vectors
 % too
 
+
+%get the matrix corresponding to the subset of basecase.bus of zone 1
+corresponding_zone1_bus_idx = basecase.bus(zone1_bus_idx,:);
 
 %% CONVERSION OF ZONE 2
 % recall zone2_bus =                                                  [2506 4169 4546 4710 4875 4915]'
@@ -101,6 +99,8 @@ a = 1;
 
 
 % creating class: https://www.mathworks.com/help/matlab/matlab_oop/create-a-simple-class.html
+
+%% USEFUL FUNCTION
 
 
 function handleBasecase()
