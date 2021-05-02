@@ -20,7 +20,12 @@ classdef Zone
         bus_near_id
         bus_near_idx
         bus_near_int_idx
-        branch_near
+        
+        branch_inner_id
+        branch_inner_idx
+        branch_near_id
+        
+        gen_inner
     end
     
     methods
@@ -36,5 +41,22 @@ classdef Zone
             obj.bus_idx = getValues(obj.mapBus_id2idx, obj.bus_id);
             obj.bus_int_idx = obj.mapBus_ext2int(obj.bus_idx,1);
         end
+        
+        %function obj = identifyBranch(obj)
+            
     end
 end
+
+%{
+
+https://www.mathworks.com/help/matlab/matlab_oop/create-a-simple-class.html
+https://www.mathworks.com/help/matlab/matlab_oop/specifying-methods-and-functions.html
+https://www.mathworks.com/help/matlab/matlab_oop/properties.html
+https://www.mathworks.com/help/matlab/ref/classdef.html
+%}
+
+%{
+issue with outputs:
+https://stackoverflow.com/questions/25906833/matlab-multiple-variable-assignments
+
+%}

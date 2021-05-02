@@ -95,6 +95,7 @@ zone1 = Zone(zone1_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
 
 zone2 = Zone(zone2_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
 
+[branch_inner, branch_border] = identifyInnerAndBorderBranch(zone1_bus, basecase);
 
 a = 1;
 
@@ -102,6 +103,35 @@ a = 1;
 % creating class: https://www.mathworks.com/help/matlab/matlab_oop/create-a-simple-class.html
 
 %% USEFUL FUNCTION
+
+function [branch_inner, branch_border] = identifyInnerAndBorderBranch(bus_id, basecase)
+    branch_inner = [];
+    branch_border = [];
+    branch_ext = basecase.branch(:,[1 2]); % an array corresponding to [fbus, tbus] for each branch
+    % an array for each branch (= row) [fbus, tbus]
+    isFbusOrTbusInBus = ismember(branch_ext, bus_id);
+    numberOfBusesPerBranch = isFbusOrTbusInBus(:,1) + isFbusOrTbusInBus(:,2);
+    % TODO can the following be done with no for loop, purely applied on a
+    % matrix
+    for row = 1:size(branch_ext,1)
+        switch numberOfBusesPerBranch(row)
+            % the branch is within the zone as it is connecting 2 inner buses
+            case 2
+                branch_inner(end+1) = row;
+            % the branch connects a inner bus with an outer bus
+            case 1
+                branch_border(end+1) = row;
+            % the branch is outside the zone
+            otherwise
+        end
+    end
+    
+end
+
+
+
+
+
 
 
 function handleBasecase()
