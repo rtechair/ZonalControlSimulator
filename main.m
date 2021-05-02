@@ -91,21 +91,66 @@ zone2_bus_back_id = getValues(mapBus_idx2id,zone2_bus_back_idx);    % [2506;4169
 
 
 zone1 = Zone(zone1_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
+[zone1_branch_inner_idx, zone1_branch_border_idx] = findInnerAndBorderBranch(zone1_bus, basecase);
+zone1_bus_border_id = findBorderBus(zone1_bus, zone1_branch_border_idx, basecase);
+[zone1_gen_idx, zone1_battery_idx] = findGenAndBattery(zone1_bus, basecase);
 
 
 zone2 = Zone(zone2_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
+[zone2_branch_inner_idx, zone2_branch_border_idx] = findInnerAndBorderBranch(zone2_bus, basecase);
+zone2_bus_border_id = findBorderBus(zone2_bus, zone2_branch_border_idx, basecase);
 
-[zone1_branch_inner_idx, zone1_branch_border_idx] = identifyInnerAndBorderBranch(zone1_bus, basecase);
-zone1_bus_border_id = identifyBorderBus(zone1_bus, zone1_branch_border_idx, basecase);
 
 a = 1;
 
 
-% creating class: https://www.mathworks.com/help/matlab/matlab_oop/create-a-simple-class.html
-
 %% USEFUL FUNCTION
 
-function [bus_border_id] = identifyBorderBus(bus_zone_id, branch_border_idx, basecase)
+function [gen_idx, battery_idx] = findGenAndBattery(bus_zone_id, basecase)
+    % Given a zone based on its buses and a basecase, 
+    % return the column vectors of the indices of the generators and
+    % batteries in the zone, from the basecase
+    n_gen = size(basecase.gen,1);
+    gen_idx = [];
+    battery_idx = [];
+    is_gen_or_battery_in_zone = ismember(basecase.gen(:,1),  bus_zone_id); % batteries are generators with Pg_min < 0
+    
+    %{
+    S = sparse(is_gen_or_battery_in_zone);
+    
+    S2 = basecase.gen(S,:);
+    %}
+    % https://stackoverflow.com/questions/32903572/how-to-iterate-over-elements-in-a-sparse-matrix-in-matlab
+    
+    %% TODO simplify the following for loop using a sparse matrix and campare time performance
+    
+    for k = 1:n_gen
+        % this is a generator or a battery
+        if is_gen_or_battery_in_zone(k,1) == 1
+            % check for a bizarre value for Pg_max
+            if basecase.gen(k,9) <= 0
+                disp(['this is a strange situation, gen_idx = ', k, ' has a Pg_max <= 0'])
+            end
+            % this is a battery
+            if basecase.gen(k,10) < 0
+                battery_idx(end+1,1) = k;
+            % this is a generator only
+            else
+                gen_idx(end+1,1) = k;
+            end
+        end
+    end
+end
+                
+            
+        
+    
+    
+    
+
+
+
+function bus_border_id = findBorderBus(bus_zone_id, branch_border_idx, basecase)
     % Given a zone based on its buses, the branches at the border of the
     % zone and a basecase,
     % return the column vector of the buses at the border of the zone
@@ -143,7 +188,7 @@ end
 
 
 
-function [branch_inner_idx, branch_border_idx] = identifyInnerAndBorderBranch(bus_zone_id, basecase)
+function [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(bus_zone_id, basecase)
     % Given a zone with its buses id, plus the basecase, return the column
     % vectors of the branch indices in the basecase, of the branches within the zone and the branches at its
     % border, i.e. both end buses within the zone and only 1 end bus within
