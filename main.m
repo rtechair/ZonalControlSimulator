@@ -95,7 +95,8 @@ zone1 = Zone(zone1_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
 
 zone2 = Zone(zone2_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
 
-[branch_inner, branch_border] = identifyInnerAndBorderBranch(zone1_bus, basecase);
+[zone1_branch_inner_idx, zone1_branch_border_idx] = identifyInnerAndBorderBranch(zone1_bus, basecase);
+zone1_bus_border_id = identifyBorderBus(zone1_bus, zone1_branch_border_idx, basecase);
 
 a = 1;
 
@@ -104,28 +105,78 @@ a = 1;
 
 %% USEFUL FUNCTION
 
-function [branch_inner, branch_border] = identifyInnerAndBorderBranch(bus_id, basecase)
-    branch_inner = [];
-    branch_border = [];
-    branch_ext = basecase.branch(:,[1 2]); % an array corresponding to [fbus, tbus] for each branch
-    % an array for each branch (= row) [fbus, tbus]
-    isFbusOrTbusInBus = ismember(branch_ext, bus_id);
-    numberOfBusesPerBranch = isFbusOrTbusInBus(:,1) + isFbusOrTbusInBus(:,2);
-    % TODO can the following be done with no for loop, purely applied on a
-    % matrix
-    for row = 1:size(branch_ext,1)
-        switch numberOfBusesPerBranch(row)
-            % the branch is within the zone as it is connecting 2 inner buses
-            case 2
-                branch_inner(end+1) = row;
-            % the branch connects a inner bus with an outer bus
-            case 1
-                branch_border(end+1) = row;
-            % the branch is outside the zone
-            otherwise
+function [bus_border_id] = identifyBorderBus(bus_zone_id, branch_border_idx, basecase)
+    % Given a zone based on its buses, the branches at the border of the
+    % zone and a basecase,
+    % return the column vector of the buses at the border of the zone
+    %% Input:
+    % bus_zone_id: zone's buses id
+    % branch_border_idx: branch indices at the border of the zone
+    % basecase
+    %% Output:
+    % bus_border_id: set of buses id at the border of the zone
+    
+    % number of border branches
+    nbr = size( branch_border_idx,1); 
+    bus_border_id = zeros(nbr,1);
+    % from the basecase, extract the branches' "from" bus and "to" bus info, for each branch (row) : [fbus, tbus]
+    buses_of_branch_border = basecase.branch(branch_border_idx,[1,2]);
+    % determine what end buses are from the zone or outside, as boolean
+    is_fbus_tbus_of_branch_in_zone = ismember(buses_of_branch_border, bus_zone_id);
+    for row = 1:nbr
+        % error if a branch does not have exactly 1 end bus inside the zone
+        if is_fbus_tbus_of_branch_in_zone(row,1) + is_fbus_tbus_of_branch_in_zone(row,2) ~= 1
+            disp(['Error: branch ', num2str(branch_border_idx(row,1)),' does not have exactly 1 end bus inside the zone, check branch_border_idx is correct'])
+            return
+        % fbus within zone, hence tbus outside
+        elseif is_fbus_tbus_of_branch_in_zone(row,1)==1
+            bus_border_id(row,1) = buses_of_branch_border(row,2);
+        % tbus within zone, hence fbus outside
+        else
+            bus_border_id(row,1) = buses_of_branch_border(row,1);
         end
     end
+    % return the set, so no repetition, in sorted order
+    bus_border_id = unique(bus_border_id);
+end
     
+
+
+
+function [branch_inner_idx, branch_border_idx] = identifyInnerAndBorderBranch(bus_zone_id, basecase)
+    % Given a zone with its buses id, plus the basecase, return the column
+    % vectors of the branch indices in the basecase, of the branches within the zone and the branches at its
+    % border, i.e. both end buses within the zone and only 1 end bus within
+    % the zone respectively
+    %% Input:
+    % bus_zone_id: zone's buses id
+    % basecase
+    %% Output:
+    % branch_inner_idx: inner branches idx, for the basecase
+    % branch_border_idx: border branches idx, for the basecase
+    
+    branch_inner_idx = [];
+    branch_border_idx = [];
+    % from the basecase, extract the branches' "from" bus and "to" bus info, for each branch (row) : [fbus, tbus]
+    buses_of_branch = basecase.branch(:,[1 2]);
+    % determine what end buses are from the zone or outside, as boolean
+    is_fbus_tbus_of_branch_in_zone = ismember(buses_of_branch, bus_zone_id);
+    % sum booleans per branch :fbusIn + tBusIn, to get the number of end buses of the branch within the zone
+    nb_of_buses_of_branch_in_zone = sum(is_fbus_tbus_of_branch_in_zone')'; % notice the ', as the sum is done by column
+    % Sort each branch in its corresponding category
+    for row = 1:size(buses_of_branch,1)
+        switch nb_of_buses_of_branch_in_zone(row)
+            % the branch is within the zone as it is connecting 2 inner buses
+            case 2
+                branch_inner_idx(end+1,1) = row;
+            % the branch connects a inner bus with an outer bus
+            case 1
+                branch_border_idx(end+1,1) = row;
+            % the branch is outside the zone
+            otherwise
+                % not to be considered
+        end
+    end
 end
 
 
