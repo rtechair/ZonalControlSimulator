@@ -30,6 +30,7 @@ zones_bus = {zone1_bus, zone2_bus, zone3_bus};
 
 %% BASECASE
 
+% if the basecase is not correctly updated, update it
 handleBasecase();
 
 basecase = loadcase('case6468rte_zone1and2'); %mpc_ext
@@ -43,6 +44,8 @@ mapBus_id2idx = getMapBus_id2idx(basecase);
 mapBus_idx2id = containers.Map(1:size(basecase.bus,1),basecase.bus(:,1));
 
 basecase_int = ext2int(basecase);
+
+[isBusDeleted, isBranchDeleted] = isBusOrBranchDeleted(basecase_int);
 
 mapBus_ext2int = basecase_int.order.bus.e2i; % 10000x1 sparse double
 mapBus_int2ext = basecase_int.order.bus.i2e; % 6469x1 double
