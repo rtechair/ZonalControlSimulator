@@ -1,4 +1,4 @@
-numberOfZones = 1;
+numberOfZones = 2;
 
 %{
 JEAN'S ORDERING
@@ -35,44 +35,67 @@ handleBasecase();
 
 basecase = loadcase('case6468rte_zone1and2'); %mpc_ext
 
+% crash test, add a island bus, not connected to the rest of the network
+% do another crash on the case9.m
+%{
+basecase = addBus(basecase,99999,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
+
+basecase = addBus(basecase,99998,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
+basecase.branch(end+1,:) = [ 99998, 99999, 0.2, 0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, 0];
+%}
 
 
 %% MAP
-% get a map of bus id to bus index for basecase.bus
-mapBus_id2idx = getMapBus_id2idx(basecase);
-% while idx2id is immediate using basecase.bus
-mapBus_idx2id = containers.Map(1:size(basecase.bus,1),basecase.bus(:,1));
+% get a map of bus id to bus index for basecase.bus and vice versa
+[mapBus_id2idx, mapBus_idx2id] = getMapBus_id2idx_idx2id(basecase);
+
 
 basecase_int = ext2int(basecase);
 
 [isBusDeleted, isBranchDeleted] = isBusOrBranchDeleted(basecase_int);
 
-mapBus_ext2int = basecase_int.order.bus.e2i; % 10000x1 sparse double
-mapBus_int2ext = basecase_int.order.bus.i2e; % 6469x1 double
+mapBus_idx_e2i = basecase_int.order.bus.e2i; % 10000x1 sparse double
+mapBus_idx_i2e = basecase_int.order.bus.i2e; % 6469x1 double
 
 
 
 %% HOW CONVERSION WORKS
+
+% BUS
 %{
 In terms of conversion:
 bus_id
-bus_idx     using id2idx
-bus_int_idx using e2i      notice that bus_int_id = bus_int_idx
+bus_idx     using mapBus_id2idx
+bus_int_idx using mapBus_ext2int      notice that bus_int_id = bus_int_idx
 Let MatPower do its work
 then convert back:
-bus_idx     using i2e
-bus_id      using idx2id
+bus_idx     using mapBus_ext2int
+bus_id      using mapBus_idx2id
 %}
+
+% BRANCH
+%{
+no map is required regarding the branches, the branches are accessed through their indices,
+if no branch is deleted during the internal conversion, then the branch will remain as the same index
+TODO check branches are not moved during the conversion
+%}
+
+% GEN
+%{
+An important point regarding the generators is, the off-generators are
+removed in the internal basecase from the external basecase.
+%}
+[mapGen_idx_e2i, mapGen_idx_i2e] = getMapGen_idx_e2i_i2e(basecase_int);
 
 
 
 %% CONVERSION OF ZONE 1
-% get the list of indices corresponding to where zone1_bus buses are
+
+% BUS
 % recall zone1_bus =                                                  [1445 2076 2135 2745 4720 10000]'
 zone1_bus_idx = getValues(mapBus_id2idx, zone1_bus);                % [1445;2076;2135;2743;4717;6469]
-
-zone1_bus_int_idx = mapBus_ext2int(zone1_bus_idx,1);                % [1445;2076;2135;2741;4714;6462]
-zone1_bus_back_idx = mapBus_int2ext(zone1_bus_int_idx);             % [1445;2076;2135;2743;4717;6469]
+zone1_bus_int_idx = mapBus_idx_e2i(zone1_bus_idx,1);                % [1445;2076;2135;2741;4714;6462]
+zone1_bus_back_idx = mapBus_idx_i2e(zone1_bus_int_idx);             % [1445;2076;2135;2743;4717;6469]
 zone1_bus_back_id = getValues(mapBus_idx2id,zone1_bus_back_idx);    % [1445;2076;2135;2745;4720;10000]
 
 % TODO: investigate why when zone1_bus is a row vector, some resulting
@@ -83,11 +106,15 @@ zone1_bus_back_id = getValues(mapBus_idx2id,zone1_bus_back_idx);    % [1445;2076
 %get the matrix corresponding to the subset of basecase.bus of zone 1
 corresponding_zone1_bus_idx = basecase.bus(zone1_bus_idx,:);
 
+
+
+
+
 %% CONVERSION OF ZONE 2
 % recall zone2_bus =                                                  [2506 4169 4546 4710 4875 4915]'
 zone2_bus_idx = getValues(mapBus_id2idx, zone2_bus);                % [2505;4167;4543;4707;4872;4912]
-zone2_bus_int_idx = mapBus_ext2int(zone2_bus_idx,1);                % [2504;4165;4540;4704;4869;4909]
-zone2_bus_back_idx = mapBus_int2ext(zone2_bus_int_idx);             % [2505;4167;4543;4707;4872;4912]
+zone2_bus_int_idx = mapBus_idx_e2i(zone2_bus_idx,1);                % [2504;4165;4540;4704;4869;4909]
+zone2_bus_back_idx = mapBus_idx_i2e(zone2_bus_int_idx);             % [2505;4167;4543;4707;4872;4912]
 zone2_bus_back_id = getValues(mapBus_idx2id,zone2_bus_back_idx);    % [2506;4169;4546;4710;4875;4915]
 
 
@@ -111,17 +138,6 @@ a = 1;
 
 
 %% USEFUL FUNCTION
-
-
-    
-
-
-
-
-
-
-
-
 
 
 
