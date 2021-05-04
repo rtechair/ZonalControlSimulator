@@ -1,4 +1,4 @@
-function [nb_bus, nb_branch, nb_gen, nb_batt] = findSystemDimension(basecase)
+function [nb_bus, nb_branch, nb_gen, nb_batt] = findBasecaseDimension(basecase)
     % Show the dimensions of the considered matpower case
     %% Input
     % case: matpower case
