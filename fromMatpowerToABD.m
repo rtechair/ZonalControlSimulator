@@ -16,26 +16,68 @@ ISF = makePTDF(basecase_int);
 [n_bus, n_branch, n_gen, n_battery] = findZoneDimension(zone_bus, zone_branch_inner_idx,zone_gen_idx, zone_battery_idx);
 
 %% MATRIX INITIALIZATION
-n_of_state_variables = n_branch + 2*n_gen + 2*n_battery;
-n_of_time_steps = 5; %TODO check this is indeed the nb_of_time_steps, can it be an input?
+n_state_variables = n_branch + 2*n_gen + 2*n_battery;
+n_time_steps = 5; %TODO check this is indeed the nb_of_time_steps, can it be an input?
 
-A = zeros(n_of_state_variables);
-Bc = zeros(n_of_state_variables, n_gen);
+% A = zeros(n_state_variables);
+Bc = zeros(n_state_variables, n_gen);
+
 % depending on if there are some batteries within the zone or not
 if n_battery == 0
     Bb = 0;
 else
-    Bb = zeros(n_of_state_variables);
+    Bb = zeros(n_state_variables);
 end
 %disturbance of generation
-Dg = zeros(n_of_state_variables, n_gen);
+Dg = zeros(n_state_variables, n_gen);
 % disturbance of power outside the zone
-Dn = zeros(n_of_state_variables, n_bus);
+Dn = zeros(n_state_variables, n_bus);
 % disturbance of power available
-Da = zeros(n_of_state_variables, n_gen);
+Da = zeros(n_state_variables, n_gen);
 
-x = zeros(nb_of_rows_of_state_variables, n_of_time_steps);
-u = zeros(nb_gen + nb_battery, nb_of_time_steps): %TODO why Bc and Bb separated but not u
-d = zeros(n_bus, n_of_time_steps); %TODO check it is correct
+x = zeros(n_state_variables, n_time_steps);
+u = zeros(n_gen + n_battery, n_time_steps): %TODO why Bc and Bb separated but not u
+d = zeros(n_bus, n_time_steps); %TODO check it is correct
      
 %% Matrix element definition
+%{
+ In the following:
+tmp_idx serves as temporary indices to construct the submatrices that are modified
+tmp_start indicates what is the initial starting row and column, thus cell, of the submatrices
+%}
+
+% 1) generate the coefficients for the A matrix w.r.t.:
+%{
+Fij(k+1) += Fij(k)
+Pc(k+1) += Pc(k)
+Pb(k+1) += Pb(k)
+Eb(k+1) += Eb(k)
+Pg(k+1) += Pg(k)
+%}
+A = eyes(n_state_variables);
+
+%{
+USELESS NOW AS THIS IS REPLACED BY WHAT COMES BEFORE
+% w.r.t. Fij(k+1) += Fij(k)
+tmp_idx = 1:n_branch;
+A(tmp_idx,tmp_idx) = eye(n_branch);
+
+% w.r.t. Pc(k+1) += Pc(k)
+tmp_start = n_branch + 1;
+tmp_idx = tmp_start: tmp_start+n_gen-1; % if n_gen = 0, then A(I,I) = [], so no modification on A. No need to handle special case n_gen = 0
+A(tmp_idx,tmp_idx) = eye(n_gen);
+
+% w.r.t. Pb(k+1) += Pb(k)
+tmp_start = n_branch + n_gen + 1
+tmp_idx = tmp_start : tmp_start + n_battery - 1
+% w.r.t. Eb(k+1) += Eb(k)
+%}
+
+% Eb(k+1) += Eb(k+1)
+
+
+
+
+
+
+
