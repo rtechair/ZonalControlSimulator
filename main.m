@@ -147,7 +147,7 @@ zone1_battery_int_idx = getValues(mapGen_idx_e2i,zone1_battery_idx); %   402
 
 zone1_gen_back_idx = getValues(mapGen_idx_i2e,zone1_gen_int_idx); %     [1297;1299;1300;1301]
 zone1_battery_back_idx = getValues(mapGen_idx_i2e, zone1_battery_int_idx); % 1298
-
+    
 
 
 
@@ -168,4 +168,15 @@ zone2_bus_border_id = findBorderBus(zone2_bus, zone2_branch_border_idx, basecase
 
 % the rest of the info could be computed as done with zone 1
 
+%% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
+%{
+x = [Fij Pc Pb Eb Pg ]'     uc = DeltaPc      ub =DeltaPb    w = DeltaPg      h = DeltaPT
+The model is described by the equations x(k+1) = A*x(k) + Bc*DPC(k-tau_c) + Bb*DPB(k-tau_b) + Dg*DPG(k) + Dn*DPT(k) + Da*DPA(k)
+cf Powertech paper
+%}
+
+[n_bus, n_branch, n_gen, n_batt] = findBasecaseDimension(basecase); % [6469, 9001, 1228, 77]
+[n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
+
+[n_bus_zone1, n_branch_zone1, n_gen_zone1, n_batt_zone1] = findZoneDimension(zone1_bus, zone1_branch_inner_idx,zone1_gen_idx, zone1_battery_idx);
 a = 1;
