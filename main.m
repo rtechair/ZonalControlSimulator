@@ -65,6 +65,12 @@ end
 mapBus_idx_e2i = basecase_int.order.bus.e2i; % 10000x1 sparse double
 mapBus_idx_i2e = basecase_int.order.bus.i2e; % 6469x1 double
 
+
+
+mapBus_id_e2i_error = mapBus_idx_e2i(getValues(mapBus_id2idx, basecase.bus(:,1)));
+[mapBus_id_e2i, mapBus_id_i2e] = getMapBus_id_e2i_i2e(basecase_int, mapBus_id2idx, mapBus_idx2id, mapBus_idx_e2i, mapBus_idx_i2e);
+% mapBus_id_i2e = getValues(getValues(mapBus_idx2id,mapBus_idx_i2e(basecase_int.bus(:,1))));
+
 [mapGen_idx_e2i, mapGen_idx_i2e] = getMapGen_idx_e2i_i2e(basecase_int);
 
 
@@ -179,4 +185,11 @@ cf Powertech paper
 [n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
 [n_bus_zone1, n_branch_zone1, n_gen_zone1, n_batt_zone1] = findZoneDimension(zone1_bus, zone1_branch_inner_idx,zone1_gen_idx, zone1_battery_idx);
-a = 1;
+
+zone1_sampling_time = 5; % in sec
+batt_cst_power_reduc = ones(n_batt_zone1,1); % TODO: needs to be changed afterwards
+% Zone 1
+[A,Bc,Bb,Dg,Dt,Da,x,u,d] = fromMatpowerToABD(basecase_int, zone1_bus, ...
+    zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx,...
+    zone1_sampling_time, batt_cst_power_reduc);
+    

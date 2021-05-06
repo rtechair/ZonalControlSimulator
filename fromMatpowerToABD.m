@@ -19,7 +19,7 @@ arguments
     zone_battery_idx
 
     sampling_time (1,1) double
-    batt_cst_power_reduc %must be a vector
+    batt_cst_power_reduc %must be a vector, of length 'n_battery'
 end
     
 ISF = makePTDF(basecase_int);
@@ -40,10 +40,11 @@ Dg = zeros(n_state_variables, n_gen);
 % disturbance of power outside the zone
 Dt = zeros(n_state_variables, n_bus);
 
-
+% TODO: the variables are useless in this function, maybe create them
+% later?
 x = zeros(n_state_variables, 1);
 u = zeros(n_gen + n_battery, 1); % TODO why Bc and Bb separated but not 'u'
-d = zeros(n_bus, 1); %TODO check it is correct
+d = zeros(n_bus, 1); 
      
 %% Matrix element definition
 %{
