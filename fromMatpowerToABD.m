@@ -1,6 +1,6 @@
-function [A,Bc,Bb,Dg,Dn,Da,x,u,d] = fromMatpowerToABD(basecase_int, zone_bus,...
+function [A,Bc,Bb,Dg,Dt,Da,x,u,d] = fromMatpowerToABD(basecase_int, zone_bus,...
     zone_branch_inner_idx,zone_gen_idx, zone_battery_idx, ...
-    sampling_time, batt_cst_power_reduc, n_time_steps)
+    sampling_time, batt_cst_power_reduc)
 % important: this concerns only one zone here
 %% Input
 % batt_cst_power_reduc : must be a vector
@@ -20,7 +20,6 @@ arguments
 
     sampling_time (1,1) double
     batt_cst_power_reduc %must be a vector
-    n_time_steps (1,1) double = 5 % check this is correct?
 end
     
 ISF = makePTDF(basecase_int);
@@ -32,19 +31,19 @@ ISF = makePTDF(basecase_int);
 [n_bus, n_branch, n_gen, n_battery] = findZoneDimension(zone_bus, zone_branch_inner_idx,zone_gen_idx, zone_battery_idx);
 
 %% MATRIX INITIALIZATION
-n_state_variables = n_branch + 2*n_gen + 2*n_battery;
+% X is stated as [ F, 
+n_state_variables = n_branch + 3*n_gen + 2*n_battery;
 
 
 %disturbance of generation
 Dg = zeros(n_state_variables, n_gen);
 % disturbance of power outside the zone
-Dn = zeros(n_state_variables, n_bus);
-% disturbance of power available
-Da = zeros(n_state_variables, n_gen);
+Dt = zeros(n_state_variables, n_bus);
 
-x = zeros(n_state_variables, n_time_steps);
-u = zeros(n_gen + n_battery, n_time_steps); % TODO why Bc and Bb separated but not 'u'
-d = zeros(n_bus, n_time_steps); %TODO check it is correct
+
+x = zeros(n_state_variables, 1);
+u = zeros(n_gen + n_battery, 1); % TODO why Bc and Bb separated but not 'u'
+d = zeros(n_bus, 1); %TODO check it is correct
      
 %% Matrix element definition
 %{
@@ -61,6 +60,7 @@ Pc(k+1) += Pc(k)
 Pb(k+1) += Pb(k)
 Eb(k+1) += Eb(k)
 Pg(k+1) += Pg(k)
+Pa(k+1) += Pa(k)
 %}
 A = eyes(n_state_variables);
 
@@ -84,7 +84,9 @@ tmp_range_row = tmp_start_row : tmp_start_row + n_gen - 1;
 Bc(tmp_range_row, :) = eye(n_gen);
 
 % Pg(k+1) -= DeltaPc(k-tau)
-Bc(end-n_gen+1 : end , :) = - eye(n_gen);
+tmp_start_row = n_branch + n_gen + 2*n_battery + 1;
+tmp_range_row = tmp_start_row : tmp_start_row +  nJ_gen - 1;
+Bc(tmp_range_row , :) = - eye(n_gen);
 
 % F(k+1) -= diag(ptdf)*DeltaPc(k-tau)
 %TODO
@@ -114,6 +116,13 @@ Bb(tmp_range_row,:) = - sampling_time*diag(batt_cst_power_reduc);
 
 % F(k+1) += diag(ptdf)*DeltaPb(k-delay_batt)
 % TODO
+
+% XX) Generate the coefficients for the disturbance matrix of power available
+Da = zeros(n_state_variables, n_gen);
+tmp_start_row = n_state_variables - n_gen + 1;
+tmp_range_row = tmp_start_row : n_state_variables;
+Da(tmp_range_row,:) = eye(n_gen);
+
 
 
 
