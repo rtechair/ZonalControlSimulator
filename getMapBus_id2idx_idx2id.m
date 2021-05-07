@@ -7,15 +7,15 @@ function [mapBus_id2idx, mapBus_idx2id] = getMapBus_id2idx_idx2id(basecase)
     %% INPUT
     % basecase: a basecase with a MatPower case struct
     %% OUTPUT
-    % mapBus_id2idx: identity -> index sparse matrix of basecase.bus
-    % mapBus_idx2id: index -> identity matrix, with continuous indexing, of basecase.bus
+    % mapBus_id2idx: sparse matrix, converts identity -> index of buses in basecase.bus
+    % mapBus_idx2id: continuous indexing matrix, convert index -> identity of buses in basecase.bus
     
     n_bus = size(basecase.bus,1);
-    id = basecase.bus(:,1);
-    idx = 1:n_bus;
-    col = ones(n_bus, 1);
+    bus_id = basecase.bus(:,1);
+    bus_idx = 1:n_bus;
+    column = ones(n_bus, 1);
     % construct maps in both directions
-    mapBus_id2idx = sparse(id, col, idx);
-    mapBus_idx2id = id;
+    mapBus_id2idx = sparse(bus_id, column, bus_idx);
+    mapBus_idx2id = bus_id;
 end
 
