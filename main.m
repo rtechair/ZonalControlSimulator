@@ -15,8 +15,6 @@ zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
 %MatPower functions 
 % https://matpower.org/docs/ref/
 
-
-
 zone1_bus = [1445 2076 2135 2745 4720 10000]';
 zone1_bus_name = ["CR" "GR" "GY" "MC" "TR" "VG"];
 
@@ -44,17 +42,12 @@ basecase = addBus(basecase,99998,    2,   0 ,      0,       0 ,  0,   1,  1.0386
 basecase.branch(end+1,:) = [ 99998, 99999, 0.2, 0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, 0];
 %}
 
-
 %% MAP
-% TODO: maybe the maps can be created as sparse matrices only and no
-% containers.Map require to be handle, plus this would avoid creating
-% associated functions
-% get a map of bus id to bus index for basecase.bus and vice versa
-[mapBus_id2idx, mapBus_idx2id] = getMapBus_id2idx_idx2id(basecase);
-
-
+% convert to the internal basecase structure for Matpower
 basecase_int = ext2int(basecase);
 
+% check if a bus or a branch has been deleted, currently the code does not
+% handle the case if some are deleted/off
 [isBusDeleted, isBranchDeleted] = isBusOrBranchDeleted(basecase_int);
 
 if isBusDeleted
@@ -63,15 +56,12 @@ end
 if isBranchDeleted
     disp('a branch has been deleted, nothing has been made to handle this situation, the code should not work')
 end
-
-
+% bus map
+[mapBus_id2idx, mapBus_idx2id] = getMapBus_id2idx_idx2id(basecase);
 mapBus_id_e2i = basecase_int.order.bus.e2i; % sparse matrix
 mapBus_id_i2e = basecase_int.order.bus.i2e; % continuous indexing matrix
 
-% TODO?
-%[mapBus_idx_e2i,mapBus_idx_i2e] = getMapBus_idx_e2i_i2e(basecase_int,mapBus_id2idx, mapBus_idx2id, mapBus_id_e2i, mapBus_id_i2e);
-
-
+% online gen map
 [mapGenOn_idx_e2i, mapGenOn_idx_i2e] = getMapGenOn_idx_e2i_i2e(basecase_int);
 
 %% HOW CONVERSION WORKS
@@ -80,26 +70,24 @@ mapBus_id_i2e = basecase_int.order.bus.i2e; % continuous indexing matrix
 %{
 In terms of conversion:
 bus_id
-bus_idx     using mapBus_id2idx
-bus_id_int using 
-/ bus_idx_int as they are both the same due to matpower modifications
-Then Matpower does its work
-
-
+bus_idx     using mapBus_id2idx(bus_id)
+bus_id_int  using mapBus_id_e2i(bus_id)
+bus_idx_int = bus_id_int
+then Matpower does its work
 then convert back:
-bus_id_back using basecase_int.order.bus.i2e (mapBus_int2ext)
-bus_idx_back using mapBus_idx2id
-
-TODO : TODELETE bus_int_idx using mapBus_ext2int      notice that bus_int_id = bus_int_idx
+bus_id_back using mapBus_id_e2i(bus_id_int)
+bus_idx_back using mapBus_id2idx(bus_id_back)
 %}
 
 % BRANCH
-%{
-no map is required regarding the branches, the branches are accessed through their indices,
-if no branch is deleted during the internal conversion, then the branch will remain as the same index
+%{ 
 TODO check branches are not moved during the conversion.
-The branches are accessed through their idx, they do not have an id.
-Additionnally, the idx is more important than fbus and tbus
+
+he branches are accessed through their idx, they do not have an id.
+if no branch is deleted during the internal conversion, then the branch will remain as the same index
+Additionnally, the idx is more important than fbus and tbus, as the former
+allows to find the latter, while not necessarily the other way as several
+branches can connect the same 2 buses
 %}
 
 % GEN
@@ -111,7 +99,6 @@ the generators are accessed through their idx, they do not have an id
 
 %% CONVERSION OF ZONE 1
 
-
 % TODO: ensure zone1_bus is a column vector
 
 % create the object associated to the zone
@@ -121,7 +108,7 @@ the generators are accessed through their idx, they do not have an id
 % get the rest of the info about the zone
 [zone1_branch_inner_idx, zone1_branch_border_idx] = findInnerAndBorderBranch(zone1_bus, basecase);
 zone1_bus_border_id = findBorderBus(zone1_bus, zone1_branch_border_idx, basecase);
-[zone1_gen_idx, zone1_battery_idx] = findGenAndBattery(zone1_bus, basecase);
+[zone1_gen_idx, zone1_battery_idx] = findGenAndBattOnInZone(zone1_bus, basecase);
 
 % BUS
 % recall zone1_bus =                                    [1445 2076 2135 2745 4720 10000]'
@@ -145,29 +132,26 @@ if no branch is deleted during the internal conversion by matpower then
 %}
 
 % GEN
-% recall zone1_gen_idx =                                [1297;1299;1300;1301]
-% recall zone1_battery_idx =                                             1298
+% recall zone1_gen_idx =                                    [1297;1299;1300;1301]
+zone1_gen_int_idx = mapGenOn_idx_e2i(zone1_gen_idx); %      [401;403;404;405]
+zone1_gen_back_idx = mapGenOn_idx_i2e(zone1_gen_int_idx); % [1297;1299;1300;1301]
 
-zone1_gen_int_idx = mapGenOn_idx_e2i(zone1_gen_idx); %          [401;403;404;405]
-zone1_battery_int_idx = mapGenOn_idx_e2i(zone1_battery_idx); %   402
-
-zone1_gen_back_idx = mapGenOn_idx_i2e(zone1_gen_int_idx); %     [1297;1299;1300;1301]
+% recall zone1_battery_idx =                                        1298
+zone1_battery_int_idx = mapGenOn_idx_e2i(zone1_battery_idx); %      402
 zone1_battery_back_idx = mapGenOn_idx_i2e(zone1_battery_int_idx); % 1298
-    
-
-
 
 %% CONVERSION OF ZONE 2
+% BUS
 % recall zone2_bus =                                    [2506 4169 4546 4710 4875 4915]'
 zone2_bus_idx = mapBus_id2idx(zone2_bus); %             [2505;4167;4543;4707;4872;4912]               
 zone2_bus_int_id = mapBus_id_e2i(zone2_bus); %          [2505;4167;4543;4707;4872;4912]        
 zone2_bus_back_id = mapBus_id_i2e(zone2_bus_int_id); %  [2506;4169;4546;4710;4875;4915]   
 zone2_bus_back_idx = mapBus_id2idx(zone2_bus_back_id);% [2505;4167;4543;4707;4872;4912]
 
-
 %zone2 = Zone(zone2_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
 [zone2_branch_inner_idx, zone2_branch_border_idx] = findInnerAndBorderBranch(zone2_bus, basecase);
 zone2_bus_border_id = findBorderBus(zone2_bus, zone2_branch_border_idx, basecase);
+[zone2_gen_idx, zone2_battery_idx] = findGenAndBattOnInZone(zone2_bus, basecase);
 
 % recall zone2_bus_border_id =                                          [347;1614;2093;4170;4236;4548]                                       
 zone2_bus_border_idx = mapBus_id2idx(zone2_bus_border_id); %            [347;1614;2093;4168;4234;4545]       
@@ -175,7 +159,15 @@ zone2_bus_border_int_id = mapBus_id_e2i(zone2_bus_border_id); %         [347;161
 zone2_bus_border_back_id = mapBus_id_i2e(zone2_bus_border_int_id); %    [347;1614;2093;4170;4236;4548]  
 zone2_bus_border_back_idx = mapBus_id2idx(zone2_bus_border_back_id); %  [347;1614;2093;4168;4234;4545]
 
-% the rest of the info could be computed as done with zone 1
+% GEN
+% recall zone2_gen_idx = [466;1302;1303;1304] notice the gen_idx = 466 is
+% in the zone but not online so not considered
+zone2_gen_int_idx = mapGenOn_idx_e2i(zone2_gen_idx); % [406;407;408]     
+zone2_gen_back_idx = mapGenOn_idx_i2e(zone2_gen_int_idx);
+
+% zone2_battery_idx = 1305
+zone2_battery_int_idx = mapGenOn_idx_e2i(zone2_battery_idx); %  409
+zone2_battery_back_idx = mapGenOn_idx_i2e(zone2_battery_int_idx); % 1305
 
 %% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
 %{
