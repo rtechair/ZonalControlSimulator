@@ -1,4 +1,4 @@
-function [A,Bc,Bb,Dg,Dt,Da,x,u,d] = fromMatpowerToABD(basecase_int, zone_bus_id,...
+function [A,Bc,Bb,Dg,Dt,Da] = fromMatpowerToABD(basecase_int, zone_bus_id,...
     zone_branch_inner_idx,zone_gen_idx, zone_battery_idx, mapGenOn_idx_e2i, ...
     sampling_time, batt_cst_power_reduc)
 % important: this concerns only one zone here
@@ -29,14 +29,6 @@ end
 % X is stated as [ Fij Pc Pb Eb Pg Pa]', thus it includes Pa: available power
 % while the equation and model doesn't show it in the paper
 n_state_variables = n_branch + 3*n_gen + 2*n_battery;
-
-
-%% MATRIX INITIALIZATION
-
-% TODO: the variables are useless in this function, maybe create them later?
-x = zeros(n_state_variables, 1);
-u = zeros(n_gen + n_battery, 1); % TODO why Bc and Bb separated but not 'u'
-d = zeros(n_bus, 1); 
      
 %% Matrix element definition
 %{
