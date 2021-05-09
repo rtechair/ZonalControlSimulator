@@ -185,9 +185,9 @@ zone1_sampling_time = 5; % in sec
 batt_cst_power_reduc = ones(n_batt_zone1,1); % TODO: needs to be changed afterwards, with each battery coef
 % Zone 1
 
-[A_ref, Bc_ref, Bb_ref, Dg_ref, Dt_ref, Da_ref] = getRefDynamicSystemMatrix();
+% [A_ref, Bc_ref, Bb_ref, Dg_ref, Dt_ref, Da_ref] = getRefDynamicSystemMatrix();
 
-[A,Bc,Bb,Dg,Dt,Da] = fromMatpowerToABD(basecase_int, zone1_bus, ...
+[A,Bc,Bb,Dg,Dt,Da] = dynamicSystem(basecase_int, zone1_bus, ...
     zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapGenOn_idx_e2i,...
     zone1_sampling_time, batt_cst_power_reduc);
 
