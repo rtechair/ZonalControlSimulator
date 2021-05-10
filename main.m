@@ -180,8 +180,8 @@ cf Powertech paper
 % Zone 1
 [n_bus_zone1, n_branch_zone1, n_gen_zone1, n_batt_zone1] = findZoneDimension(zone1_bus, zone1_branch_inner_idx,zone1_gen_idx, zone1_battery_idx);
 
-zone1_sampling_time = 5; % in sec
-batt_cst_power_reduc = ones(n_batt_zone1,1); % TODO: needs to be changed afterwards, with each battery coef
+zone1_sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
+batt_cst_power_reduc = 0.001 * ones(n_batt_zone1,1); % TODO: needs to be changed afterwards, with each battery coef
 
 [A,Bc,Bb,Dg,Dt,Da] = dynamicSystem(basecase_int, zone1_bus, ...
     zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapBus_id_e2i, mapGenOn_idx_e2i,...

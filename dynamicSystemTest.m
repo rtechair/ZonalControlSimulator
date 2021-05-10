@@ -11,16 +11,34 @@ zone1_bus = [1445 2076 2135 2745 4720 10000]';
 zone1_sampling_time = 5; % arbitrary
 batt_cst_power_reduc = 1; % arbitrary
 
-%% Test 1: zone 1
-
 [A,Bc,Bb,Dg,Dt,Da] = dynamicSystem(basecase1_int, zone1_bus, ...
     zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapGenOn_idx_e2i,...
     zone1_sampling_time, batt_cst_power_reduc);
 
 data = load('alessioABCmatrices.mat');
-assert( all( A(:) == data.A(:) ), 'incorrect A')
-assert( all( Bc(:) == data.Bc(:) ), 'incorrect Bc')
-assert( all( Bb(:) == data.Bb(:) ), 'incorrect Bb')
-assert( all( Dg(:) == data.Dg(:) ), 'incorrect Dg')
-assert( all( Dt(:) == data.Dt(:) ), 'incorrect Dt')
-assert( all( Da(:) == data.Da(:) ), 'incorrect Da')
+
+
+%{
+[A,Bc,Bb,Dg,Dt,Da] = dynamicSystem(basecase1_int, zone1_bus, ...
+    zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapGenOn_idx_e2i,...
+    zone1_sampling_time, batt_cst_power_reduc);
+data = load('alessioABCmatrices.mat');
+%}
+
+%% Test 1: zone 1 - A
+assert( isequal(A, data.A), 'incorrect A')
+
+%% Test 2: zone 1 - Bc
+assert( isequal(Bc, data.Bc), 'incorrect Bc')
+
+%% Test 3: zone 1 - Bb
+assert( isequal(Bb, data.Bb), 'incorrect Bb')
+
+%% Test 4: zone 1 - Dg
+assert( isequal(Dg, data.Dg), 'incorrect Dg')
+
+%% Test 5: zone 1 - Dt
+assert( isequal(Dt, data.Dn), 'incorrect Dt') % Alessio called it 'Dn' initially
+
+%% Test 6: zone 1 - Da
+assert( isequal(Da, data.Da), 'incorrect Da')

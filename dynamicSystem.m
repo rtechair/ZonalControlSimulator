@@ -35,7 +35,7 @@ ISF = makePTDF(basecase_int);
      
 %% Matrix element definition
 %{
- In the following:
+ In the following local functions:
 'tmp_range_row' and 'tmp_range_col' serve as a temporary ranges of indices to
 edit submatrices values
 'tmp_start_row' and 'tmp_start_col' indicates what is the initial starting row and column, thus cell, of the submatrices
@@ -69,6 +69,8 @@ end
 
 
 function A = stateSystem(n_state_variables, n_branch, n_gen, n_battery, sampling_time, batt_cst_power_reduc)
+% Return the state system operator A
+
 %{
 Fij(k+1) += Fij(k)
 Pc(k+1) += Pc(k)
