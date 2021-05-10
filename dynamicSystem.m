@@ -45,16 +45,16 @@ edit submatrices values
 A = stateSystem(n_state_variables, n_branch, n_gen, n_battery, sampling_time, batt_cst_power_reduc);
 
 %% 2) Generate the coefficients for the Bc matrix
-Bc = controlCurtailment(n_state_variables, n_branch, n_gen, n_battery, ...
+Bc = controlCurtailment(basecase_int, n_state_variables, n_branch, n_gen, n_battery, ...
     zone_branch_inner_idx, zone_gen_idx, mapGenOn_idx_e2i, ISF);
 
 %% 3) Generate the coefficients for the Bb matrix
-Bb = controlBattery(n_state_variables, n_branch, n_gen, n_battery,...
+Bb = controlBattery(basecase_int, n_state_variables, n_branch, n_gen, n_battery,...
     zone_branch_inner_idx, zone_battery_idx, mapGenOn_idx_e2i, ISF, sampling_time, batt_cst_power_reduc);
 
 
 %% 4) Generate the coefficients for the disturbance of generation Dg
-Dg = disturbanceDeltaPowerGenerated(n_state_variables, n_branch, n_gen,...
+Dg = disturbanceDeltaPowerGenerated(basecase_int, n_state_variables, n_branch, n_gen,...
     zone_branch_inner_idx, zone_gen_idx, mapGenOn_idx_e2i, ISF);
 
 
@@ -92,10 +92,16 @@ A(tmp_range_row, tmp_range_col) = - sampling_time*diag(batt_cst_power_reduc);
 end
 
 
-function Bc = controlCurtailment(n_state_variables, n_branch, n_gen, n_battery, ...
+function Bc = controlCurtailment(basecase_int, n_state_variables, n_branch, n_gen, n_battery, ...
     zone_branch_inner_idx, zone_gen_idx, mapGenOn_idx_e2i, ISF)
 
 Bc = zeros(n_state_variables, n_gen);
+
+% F(k+1) -= diag(ptdf)*DeltaPc(k-tau)
+zone_gen_on_int_idx = mapGenOn_idx_e2i(zone_gen_idx);
+bus_id_int_of_gen_on = basecase_int.gen(zone_gen_on_int_idx,1); % as bus_id_int = bus_idx_int
+Bc(1:n_branch,:) = - ISF( zone_branch_inner_idx,... % indices for branch are the same for int and ext
+    bus_id_int_of_gen_on); % = - Mc in the paper
 
 % Pc(k+1) += DeltaPc(k-tau)
 tmp_start_row = n_branch + 1;
@@ -106,22 +112,18 @@ Bc(tmp_range_row, :) = eye(n_gen);
 tmp_start_row = n_branch + n_gen + 2*n_battery + 1;
 tmp_range_row = tmp_start_row : tmp_start_row +  n_gen - 1;
 Bc(tmp_range_row , :) = - eye(n_gen);
-
-% F(k+1) -= diag(ptdf)*DeltaPc(k-tau)
-zone_gen_on_int_idx = mapGenOn_idx_e2i(zone_gen_idx);
-Bc(1:n_branch,:) = - ISF( zone_branch_inner_idx,... % % indices for branch are the same for int and ext
-    zone_gen_on_int_idx); % = - Mc in the paper
 end
 
 
-function Bb = controlBattery(n_state_variables, n_branch, n_gen, n_battery,...
+function Bb = controlBattery(basecase_int, n_state_variables, n_branch, n_gen, n_battery,...
     zone_branch_inner_idx, zone_battery_idx, mapGenOn_idx_e2i, ISF, sampling_time, batt_cst_power_reduc)
 % initialization, the special case of no battery should be handled
 Bb = zeros(n_state_variables, n_battery);
 
 % F(k+1) += diag(ptdf)*DeltaPb(k-delay_batt), i.e. matrix Mb
-zone_batt_on_int_idx = mapGenOn_idx_e2i(zone_battery_idx);
-Bb(1:n_branch , :) = ISF(zone_branch_inner_idx, zone_batt_on_int_idx); 
+zone_battery_int_idx = mapGenOn_idx_e2i(zone_battery_idx);
+bus_id_int_of_batt_on = basecase_int.gen(zone_battery_int_idx,1);
+Bb(1:n_branch , :) = ISF(zone_branch_inner_idx, bus_id_int_of_batt_on); % as id_int = idx_int
 
 % Pb(k+1) += DeltaPb(k-delay_batt), i.e. matrix eye
 tmp_start_row = n_branch + n_gen + 1;
@@ -135,12 +137,13 @@ Bb(tmp_range_row , :) = - sampling_time*diag(batt_cst_power_reduc);
 end
 
 
-function Dg = disturbanceDeltaPowerGenerated(n_state_variables, n_branch, n_gen,...
+function Dg = disturbanceDeltaPowerGenerated(basecase_int, n_state_variables, n_branch, n_gen,...
     zone_branch_inner_idx, zone_gen_idx, mapGenOn_idx_e2i, ISF)
 Dg = zeros(n_state_variables, n_gen);
 zone_gen_on_int_idx = mapGenOn_idx_e2i(zone_gen_idx);
+bus_id_int_of_gen_on = basecase_int.gen(zone_gen_on_int_idx,1); % as bus_id_int = bus_idx_int
 Dg(1:n_branch , :) = ISF( zone_branch_inner_idx,... % branch indices are the same for int and ext
-    zone_gen_on_int_idx); % = Mc in the paper
+    bus_id_int_of_gen_on); % = Mc in the paper
 end
 
 
