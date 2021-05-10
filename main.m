@@ -1,5 +1,3 @@
-numberOfZones = 2;
-
 %{
 JEAN'S ORDERING
 zone1_bus = [2076 2135 2745 4720  1445 10000]';
@@ -179,29 +177,13 @@ cf Powertech paper
 [n_bus, n_branch, n_gen, n_batt] = findBasecaseDimension(basecase); % [6469, 9001, 1228, 77]
 [n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
+% Zone 1
 [n_bus_zone1, n_branch_zone1, n_gen_zone1, n_batt_zone1] = findZoneDimension(zone1_bus, zone1_branch_inner_idx,zone1_gen_idx, zone1_battery_idx);
 
 zone1_sampling_time = 5; % in sec
 batt_cst_power_reduc = ones(n_batt_zone1,1); % TODO: needs to be changed afterwards, with each battery coef
-% Zone 1
-
-% [A_ref, Bc_ref, Bb_ref, Dg_ref, Dt_ref, Da_ref] = getRefDynamicSystemMatrix();
 
 [A,Bc,Bb,Dg,Dt,Da] = dynamicSystem(basecase_int, zone1_bus, ...
-    zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapGenOn_idx_e2i,...
+    zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapBus_id_e2i, mapGenOn_idx_e2i,...
     zone1_sampling_time, batt_cst_power_reduc);
 
-testA = A==A_ref
-
-
-
-function [A_ref, Bc_ref, Bb_ref, Dg_ref, Dt_ref, Da_ref] = getRefDynamicSystemMatrix();
-    data = load('alessioABCmatrices.mat');
-    A_ref = data.A;
-    Bc_ref = data.Bc;
-    Bb_ref = data.Bb;
-    Dg_ref = data.Dg;
-    Dt_ref = data.Dt;
-    Da_ref = data.Da;
-end
-    
