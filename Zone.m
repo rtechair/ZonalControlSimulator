@@ -38,6 +38,7 @@ classdef Zone
         
         % Other
         Sampling_time
+        Simulation_time_unit
         Batt_cst_power_reduc
     end
     

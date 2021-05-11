@@ -130,29 +130,48 @@ cf Powertech paper
 % Zone 1
 [z1.N_bus, z1.N_branch, z1.N_genOn, z1.N_battOn] = findZoneDimension(z1.Bus_id, z1.Branch_idx,z1.GenOn_idx, z1.BattOn_idx);
 
-z1.Sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
+z1.Simulation_time_unit = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
 z1_cb = 0.001; % conversion factor for battery power output
 z1.Batt_cst_power_reduc = z1_cb * ones(z1.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 
  z1 = setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
-                mapBus_id_e2i, mapGenOn_idx_e2i, z1.Sampling_time, z1.Batt_cst_power_reduc);
+                mapBus_id_e2i, mapGenOn_idx_e2i, z1.Simulation_time_unit, z1.Batt_cst_power_reduc);
 %{
  [z1.A, z1.Bc, z1.Bb, z1.Dg, z1.Dt, z1.Da] = dynamicSystem(basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
-               mapBus_id_e2i, mapGenOn_idx_e2i, z1.Sampling_time, z1.Batt_cst_power_reduc);
+               mapBus_id_e2i, mapGenOn_idx_e2i, z1.Simulation_time_unit, z1.Batt_cst_power_reduc);
  %}
  
 % Zone 2
 [z2.N_bus, z2.N_branch, z2.N_genOn, z2.N_battOn] = findZoneDimension(z2.Bus_id, z2.Branch_idx,z2.GenOn_idx, z2.BattOn_idx);
 
-z2.Sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
+z2.Simulation_time_unit = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
 z2_cb = 0.001; % conversion factor for battery power output
 z2.Batt_cst_power_reduc = z2_cb * ones(z2.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, z2.BattOn_idx,...
-                mapBus_id_e2i, mapGenOn_idx_e2i, z2.Sampling_time, z2.Batt_cst_power_reduc);
+                mapBus_id_e2i, mapGenOn_idx_e2i, z2.Simulation_time_unit, z2.Batt_cst_power_reduc);
 
 %% Simulation initialization
+
+%% Compute available power (PA) and delta PA using real data
+% all PA and DeltaPA values are computed prior to the simulation
+
+power_available_percentage_realtime = table2array(readtable('tauxDeChargeMTJLMA2juillet2018.txt'));
+
+z1.Sampling_time = 5;
+
+% Sample the available power w.r.t. the selected sampling time
+range_idx = 1 : z1.Sampling_time : size(power_available_percentage_realtime,1);
+power_available_percentage_simulationtime = power_available_percentage_realtime(range_idx);
+
+% size of the percentage power vector
+n_power_available_percentage = size(range_idx,2);
+
+
+
+
+
 
 
 

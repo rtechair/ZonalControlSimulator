@@ -1,6 +1,6 @@
 function [A,Bc,Bb,Dg,Dt,Da] = dynamicSystem(basecase_int, zone_bus_id,...
     zone_branch_inner_idx,zone_gen_idx, zone_battery_idx, mapBus_id_e2i, mapGenOn_idx_e2i, ...
-    sampling_time, batt_cst_power_reduc)
+    simulation_time_unit, batt_cst_power_reduc)
 % important: this concerns only one zone here
 %% Input
 % batt_cst_power_reduc : must be a vector
@@ -19,7 +19,7 @@ arguments
     zone_battery_idx
     mapBus_id_e2i
     mapGenOn_idx_e2i
-    sampling_time (1,1) double
+    simulation_time_unit (1,1) double
     batt_cst_power_reduc %must be a vector, of length 'n_battery'
 end
 
@@ -42,7 +42,7 @@ edit submatrices values
 %}
 
 %% 1) Generate the coefficients for the A matrix w.r.t.:
-A = stateSystem(n_state_variables, n_branch, n_gen, n_battery, sampling_time, batt_cst_power_reduc);
+A = stateSystem(n_state_variables, n_branch, n_gen, n_battery, simulation_time_unit, batt_cst_power_reduc);
 
 %% 2) Generate the coefficients for the Bc matrix
 Bc = controlCurtailment(basecase_int, n_state_variables, n_branch, n_gen, n_battery, ...
@@ -50,7 +50,7 @@ Bc = controlCurtailment(basecase_int, n_state_variables, n_branch, n_gen, n_batt
 
 %% 3) Generate the coefficients for the Bb matrix
 Bb = controlBattery(basecase_int, n_state_variables, n_branch, n_gen, n_battery,...
-    zone_branch_inner_idx, zone_battery_idx, mapGenOn_idx_e2i, ISF, sampling_time, batt_cst_power_reduc);
+    zone_branch_inner_idx, zone_battery_idx, mapGenOn_idx_e2i, ISF, simulation_time_unit, batt_cst_power_reduc);
 
 
 %% 4) Generate the coefficients for the disturbance of generation Dg
@@ -68,7 +68,7 @@ Da = disturbanceDeltaPowerAvailable(n_state_variables, n_gen);
 end
 
 
-function A = stateSystem(n_state_variables, n_branch, n_gen, n_battery, sampling_time, batt_cst_power_reduc)
+function A = stateSystem(n_state_variables, n_branch, n_gen, n_battery, simulation_time_unit, batt_cst_power_reduc)
 % Return the state system operator A
 
 %{
@@ -86,7 +86,7 @@ tmp_start_row = n_branch + n_gen + n_battery + 1;
 tmp_start_col = n_branch + n_gen + 1;
 tmp_range_row = tmp_start_row : tmp_start_row + n_battery - 1;
 tmp_range_col = tmp_start_col : tmp_start_col + n_battery - 1;
-A(tmp_range_row, tmp_range_col) = - sampling_time*diag(batt_cst_power_reduc);
+A(tmp_range_row, tmp_range_col) = - simulation_time_unit*diag(batt_cst_power_reduc);
 % notice with the previous operation, if there is no battery, then the submatrix to be modified 
 % is a empty double matrix which does not modify the matrix, so no special case to handle
 end
@@ -116,7 +116,7 @@ end
 
 
 function Bb = controlBattery(basecase_int, n_state_variables, n_branch, n_gen, n_battery,...
-    zone_branch_inner_idx, zone_battery_idx, mapGenOn_idx_e2i, ISF, sampling_time, batt_cst_power_reduc)
+    zone_branch_inner_idx, zone_battery_idx, mapGenOn_idx_e2i, ISF, simulation_time_unit, batt_cst_power_reduc)
 % initialization, the special case of no battery should be handled
 Bb = zeros(n_state_variables, n_battery);
 
@@ -133,7 +133,7 @@ Bb(tmp_range_row , :) = eye(n_battery);
 % Eb(k+1) -= T*diag(cb)*DeltaPb(k-delay_batt), i.e. matrix -Ab
 tmp_start_row = n_branch + n_gen + n_battery + 1;
 tmp_range_row = tmp_start_row : tmp_start_row + n_battery - 1;
-Bb(tmp_range_row , :) = - sampling_time*diag(batt_cst_power_reduc);
+Bb(tmp_range_row , :) = - simulation_time_unit*diag(batt_cst_power_reduc);
 end
 
 
