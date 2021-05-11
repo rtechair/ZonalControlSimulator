@@ -128,25 +128,32 @@ cf Powertech paper
 [n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
 % Zone 1
-[z1_n_bus, z1_n_branch, z1_n_gen, z1_n_batt] = findZoneDimension(z1.Bus_id, z1.Branch_idx,z1.GenOn_idx, z1.BattOn_idx);
+[z1.N_bus, z1.N_branch, z1.N_genOn, z1.N_battOn] = findZoneDimension(z1.Bus_id, z1.Branch_idx,z1.GenOn_idx, z1.BattOn_idx);
 
 z1.Sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
 z1_cb = 0.001; % conversion factor for battery power output
-z1.Batt_cst_power_reduc = z1_cb * ones(z1_n_batt,1); % TODO: needs to be changed afterwards, with each battery coef
+z1.Batt_cst_power_reduc = z1_cb * ones(z1.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 
-z1 = setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
+ z1 = setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
                 mapBus_id_e2i, mapGenOn_idx_e2i, z1.Sampling_time, z1.Batt_cst_power_reduc);
-
+%{
+ [z1.A, z1.Bc, z1.Bb, z1.Dg, z1.Dt, z1.Da] = dynamicSystem(basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
+               mapBus_id_e2i, mapGenOn_idx_e2i, z1.Sampling_time, z1.Batt_cst_power_reduc);
+ %}
+ 
 % Zone 2
-[z2_n_bus, z2_n_branch, z2_n_gen, z2_n_batt] = findZoneDimension(z2.Bus_id, z2.Branch_idx,z2.GenOn_idx, z2.BattOn_idx);
+[z2.N_bus, z2.N_branch, z2.N_genOn, z2.N_battOn] = findZoneDimension(z2.Bus_id, z2.Branch_idx,z2.GenOn_idx, z2.BattOn_idx);
 
 z2.Sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
 z2_cb = 0.001; % conversion factor for battery power output
-z2.Batt_cst_power_reduc = z2_cb * ones(z2_n_batt,1); % TODO: needs to be changed afterwards, with each battery coef
+z2.Batt_cst_power_reduc = z2_cb * ones(z2.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, z2.BattOn_idx,...
                 mapBus_id_e2i, mapGenOn_idx_e2i, z2.Sampling_time, z2.Batt_cst_power_reduc);
 
 %% Simulation initialization
+
+
+
 

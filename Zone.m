@@ -22,6 +22,11 @@ classdef Zone
         Branch_border_idx
         
         % Number of elements
+        N_bus
+        N_branch
+        N_genOn
+        N_battOn
+        
         
         %Dynamic Model Operator
         A   % state
