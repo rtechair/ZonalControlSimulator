@@ -9,7 +9,7 @@ classdef Zone
         Bus_int_id
 
         Branch_idx
-        % branch_int_idx % if no branch deleted, then branch_int_idx =
+        % if no branch deleted, then branch_int_idx =
         % branch_idx, thus unnecessary
         
         GenOn_idx
@@ -25,9 +25,13 @@ classdef Zone
     
     methods
         function obj= Zone(bus_id, basecase_int)
-            % create the zone, providing the buses, branches, gen and batt of
+            % create the zone, providing the buses, branches, gen and batt ON of
             % the zone, alongside the buses and branches at the border of
-            % the zone.
+            % the zone
+            arguments
+                bus_id (:,1) {mustBeInteger} % column vector
+                basecase_int struct % MatPower Case struct
+            end
             obj.Bus_id = bus_id;
             basecase = basecase_int.order.ext;
             [obj.Branch_idx, obj.Branch_border_idx] = findInnerAndBorderBranch(bus_id, basecase);
@@ -36,6 +40,15 @@ classdef Zone
         end
         
         function obj = SetInteriorProperties(obj, mapBus_id_e2i, mapGenOn_idx_e2i)
+            % Set the interior properties of the zone with regards to the internal basecase, i.e.
+            % Bus_int_id: the internal indices of Buses
+            % GenOn_int_idx: the internal indices of generators ON
+            % BattOn_int_idx: the internal indices of batteries ON
+            arguments
+                obj
+                mapBus_id_e2i (:,1) {mustBeInteger} % (sparse) double column matrix, serving as map
+                mapGenOn_idx_e2i (:,1) {mustBeInteger} % (sparse) double column matrix
+            end
             obj.Bus_int_id = mapBus_id_e2i(obj.Bus_id);
             obj.GenOn_int_idx = mapGenOn_idx_e2i(obj.GenOn_idx);
             obj.BattOn_int_idx = mapGenOn_idx_e2i(obj.BattOn_idx);
@@ -45,7 +58,6 @@ classdef Zone
 end
 
 %{
-
 https://www.mathworks.com/help/matlab/matlab_oop/create-a-simple-class.html
 https://www.mathworks.com/help/matlab/matlab_oop/specifying-methods-and-functions.html
 https://www.mathworks.com/help/matlab/matlab_oop/properties.html
@@ -58,5 +70,4 @@ https://www.mathworks.com/help/matlab/matlab_oop/example-representing-structured
 %{
 issue with outputs:
 https://stackoverflow.com/questions/25906833/matlab-multiple-variable-assignments
-
 %}
