@@ -20,7 +20,20 @@ classdef Zone
         % peripheral / nearby zone
         Bus_border_id
         Branch_border_idx
-
+        
+        % Number of elements
+        
+        %Dynamic Model Operator
+        A   % state
+        Bc  % control curtailment
+        Bb  % control battery
+        Dg  % disturbance from power generation variation
+        Dt  % disturbance from power transmission variation
+        Da  % disturbance from power availibity variation
+        
+        % Other
+        Sampling_time
+        Batt_cst_power_reduc
     end
     
     methods
@@ -39,7 +52,7 @@ classdef Zone
             [obj.GenOn_idx, obj.BattOn_idx] = findGenAndBattOnInZone(bus_id, basecase);
         end
         
-        function obj = SetInteriorProperties(obj, mapBus_id_e2i, mapGenOn_idx_e2i)
+        function obj = setInteriorIdAndIdx(obj, mapBus_id_e2i, mapGenOn_idx_e2i)
             % Set the interior properties of the zone with regards to the internal basecase, i.e.
             % Bus_int_id: the internal indices of Buses
             % GenOn_int_idx: the internal indices of generators ON
@@ -52,6 +65,19 @@ classdef Zone
             obj.Bus_int_id = mapBus_id_e2i(obj.Bus_id);
             obj.GenOn_int_idx = mapGenOn_idx_e2i(obj.GenOn_idx);
             obj.BattOn_int_idx = mapGenOn_idx_e2i(obj.BattOn_idx);
+        end
+        
+        function obj = setDynamicSystem(obj, basecase_int, bus_id, branch_idx, genOn_idx, battOn_idx,...
+                mapBus_id_e2i, mapGenOn_idx_e2i, sampling_time, batt_cst_power_reduc)
+            % Set the dynamic model operators:
+            % A: state               
+            % Bc: control curtailment
+            % Bb: control battery
+            % Dg: disturbance from power generation variation
+            % Dt: disturbance from power transmission variation
+            % Da: disturbance from power availibity variation
+            [obj.A, obj.Bc, obj.Bb, obj.Dg, obj.Dt, obj.Da] = dynamicSystem(basecase_int, bus_id, branch_idx, genOn_idx, battOn_idx,...
+                mapBus_id_e2i, mapGenOn_idx_e2i, sampling_time, batt_cst_power_reduc);
         end
             
     end
