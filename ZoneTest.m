@@ -58,7 +58,7 @@ Bus_border_int_id_ref = [347;1614;2093;4168;4234;4545];
 Branch_border_idx_ref = [767;3194;3904;6280;8479;8480;8567];
 
 %% Test 7: zone VTV - Generator
-Gen_idx_ref = [1302;1303;1304];
+Gen_idx_ref = [1302;1303;1304]; % notice gen_idx = 466 is in the zone but not ON so not considered
 Gen_int_idx_ref = [406;407;408];
 
 %% Test 8: zone VTV - Battery

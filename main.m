@@ -101,77 +101,21 @@ the generators are accessed through their idx, they do not have an id
 
 %% CONVERSION OF ZONE 1
 
-% TODO: ensure zone1_bus is a column vector
 
 % create the object associated to the zone
-% TODO: the Zone object is not working anymore as based on the
-% containers.Map structure
 
 % get the rest of the info about the zone
+%{
 [zone1_branch_inner_idx, zone1_branch_border_idx] = findInnerAndBorderBranch(zone1_bus_id, basecase);
 zone1_bus_border_id = findBorderBus(zone1_bus_id, zone1_branch_border_idx, basecase);
 [zone1_gen_idx, zone1_battery_idx] = findGenAndBattOnInZone(zone1_bus_id, basecase);
+%}
 
 z1 = Zone(zone1_bus_id, basecase_int);
 z2 = Zone(zone2_bus_id, basecase_int);
 
-z1 = SetInteriorProperties( z1, mapBus_id_e2i, mapGenOn_idx_e2i);
-z2 = SetInteriorProperties( z2, mapBus_id_e2i, mapGenOn_idx_e2i);
-
-
-% BUS
-% recall zone1_bus =                                    [1445 2076 2135 2745 4720 10000]'
-zone1_bus_idx = mapBus_id2idx(zone1_bus_id); %             [1445;2076;2135;2743;4717;6469]
-zone1_bus_int_id = mapBus_id_e2i(zone1_bus_id); %          [1445;2076;2135;2743;4717;6469]
-zone1_bus_back_id = mapBus_id_i2e(zone1_bus_int_id); %  [1445;2076;2135;2745;4720;10000]
-zone1_bus_back_idx = mapBus_id2idx(zone1_bus_back_id);% [1445;2076;2135;2743;4717;6469]
-
-% recall zone1_bus_border_id =                                          [1446;2504;2694;4231;5313;5411]   
-zone1_bus_border_idx = mapBus_id2idx(zone1_bus_border_id); %            [1446;2503;2692;4229;5310;5408]
-zone1_bus_border_int_id = mapBus_id_e2i(zone1_bus_border_id); %         [1446;2503;2692;4229;5310;5408]
-zone1_bus_border_back_id = mapBus_id_i2e(zone1_bus_border_int_id); %    [1446;2504;2694;4231;5313;5411]
-zone1_bus_border_back_idx = mapBus_id2idx(zone1_bus_border_back_id); %  [1446;2503;2692;4229;5310;5408]
-
-% BRANCH
-% nothing to change
-
-% GEN
-% recall zone1_gen_idx =                                    [1297;1299;1300;1301]
-zone1_gen_int_idx = mapGenOn_idx_e2i(zone1_gen_idx); %      [401;403;404;405]
-zone1_gen_back_idx = mapGenOn_idx_i2e(zone1_gen_int_idx); % [1297;1299;1300;1301]
-
-% recall zone1_battery_idx =                                        1298
-zone1_battery_int_idx = mapGenOn_idx_e2i(zone1_battery_idx); %      402
-zone1_battery_back_idx = mapGenOn_idx_i2e(zone1_battery_int_idx); % 1298
-
-%% CONVERSION OF ZONE 2
-% BUS
-% recall zone2_bus =                                    [2506 4169 4546 4710 4875 4915]'
-zone2_bus_idx = mapBus_id2idx(zone2_bus_id); %             [2505;4167;4543;4707;4872;4912]               
-zone2_bus_int_id = mapBus_id_e2i(zone2_bus_id); %          [2505;4167;4543;4707;4872;4912]        
-zone2_bus_back_id = mapBus_id_i2e(zone2_bus_int_id); %  [2506;4169;4546;4710;4875;4915]   
-zone2_bus_back_idx = mapBus_id2idx(zone2_bus_back_id);% [2505;4167;4543;4707;4872;4912]
-
-%zone2 = Zone(zone2_bus, basecase, basecase_int, mapBus_id2idx, mapBus_idx2id);
-[zone2_branch_inner_idx, zone2_branch_border_idx] = findInnerAndBorderBranch(zone2_bus_id, basecase);
-zone2_bus_border_id = findBorderBus(zone2_bus_id, zone2_branch_border_idx, basecase);
-[zone2_gen_idx, zone2_battery_idx] = findGenAndBattOnInZone(zone2_bus_id, basecase);
-
-% recall zone2_bus_border_id =                                          [347;1614;2093;4170;4236;4548]                                       
-zone2_bus_border_idx = mapBus_id2idx(zone2_bus_border_id); %            [347;1614;2093;4168;4234;4545]       
-zone2_bus_border_int_id = mapBus_id_e2i(zone2_bus_border_id); %         [347;1614;2093;4168;4234;4545]    
-zone2_bus_border_back_id = mapBus_id_i2e(zone2_bus_border_int_id); %    [347;1614;2093;4170;4236;4548]  
-zone2_bus_border_back_idx = mapBus_id2idx(zone2_bus_border_back_id); %  [347;1614;2093;4168;4234;4545]
-
-% GEN
-% recall zone2_gen_idx = [466;1302;1303;1304] notice the gen_idx = 466 is
-% in the zone but not online so not considered
-zone2_gen_int_idx = mapGenOn_idx_e2i(zone2_gen_idx); % [406;407;408]     
-zone2_gen_back_idx = mapGenOn_idx_i2e(zone2_gen_int_idx);
-
-% zone2_battery_idx = 1305
-zone2_battery_int_idx = mapGenOn_idx_e2i(zone2_battery_idx); %  409
-zone2_battery_back_idx = mapGenOn_idx_i2e(zone2_battery_int_idx); % 1305
+z1 = setInteriorIdAndIdx( z1, mapBus_id_e2i, mapGenOn_idx_e2i);
+z2 = setInteriorIdAndIdx( z2, mapBus_id_e2i, mapGenOn_idx_e2i);
 
 %% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
 %{
@@ -184,24 +128,25 @@ cf Powertech paper
 [n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
 % Zone 1
-[zone1_n_bus, zone1_n_branch, zone1_n_gen, zone1_n_batt] = findZoneDimension(zone1_bus_id, zone1_branch_inner_idx,zone1_gen_idx, zone1_battery_idx);
+[z1_n_bus, z1_n_branch, z1_n_gen, z1_n_batt] = findZoneDimension(z1.Bus_id, z1.Branch_idx,z1.GenOn_idx, z1.BattOn_idx);
 
-zone1_sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
-zone1_batt_cst_power_reduc = 0.001 * ones(zone1_n_batt,1); % TODO: needs to be changed afterwards, with each battery coef
+z1.Sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
+z1_cb = 0.001; % conversion factor for battery power output
+z1.Batt_cst_power_reduc = z1_cb * ones(z1_n_batt,1); % TODO: needs to be changed afterwards, with each battery coef
 
-[z1_A,z1_Bc,z1_Bb,z1_Dg,z1_Dt,z1_Da] = dynamicSystem(basecase_int, zone1_bus_id, ...
-    zone1_branch_inner_idx, zone1_gen_idx, zone1_battery_idx, mapBus_id_e2i, mapGenOn_idx_e2i,...
-    zone1_sampling_time, zone1_batt_cst_power_reduc);
+
+z1 = setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
+                mapBus_id_e2i, mapGenOn_idx_e2i, z1.Sampling_time, z1.Batt_cst_power_reduc);
 
 % Zone 2
-[zone2_n_bus, zone2_n_branch, zone2_n_gen, zone2_n_batt] = findZoneDimension(zone2_bus_id, zone2_branch_inner_idx,zone2_gen_idx, zone2_battery_idx);
+[z2_n_bus, z2_n_branch, z2_n_gen, z2_n_batt] = findZoneDimension(z2.Bus_id, z2.Branch_idx,z2.GenOn_idx, z2.BattOn_idx);
 
-zone2_sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
-zone2_batt_cst_power_reduc = 0.001 * ones(zone2_n_batt,1); % TODO: needs to be changed afterwards, with each battery coef
+z2.Sampling_time = 1; % sec, TODO look at the previous main, sampling_time = 5 and simulation_time_unit = 1, I do not understand
+z2_cb = 0.001; % conversion factor for battery power output
+z2.Batt_cst_power_reduc = z2_cb * ones(z2_n_batt,1); % TODO: needs to be changed afterwards, with each battery coef
 
-[z2_A,z2_Bc,z2_Bb,z2_Dg,z2_Dt,z2_Da] = dynamicSystem(basecase_int, zone2_bus_id, ...
-    zone2_branch_inner_idx, zone2_gen_idx, zone2_battery_idx, mapBus_id_e2i, mapGenOn_idx_e2i,...
-    zone2_sampling_time, zone2_batt_cst_power_reduc);
+z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, z2.BattOn_idx,...
+                mapBus_id_e2i, mapGenOn_idx_e2i, z2.Sampling_time, z2.Batt_cst_power_reduc);
 
 %% Simulation initialization
 
