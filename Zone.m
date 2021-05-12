@@ -27,6 +27,7 @@ classdef Zone
         N_genOn
         N_battOn
         
+        N_iteration
         
         %Dynamic Model Operator
         A   % state
@@ -35,6 +36,10 @@ classdef Zone
         Dg  % disturbance from power generation variation
         Dt  % disturbance from power transmission variation
         Da  % disturbance from power availibity variation
+        
+        % Data
+        PA_sim
+        DeltaPA_sim
         
         % Other
         Sampling_time

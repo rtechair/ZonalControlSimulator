@@ -117,13 +117,15 @@ z2 = Zone(zone2_bus_id, basecase_int);
 z1 = setInteriorIdAndIdx( z1, mapBus_id_e2i, mapGenOn_idx_e2i);
 z2 = setInteriorIdAndIdx( z2, mapBus_id_e2i, mapGenOn_idx_e2i);
 
+
+
 %% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
 %{
 x = [Fij Pc Pb Eb Pg ]'     uc = DeltaPc      ub =DeltaPb    w = DeltaPg      h = DeltaPT
 The model is described by the equations x(k+1) = A*x(k) + Bc*DPC(k-tau_c) + Bb*DPB(k-tau_b) + Dg*DPG(k) + Dn*DPT(k) + Da*DPA(k)
 cf Powertech paper
 %}
-
+% External and internal basecase
 [n_bus, n_branch, n_gen, n_batt] = findBasecaseDimension(basecase); % [6469, 9001, 1228, 77]
 [n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
@@ -152,27 +154,15 @@ z2.Batt_cst_power_reduc = z2_cb * ones(z2.N_battOn,1); % TODO: needs to be chang
 z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, z2.BattOn_idx,...
                 mapBus_id_e2i, mapGenOn_idx_e2i, z2.Simulation_time_unit, z2.Batt_cst_power_reduc);
 
+
 %% Simulation initialization
 
 %% Compute available power (PA) and delta PA using real data
 % all PA and DeltaPA values are computed prior to the simulation
 
-power_available_percentage_realtime = table2array(readtable('tauxDeChargeMTJLMA2juillet2018.txt'));
-
 z1.Sampling_time = 5;
+z1 = getPAandDeltaPA(z1, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase);
 
-% Sample the available power w.r.t. the selected sampling time
-range_idx = 1 : z1.Sampling_time : size(power_available_percentage_realtime,1);
-power_available_percentage_simulationtime = power_available_percentage_realtime(range_idx);
-
-% size of the percentage power vector
-n_power_available_percentage = size(range_idx,2);
-
-
-
-
-
-
-
-
+z2.Sampling_time = 5;
+z2 = getPAandDeltaPA(z2, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase);
 
