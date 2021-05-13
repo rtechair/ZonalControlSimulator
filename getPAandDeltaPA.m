@@ -4,7 +4,7 @@ function [zone] = getPAandDeltaPA(zone, filename_charging_rate, basecase, durati
         filename_charging_rate {mustBeTextScalar}
         % zone.Sampling_time (1,1) {mustBePositive}
         basecase struct
-        duration (1,1) double {mustBeInteger} = 600; % sec
+        duration (1,1) double {mustBeInteger}; % sec
     end
     % check the property zone.Sampling_time has been initialized
     if isempty(zone.Sampling_time)
@@ -52,15 +52,15 @@ function [zone] = getPAandDeltaPA(zone, filename_charging_rate, basecase, durati
     % Compute the Power Available for the simulation: PA(k)
     maxPA_of_genOn = basecase.gen(zone.GenOn_idx, 9);
     % notice the '+1', in order to have 'n' intervals /variations (DeltaPA), 'n+1' positions/values (PA) are required
-    zone.PA_sim = zeros(zone.N_genOn, zone.N_iteration + 1);
+    zone.PA = zeros(zone.N_genOn, zone.N_iteration + 1);
     for r=1:zone.N_genOn
         tmp_range_col = PA_starting_time(r) : PA_starting_time(r)+zone.N_iteration; % and not -1, because in order to have 'n_iteration' DeltaPA values, 'n_iteration + 1' PA values are required
-        zone.PA_sim(r,:) = maxPA_of_genOn(r,1) * power_available_rate_simulationtime(tmp_range_col,1)';
+        zone.PA(r,:) = maxPA_of_genOn(r,1) * power_available_rate_simulationtime(tmp_range_col,1)';
     end
 
     % compute DeltaPA as DeltaPA(k)=PA(k+1)-PA(k)
-    zone.DeltaPA_sim = zeros(zone.N_genOn, zone.N_iteration);
+    zone.DeltaPA = zeros(zone.N_genOn, zone.N_iteration);
     for k = 1:zone.N_iteration
-        zone.DeltaPA_sim(:, k) = zone.PA_sim(:,k+1) - zone.PA_sim(:,k);
+        zone.DeltaPA(:, k) = zone.PA(:,k+1) - zone.PA(:,k);
     end
 end

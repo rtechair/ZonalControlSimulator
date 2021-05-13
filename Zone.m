@@ -37,9 +37,10 @@ classdef Zone
         Dt  % disturbance from power transmission variation
         Da  % disturbance from power availibity variation
         
-        % Data
-        PA_sim
-        DeltaPA_sim
+        % Variable
+        PA
+        DeltaPA
+        DeltaPC
         
         % Other
         Sampling_time

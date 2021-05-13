@@ -159,10 +159,17 @@ z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, 
 
 %% Compute available power (PA) and delta PA using real data
 % all PA and DeltaPA values are computed prior to the simulation
-
+duration = 600;
 z1.Sampling_time = 5;
-z1 = getPAandDeltaPA(z1, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase);
+z1 = getPAandDeltaPA(z1, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase, duration);
 
 z2.Sampling_time = 5;
-z2 = getPAandDeltaPA(z2, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase);
+z2 = getPAandDeltaPA(z2, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase, duration);
+
+
+%% Set some preconfigurated curtailment
+
+
+
+
 
