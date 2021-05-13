@@ -161,6 +161,8 @@ z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, 
 % all PA and DeltaPA values are computed prior to the simulation
 duration = 600;
 z1.Sampling_time = 5;
+
+z1.N_iteration = floor(duration / z1.Sampling_time);
 z1 = getPAandDeltaPA(z1, 'tauxDeChargeMTJLMA2juillet2018.txt',basecase, duration);
 
 z2.Sampling_time = 5;

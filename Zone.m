@@ -1,12 +1,14 @@
-classdef Zone
+classdef Zone < handle
+    % Now the class inherits 'handle', so it is a handle class and not a
+    % value class
     properties
         % the properties starts a majuscule only because the following tutorial
         % does the same way: https://www.mathworks.com/help/matlab/matlab_oop/example-representing-structured-data.html
         
         % elements of the inner zone
-        Bus_id
-        Bus_idx
-        Bus_int_id
+        Bus_id (:,1) {mustBeInteger}
+        Bus_idx (:,1) {mustBeInteger}
+        Bus_int_id 
 
         Branch_idx
         % if no branch deleted, then branch_int_idx =
@@ -22,12 +24,12 @@ classdef Zone
         Branch_border_idx
         
         % Number of elements
-        N_bus
-        N_branch
-        N_genOn
-        N_battOn
+        N_bus (1,1) {mustBeInteger}
+        N_branch (1,1) {mustBeInteger}
+        N_genOn (1,1) {mustBeInteger}
+        N_battOn (1,1) {mustBeInteger}
         
-        N_iteration
+        N_iteration (1,1) {mustBeInteger}
         
         %Dynamic Model Operator
         A   % state
@@ -54,7 +56,7 @@ classdef Zone
             % the zone, alongside the buses and branches at the border of
             % the zone
             arguments
-                bus_id (:,1) {mustBeInteger} % column vector
+                bus_id (:,1) {mustBeInteger}
                 basecase_int struct % MatPower Case struct
             end
             obj.Bus_id = bus_id;
@@ -90,19 +92,25 @@ classdef Zone
             % Da: disturbance from power availibity variation
             [obj.A, obj.Bc, obj.Bb, obj.Dg, obj.Dt, obj.Da] = dynamicSystem(basecase_int, bus_id, branch_idx, genOn_idx, battOn_idx,...
                 mapBus_id_e2i, mapGenOn_idx_e2i, sampling_time, batt_cst_power_reduc);
-        end
+        end   
             
     end
 end
 
 %{
+Help regarding Matlab classes:
 https://www.mathworks.com/help/matlab/matlab_oop/create-a-simple-class.html
 https://www.mathworks.com/help/matlab/matlab_oop/specifying-methods-and-functions.html
+https://www.mathworks.com/help/matlab/matlab_oop/property-access-methods.html
 https://www.mathworks.com/help/matlab/matlab_oop/properties.html
 https://www.mathworks.com/help/matlab/ref/classdef.html
 
 https://www.mathworks.com/matlabcentral/answers/350158-convert-a-struct-to-an-object-of-a-class
 https://www.mathworks.com/help/matlab/matlab_oop/example-representing-structured-data.html
+
+https://www.mathworks.com/help/matlab/matlab_oop/comparing-handle-and-value-classes.html
+https://www.mathworks.com/help/matlab/matlab_oop/validate-property-values.html
+https://stackoverflow.com/questions/51294245/why-do-some-matlab-class-methods-require-apparently-unnecessary-output-argumen
 %}
 
 %{
