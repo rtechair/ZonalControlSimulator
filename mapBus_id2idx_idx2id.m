@@ -1,4 +1,4 @@
-function [mapBus_id2idx, mapBus_idx2id] = getMapBus_id2idx_idx2id(basecase)
+function [mapBus_id2idx, mapBus_idx2id] = MapBus_id2idx_idx2id(basecase)
     % Return 2 matrices serving as maps bus_id <-> bus_idx for the external basecase: 
     % 1) a sparse matrix serving as a bus map from id to index in the
     % basecase.bus
@@ -15,7 +15,7 @@ function [mapBus_id2idx, mapBus_idx2id] = getMapBus_id2idx_idx2id(basecase)
     bus_idx = 1:n_bus;
     column = ones(n_bus, 1);
     % construct maps in both directions
-    mapBus_id2idx = sparse(bus_id, column, bus_idx);
-    mapBus_idx2id = bus_id;
+    mapBus_id2idx = sparse(bus_id, column, bus_idx); % sparse column vector
+    mapBus_idx2id = bus_id; % full column vector
 end
 
