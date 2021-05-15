@@ -1,12 +1,12 @@
 classdef ZoneTest < matlab.unittest.TestCase
     methods (Test)
-        function testErrorBusNotInBasecase(testCase)
+        function errorBusNotInBasecase(testCase)
             basecase = loadcase('case5');
             bus_id_wrong = [ 2 4 6]'; % bus_id = 6 does not exist in reality
             testCase.verifyError(@()Zone(bus_id_wrong, basecase),'mustBusBeFromBasecase:busNotFromBasecase')
         end
         
-        function testNoErrorBusInBasecase(testCase)
+        function noErrorBusInBasecase(testCase)
             basecase = loadcase('case5');
             bus_id = [ 2 4 5]'; % all buses exist
             testCase.verifyWarningFree(@()Zone(bus_id, basecase))
