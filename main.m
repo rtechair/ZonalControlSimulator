@@ -57,9 +57,9 @@ if isBranchDeleted
     disp('a branch has been deleted, nothing has been made to handle this situation, the code should not work')
 end
 % bus map
-[mapBus_id2idx, mapBus_idx2id] = MapBus_id2idx_idx2id(basecase);
-mapBus_id_e2i = basecase_int.order.bus.e2i; % sparse matrix
-mapBus_id_i2e = basecase_int.order.bus.i2e; % continuous indexing matrix
+[mapBus_id2idx, mapBus_idx2id] = mapBus_id2idx_idx2id(basecase);
+mapBus_id_e2i = basecase_int.order.bus.e2i; % sparse column vector
+mapBus_id_i2e = basecase_int.order.bus.i2e; % full column vector
 
 % online gen map, this include batteries
 [mapGenOn_idx_e2i, mapGenOn_idx_i2e] = mapGenOn_idx_e2i_i2e(basecase_int);
