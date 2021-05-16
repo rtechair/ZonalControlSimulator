@@ -9,9 +9,14 @@ function [isBusDeleted, isBranchDeleted] = isBusOrBranchDeleted(basecase_int)
     % the exterior basecase
     % isBranchDeleted: boolean, if there is at least a branch deleted compared to
     % the exterior basecase
+    arguments
+        basecase_int struct {mustBeInternalBasecase(basecase_int)}
+    end
+    
     
     % a bus is deleted if the number of off buses >= 1
     isBusDeleted = size(basecase_int.order.bus.status.off,1) ~= 0;
     % a branch is deleted if the number of off branches >= 1
     isBranchDeleted = size(basecase_int.order.branch.status.off,1) ~= 0;
     
+end
