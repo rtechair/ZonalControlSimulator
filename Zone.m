@@ -42,7 +42,15 @@ classdef Zone < handle
         % Variable
         PA
         DeltaPA
+        PB
+        DeltaPB
+        PC
         DeltaPC
+        PG
+        DeltaPG
+        PT
+        Fij
+        
         
         % Other
         Sampling_time (1,1) {mustBeInteger, mustBeNonempty}
@@ -58,8 +66,7 @@ classdef Zone < handle
             arguments
                 basecase struct % MatPower Case struct
                 bus_id (:,1) {mustBeInteger, mustBeNonempty, mustBusBeFromBasecase(bus_id, basecase)}
-            end
-                
+            end            
             obj.Bus_id = bus_id;
             [obj.Branch_idx, obj.Branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
             obj.Bus_border_id = findBorderBus(basecase, bus_id, obj.Branch_border_idx);
