@@ -1,16 +1,15 @@
-function [zone] = getPAandDeltaPA(zone, filename_charging_rate, basecase, duration)
+function [zone] = getPAandDeltaPA(basecase, zone, filename_charging_rate)
     arguments
+        basecase struct
         zone {mustBeA(zone, 'Zone')}
         filename_charging_rate {mustBeTextScalar}
-        % zone.Sampling_time (1,1) {mustBePositive}
-        basecase struct
-        duration (1,1) double {mustBeInteger}; % sec
     end
     % check the property zone.Sampling_time has been initialized
     if isempty(zone.Sampling_time)
         error(' the property Sampling_time has not been initialized, initialize it before using getPAandDeltaPA function')
     end
-
+    mustBePositive(zone.N_iteration); % check zone.N_iteration has been computed
+    
     % The property zone.GenOn_idx exists because it is computed during the construction of a Zone object
 
     % check the property zone.N_genOn has been initialized, if not compute it
@@ -37,7 +36,6 @@ function [zone] = getPAandDeltaPA(zone, filename_charging_rate, basecase, durati
     % size of the percentage power vector
     n_sample_power_available_rate_realtime= size(range_idx,2);
 
-    zone.N_iteration = floor(duration / zone.Sampling_time);
 
     if zone.N_iteration > n_sample_power_available_rate_realtime
         disp('Error, the number of iterations of the simulation is greater than the number of samples of data of power available')
