@@ -1,7 +1,7 @@
-function [zone] = getPAandDeltaPA(basecase, zone, filename_charging_rate)
+function zone = getPAandDeltaPA(zone, basecase, filename_charging_rate)
     arguments
-        basecase struct
         zone {mustBeA(zone, 'Zone')}
+        basecase struct
         filename_charging_rate {mustBeTextScalar}
     end
     % check the property zone.Sampling_time has been initialized
