@@ -1,10 +1,9 @@
-function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn, duration)
+function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn)
     arguments
         zone {mustBeA(zone, 'Zone')}
         instant (:,1) % column vector, if row vector given, this converts it into a column vector, cf. https://www.mathworks.com/help/matlab/ref/arguments.html
         curtailment (:,:)
         maxPA_per_genOn (:,1) % column vector
-        duration (1,1) double {mustBeInteger}; % sec
     end
     
     %{
@@ -22,18 +21,11 @@ function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn, duration
     
     %% Handling error
     
-    %TODO check if zone.N_iteration and when it is computed
-    
+    mustBePositive(zone.N_iteration); % check zone.N_iteration has been computed
     if isempty(zone.N_genOn)
         error('compute Zone.N_genOn using the findZoneDimension function, prior to using setGivenCurtailment')
     end
     
-    if isempty(zone.N_iteration)
-        if isempty(zone.Sampling_time)
-        error(' the property Sampling_time has not been initialized, initialize it before using setDeltaPC function')
-        else
-        end
-    end
             
     
     if size(maxPA_per_genOn,1) ~= zone.N_genOn
@@ -53,7 +45,7 @@ function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn, duration
     
     % initialize DeltaPC if necessary
     if isempty(zone.DeltaPC)
-        zone.DeltaPC = zeros(zone.N_genOn,1);
+        zone.DeltaPC = zeros(zone.N_genOn,zone.N_iteration);
     end
     
     instant_to_modify = floor(zone.N_iteration * instant);
@@ -63,7 +55,7 @@ function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn, duration
         zone.DeltaPC(:,instant_to_modify) = curtailment .* maxPA_per_genOn;
     else
         % case 1 & 2 & 3
-        zone.DeltaPC(:,instant_to_modify) = curtailment .* repmat(maxPA_per_gen, 1, n_instant);
+        zone.DeltaPC(:,instant_to_modify) = curtailment .* repmat(maxPA_per_genOn, 1, n_instant);
     end
     
     %TODO check if the distinction is necessary, I believe all for cases
