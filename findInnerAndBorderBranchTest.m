@@ -1,22 +1,36 @@
 classdef findInnerAndBorderBranchTest < matlab.unittest.TestCase
     methods (Test)
+        %% Error
+        function errorNoBus(testCase)
+            basecase = loadcase('case5');
+            bus_id = [];
+            testCase.verifyError(@() findInnerAndBorderBranch(basecase, bus_id), 'MATLAB:validators:mustBeNonempty')
+        end
+        
         function errorBusNotInBasecase(testCase)
             basecase = loadcase('case5');
             bus_id_wrong = [ 4 5 6]; % bus id = 6 does not exist
-            testCase.verifyError(@()findInnerAndBorderBranch(bus_id_wrong, basecase),'mustBusBeFromBasecase:busNotFromBasecase')
+            testCase.verifyError(@()findInnerAndBorderBranch(basecase, bus_id_wrong),'mustBusBeFromBasecase:busNotFromBasecase')
         end
             
         
         function errorBusNotInteger(testCase)
             basecase = loadcase('case5');
             bus_id_wrong = [ 4.5 5 ]; % bus_id is integer
-            testCase.verifyError(@()findInnerAndBorderBranch(bus_id_wrong, basecase),'MATLAB:validators:mustBeInteger')
+            testCase.verifyError(@()findInnerAndBorderBranch(basecase, bus_id_wrong),'MATLAB:validators:mustBeInteger')
         end 
         
+        function errorBusNotVector(testCase)
+            basecase = loadcase('case5');
+            bus_id_wrong = [1 2; 3 4]; % 2x2 matrix
+            testCase.verifyError(@() findInnerAndBorderBranch(basecase, bus_id_wrong), 'MATLAB:validation:IncompatibleSize')
+        end
+        
+        %% Special case
         function noInnerBranch(testCase)
             basecase = loadcase('case5');
             bus_id = 3;
-            [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(bus_id, basecase);
+            [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
             expected_inner = find([0;0]==1); % 0x1 empty double column vector
             expected_border = [ 4 5]';
             testCase.verifyEqual(branch_inner_idx, expected_inner) % actual value: 0x1 empty double column vector
@@ -26,7 +40,7 @@ classdef findInnerAndBorderBranchTest < matlab.unittest.TestCase
         function noBorderBranch(testCase)
             basecase = loadcase('case9');
             bus_id = (1:size(basecase.bus,1))'; % all buses
-            [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(bus_id, basecase);
+            [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
             expected_inner = (1: size(basecase.branch,1))'; % all branches
             expected_border = find([0;0]==1); % 0x1 empty double column vector
             testCase.verifyEqual(branch_inner_idx, expected_inner) 
@@ -36,7 +50,7 @@ classdef findInnerAndBorderBranchTest < matlab.unittest.TestCase
         function case5Bus3_4(testCase)
             basecase = loadcase('case5');
             bus_id = [3 4];
-            [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(bus_id, basecase);
+            [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
             expected_inner = 5;
             expected_border = [ 2 4 6]';
             testCase.verifyEqual(branch_inner_idx, expected_inner)

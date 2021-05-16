@@ -1,4 +1,4 @@
-function [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(bus_zone_id, basecase)
+function [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(basecase, bus_zone_id)
     % Given a zone with its buses id, plus the basecase, return the column
     % vectors of the branch indices in the basecase, of the branches within the zone and the branches at its
     % border, i.e. both end buses within the zone and only 1 end bus within
@@ -9,13 +9,11 @@ function [branch_inner_idx, branch_border_idx] = findInnerAndBorderBranch(bus_zo
     %% Output:
     % branch_inner_idx: inner branches idx, for the basecase
     % branch_border_idx: border branches idx, for the basecase
-    arguments
-        bus_zone_id (:,1) {mustBeInteger, mustBeNonempty}
-        basecase struct
-    end
     
-    % check buses are present in the basecase
-    mustBusBeFromBasecase(bus_zone_id, basecase)
+    arguments
+        basecase struct
+        bus_zone_id (:,1) {mustBeInteger, mustBeNonempty, mustBusBeFromBasecase(bus_zone_id, basecase)}
+    end
     
     % from the basecase, extract the branches' "from" bus and "to" bus info, for each branch (row) : [fbus, tbus]
     buses_of_branch = basecase.branch(:,[1 2]);
