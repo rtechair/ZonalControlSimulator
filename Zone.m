@@ -45,25 +45,24 @@ classdef Zone < handle
         DeltaPC
         
         % Other
-        Sampling_time
-        Simulation_time_unit
-        Batt_cst_power_reduc
+        Sampling_time (1,1) {mustBeInteger, mustBeNonempty}
+        Simulation_time_unit (1,1) {mustBeInteger, mustBeNonempty}
+        Batt_cst_power_reduc (1,1) {mustBeNonempty}
     end
     
     methods
-        function obj= Zone(bus_id, basecase)
+        function obj= Zone(basecase, bus_id)
             % create the zone, providing the buses, branches, gen and batt ON of
             % the zone, alongside the buses and branches at the border of
             % the zone
             arguments
-                bus_id (:,1) {mustBeInteger}
                 basecase struct % MatPower Case struct
+                bus_id (:,1) {mustBeInteger, mustBeNonempty, mustBusBeFromBasecase(bus_id, basecase)}
             end
-            mustBusBeFromBasecase(bus_id, basecase)
                 
             obj.Bus_id = bus_id;
-            [obj.Branch_idx, obj.Branch_border_idx] = findInnerAndBorderBranch(bus_id, basecase);
-            obj.Bus_border_id = findBorderBus(bus_id, obj.Branch_border_idx, basecase);
+            [obj.Branch_idx, obj.Branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
+            obj.Bus_border_id = findBorderBus(basecase, bus_id, obj.Branch_border_idx);
             [obj.GenOn_idx, obj.BattOn_idx] = findGenAndBattOnInZone(bus_id, basecase);
         end
         
