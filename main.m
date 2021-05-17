@@ -186,3 +186,6 @@ z2 = setPC(z2);
 
 %% Compute PB
 % DeltaPB has not been set however
+z1 = setPB(z1);
+z2 = setPB(z2);
+
