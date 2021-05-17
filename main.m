@@ -189,3 +189,18 @@ z2 = setPC(z2);
 z1 = setPB(z1);
 z2 = setPB(z2);
 
+%% Initialization
+
+z1 = setInitialPG(z1, z1_maxPA_of_genOn);
+z2 = setInitialPG(z2, z2_maxPA_of_genOn);
+
+% need to update both basecase and basecase_int with the initial PG values
+% updateGeneratorProduction
+% mpc.gen(genOn_idx,2) = valueP;
+% mpc_int.gen(genOn_int_idx,2) = valueP;
+
+
+
+
+
+
