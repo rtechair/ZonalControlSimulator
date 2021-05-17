@@ -80,12 +80,15 @@ classdef Zone < handle
             % BattOn_int_idx: the internal indices of batteries ON
             arguments
                 obj
-                mapBus_id_e2i (:,1) {mustBeInteger} % (sparse) double column matrix, serving as map
-                mapGenOn_idx_e2i (:,1) {mustBeInteger} % (sparse) double column matrix
+                mapBus_id_e2i (:,1) {mustBeInteger} % sparse double column matrix, serving as map
+                mapGenOn_idx_e2i (:,1) {mustBeInteger} % sparse double column matrix
             end
-            obj.Bus_int_id = mapBus_id_e2i(obj.Bus_id);
-            obj.GenOn_int_idx = mapGenOn_idx_e2i(obj.GenOn_idx);
-            obj.BattOn_int_idx = mapGenOn_idx_e2i(obj.BattOn_idx);
+            % because the maps are sparse matrix, the returned column vector is
+            % also sparsed, hence the use of 'full' function to obtain a
+            % full column vector
+            obj.Bus_int_id = full(mapBus_id_e2i(obj.Bus_id)); 
+            obj.GenOn_int_idx = full(mapGenOn_idx_e2i(obj.GenOn_idx));
+            obj.BattOn_int_idx = full(mapGenOn_idx_e2i(obj.BattOn_idx));
         end
         
         function obj = setDynamicSystem(obj, basecase_int, bus_id, branch_idx, genOn_idx, battOn_idx,...
