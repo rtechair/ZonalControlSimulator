@@ -199,6 +199,9 @@ z2 = setInitialPG(z2, z2_maxPA_of_genOn);
 % mpc.gen(genOn_idx,2) = valueP;
 % mpc_int.gen(genOn_int_idx,2) = valueP;
 
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, 1);
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z2, 1);
+
 
 
 
