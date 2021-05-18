@@ -50,6 +50,7 @@ classdef Zone < handle
         DeltaPG
         PT
         Fij
+        EB
         
         
         % Other

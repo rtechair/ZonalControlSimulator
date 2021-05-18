@@ -185,7 +185,7 @@ z1 = setPC(z1);
 z2 = setPC(z2);
 
 %% Compute PB
-% DeltaPB has not been set however
+% DeltaPB has not been set previously however
 z1 = setPB(z1);
 z2 = setPB(z2);
 
@@ -194,16 +194,65 @@ z2 = setPB(z2);
 z1 = setInitialPG(z1, z1_maxPA_of_genOn);
 z2 = setInitialPG(z2, z2_maxPA_of_genOn);
 
-% need to update both basecase and basecase_int with the initial PG values
-% updateGeneratorProduction
-% mpc.gen(genOn_idx,2) = valueP;
-% mpc_int.gen(genOn_int_idx,2) = valueP;
+% update both basecase and basecase_int with the initial PG values, due to
+% the generators On
+initialInstant = 1;
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, initialInstant);
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z2, initialInstant);
 
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, 1);
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z2, 1);
+% Similarly, update for the batteries On
+[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, initialInstant);
+[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z2, initialInstant);
+
+% matpower option for the runpf function, see help runpf and help mpoption
+% https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
+mpopt = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
+        'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
+        'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
+    
+[results, success] = runpf( basecase_int, mpopt); % https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+
+%% Extraction from results
+% TODO: check if matpower values fits the model, e.g. for PG =
+% results.gen(:,2), real power output,
+% if PG > 0, does it mean the power goes on the network or in the battery?
+%{
+IMPORTANT: 'results' are returned using 'basecase' data, not
+'basecase_int' even though the 'runpf' computation was done while
+providing the internal basecase
+%}
+% X = [ Fij PC PB EB PG PA]', 
+% dimension-wise: [ N_branch N_genOn N_battOn N_battOn N_genOn N_genOn] '
+X_0 = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn);
+
+% z1_Fij_K = results.branch(z1.Branch_idx, 14); % column 14 is PF: real power injected at "from" end bus
+
+% for the zone 1: EB_init = 750
+
+% PB = results.gen(zone.BattOn_idx, 2);
+% PG = results.gen(zone.GenOn_idx, 2);
+
+z1.EB = zeros(z1.N_battOn,1);
+z2.EB = zeros(z2.N_battOn,1);
+
+%{
+z2_Fij_K = results.branch(z1.Branch_idx, 14);
+z2_PB_K = results.gen(z1.BattOn_idx, 2);
+z2_PG_K = results.gen(z1.GenOn_idx,2);
+%}
+z1_X0 = initialXk(results, z1);
+z2_X0 = initialXk(results, z2);
 
 
 
 
-
-
+function Xk = initialXk(results, zone)
+    Fij = results.branch(zone.Branch_idx, 14); % column 14 is PF: real power injected at "from" end bus
+    PC = zone.PC(:,1);
+    PB = zone.PB(:,1);
+    EB = zone.EB(:,1);
+    PG = zone.PG(:,1);
+    PA = zone.PA(:,1);
+    Xk = [ Fij; PC; PB; EB; PG; PA];
+end
+    

@@ -4,6 +4,7 @@ function zone = setPC(zone)
     end
     if isempty(zone.DeltaPC)
         disp('create or fill DeltaPC before computing PC')
+        return
     end
     mustBePositive(zone.N_iteration); % check zone.N_iteration has been computed
     % there might be some instances where there will be no generators ON,
