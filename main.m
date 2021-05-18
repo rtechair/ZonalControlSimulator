@@ -223,7 +223,7 @@ providing the internal basecase
 %}
 % X = [ Fij PC PB EB PG PA]', 
 % dimension-wise: [ N_branch N_genOn N_battOn N_battOn N_genOn N_genOn] '
-X_0 = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn);
+% X_0 = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn, 1);
 
 % z1_Fij_K = results.branch(z1.Branch_idx, 14); % column 14 is PF: real power injected at "from" end bus
 
@@ -232,6 +232,7 @@ X_0 = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn);
 % PB = results.gen(zone.BattOn_idx, 2);
 % PG = results.gen(zone.GenOn_idx, 2);
 
+% initialize the energy in the batteries, as zeros
 z1.EB = zeros(z1.N_battOn,1);
 z2.EB = zeros(z2.N_battOn,1);
 
@@ -243,7 +244,34 @@ z2_PG_K = results.gen(z1.GenOn_idx,2);
 z1_X0 = initialXk(results, z1);
 z2_X0 = initialXk(results, z2);
 
+% set the initial values for PT(k) in x(k)
+z1.PT = getPT(results, z1);
+z2.PT = getPT(results, z2);
 
+z1.DeltaPT = zeros(z1.N_branch,1);
+z2.DeltaPT = zeros(z2.N_branch,1);
+
+
+
+function PT = getPT(results, zone)
+    arguments
+        results
+        zone {mustBeA(zone, 'Zone')}
+    end
+    % get the end bus id of the branch
+    fbus = results.branch(zone.Branch_border_idx,1);
+    tbus = results.branch(zone.Branch_border_idx,2);
+    % check what buses are in the zone
+    is_fbus_in_zone = ismember(fbus, zone.Bus_id);
+    is_tbus_in_zone = ismember(tbus, zone.Bus_id);
+    % get the power injection at the buses
+    powerInjection_at_fbus = results.branch(zone.Branch_border_idx, 14);
+    powerInjection_at_tbus = results.branch(zone.Branch_border_idx, 16);
+    % get the power injection at the buses only in the zone
+    PT_fbus = powerInjection_at_fbus(is_fbus_in_zone);
+    PT_tbus = powerInjection_at_tbus(is_tbus_in_zone);
+    PT = [PT_fbus; PT_tbus];
+end
 
 
 function Xk = initialXk(results, zone)
