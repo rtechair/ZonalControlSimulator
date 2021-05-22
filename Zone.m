@@ -39,7 +39,7 @@ classdef Zone < handle
         Dt  % disturbance from power transmission variation
         Da  % disturbance from power availibity variation
         
-        % Variable
+        % Variable and Storage of results
         PA
         DeltaPA
         PB
@@ -49,14 +49,16 @@ classdef Zone < handle
         PG
         DeltaPG
         PT
+        DeltaPT
         Fij
         EB
-        
         
         % Other
         Sampling_time (1,1) {mustBeInteger, mustBeNonempty}
         Simulation_time_unit (1,1) {mustBeInteger, mustBeNonempty}
         Batt_cst_power_reduc (1,1) {mustBeNonempty}
+        delay_batt (1,1) {mustBeInteger, mustBeNonempty}
+        maxPG 
     end
     
     methods
