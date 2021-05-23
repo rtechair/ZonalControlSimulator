@@ -57,8 +57,8 @@ classdef Zone < handle
         Sampling_time (1,1) {mustBeInteger, mustBeNonempty}
         Simulation_time_unit (1,1) {mustBeInteger, mustBeNonempty}
         Batt_cst_power_reduc (1,1) {mustBeNonempty}
-        delay_batt (1,1) {mustBeInteger, mustBeNonempty}
-        delay_curt (1,1) {mustBeInteger, mustBeNonempty}
+        Delay_batt (1,1) {mustBeInteger, mustBeNonempty}
+        Delay_curt (1,1) {mustBeInteger, mustBeNonempty}
         maxPG 
     end
     

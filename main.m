@@ -159,16 +159,27 @@ z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, 
 
 %% Simulation initialization
 
-%% Compute available power (PA) and delta PA using real data
-% all PA and DeltaPA values are computed prior to the simulation
 duration = 600;
 z1.Sampling_time = 5;
-
 z1.N_iteration = floor(duration / z1.Sampling_time);
-z1 = getPAandDeltaPA(z1, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
+z1.maxPG = basecase.gen(z1.GenOn_idx, 9);
+
+z1_delay_batt_sec = 1;
+z1_delay_curt_sec = 45;
+z1.Delay_batt = ceil(z1_delay_batt_sec/ z1.Sampling_time);
+z1.Delay_curt = ceil(z1_delay_curt_sec/ z1.Sampling_time);
+
 
 z2.Sampling_time = 5;
 z2.N_iteration = floor(duration / z2.Sampling_time);
+z2.maxPG = basecase.gen(z2.GenOn_idx, 9);
+
+%% Compute available power (PA) and delta PA using real data
+% all PA and DeltaPA values are computed prior to the simulation
+
+z1 = getPAandDeltaPA(z1, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
+
+
 z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
 
@@ -180,11 +191,11 @@ z1_maxPG_of_genOn = basecase.gen(z1.GenOn_idx, 9); % computed inside getPAandDel
 %PC(1) = 0; Other PC values will be computed online with DeltaPC values provided by the MPC
 
 z1.PC = zeros(z1.N_genOn, z1.N_iteration+1);
-z1.maxPG = basecase.gen(z1.GenOn_idx, 9);
+
 z1 = setDeltaPC(z1, [1/7 1/3 2/3], 0.2, z1.maxPG); 
 
 z2.PC = zeros(z2.N_genOn, z2.N_iteration+1);
-z2.maxPG = basecase.gen(z2.GenOn_idx, 9);
+
 z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2.maxPG); 
 
 %% Initialize PB and DeltaPB
@@ -196,6 +207,7 @@ z1.DeltaPB = zeros(z1.N_battOn, z1.N_iteration);
 %% Initialize PG and DeltaPG
 z1.PG = zeros(z1.N_genOn, z1.N_iteration+1);
 z1.DeltaPG = zeros(z1.N_genOn, z1.N_iteration);
+% Define PG(1)
 z1 = setInitialPG(z1);
 
 %% Initialize PT and DeltaPT
@@ -210,17 +222,17 @@ z1.EB = zeros(z1.N_battOn, z1.N_iteration+1);
 z1.Fij = zeros(z1.N_branch, z1.N_iteration+1);
 
 %% Initialization
+
 step = 1;
-
-
+initialInstant = true;
 % update both basecase and basecase_int with the initial PG values, due to
 % the generators On
-initialInstant = 1;
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, initialInstant);
+
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step);
 
 
 % Similarly, update for the batteries On
-[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, initialInstant);
+[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step);
 
 % matpower option for the runpf function, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
@@ -247,9 +259,6 @@ providing the internal basecase
 
 % for the zone 1: EB_init = 750
 
-
-% initialize the energy in the batteries, as zeros
-z1.EB = zeros(z1.N_battOn,z1.N_iteration+1);
 
 %{
 z2_Fij_K = results.branch(z1.Branch_idx, 14);
