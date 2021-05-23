@@ -175,34 +175,40 @@ z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 %% Set some preconfigurated curtailment DeltaPC
 z1_maxPA_of_genOn = basecase.gen(z1.GenOn_idx, 9); % computed inside getPAandDeltaPA, but can't be in setDeltaPC as basecase not provided
 z1 = setDeltaPC(z1, [1/7 1/3 2/3], 0.2, z1_maxPA_of_genOn); 
+z1.maxPG = basecase.gen(z1.GenOn_idx, 9);
 
 z2_maxPA_of_genOn = basecase.gen(z2.GenOn_idx, 9);
 z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2_maxPA_of_genOn);
 
-%% Compute PC
+%% Initialize PC and DeltaPC
+%PC(1) = 0; Other PC values will be computed online with DeltaPC values provided by the MPC
 
-z1 = setPC(z1);
-z2 = setPC(z2);
+z1.PC = zeros(z1.N_genOn, zone.N_iteration+1);
+z1.DeltaPC = zeros(z1.N_genOn, zone.N_iteration);
 
-%% Compute PB
+
+%% Initialize PB and DeltaPB
 % DeltaPB has not been set previously however
+
+z1.DeltaPB = zeros(z1.N_battOn, z1.N_iteration);
+z1.PB = zeros(z1.N_battOn, z1.N_iteration+1);
+%PB(1) = 0; which is already the case from the previous line
 z1 = setPB(z1);
-z2 = setPB(z2);
 
 %% Initialization
+step = 1;
 
-z1 = setInitialPG(z1, z1_maxPA_of_genOn);
-z2 = setInitialPG(z2, z2_maxPA_of_genOn);
+z1 = setInitialPG(z1);
+
 
 % update both basecase and basecase_int with the initial PG values, due to
 % the generators On
 initialInstant = 1;
 [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, initialInstant);
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z2, initialInstant);
+
 
 % Similarly, update for the batteries On
 [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, initialInstant);
-[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z2, initialInstant);
 
 % matpower option for the runpf function, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
@@ -229,58 +235,152 @@ providing the internal basecase
 
 % for the zone 1: EB_init = 750
 
-% PB = results.gen(zone.BattOn_idx, 2);
-% PG = results.gen(zone.GenOn_idx, 2);
 
 % initialize the energy in the batteries, as zeros
-z1.EB = zeros(z1.N_battOn,1);
-z2.EB = zeros(z2.N_battOn,1);
+z1.EB = zeros(z1.N_battOn,z1.N_iteration+1);
 
 %{
 z2_Fij_K = results.branch(z1.Branch_idx, 14);
 z2_PB_K = results.gen(z1.BattOn_idx, 2);
 z2_PG_K = results.gen(z1.GenOn_idx,2);
 %}
-z1_X0 = initialXk(results, z1);
-z2_X0 = initialXk(results, z2);
+
+Fij = zeros(z1.N_branch, z1.N_iteration);
+% column 14 of results.branch is PF: real power injected at "from" end bus
+z1.Fij(:,step) = results.branch(z1.Branch_idx, 14); 
+
 
 % set the initial values for PT(k) in x(k)
-z1.PT = getPT(results, z1);
-z2.PT = getPT(results, z2);
+z1 = getPT_k(results, z1, step);
 
-z1.DeltaPT = zeros(z1.N_branch,1);
-z2.DeltaPT = zeros(z2.N_branch,1);
+z1.DeltaPT = zeros(z1.N_branch,z1.N_iteration);
+
+% store info about 'runpf' convergence
+infoRUNPF(1:3,step) = [results.success results.et results.iterations]';
+
+% save the whole set of produced data:
+cellOfResults = cell(1,z1.N_iteration);
+cellOfResults{1} = results;
+
+
+%% Preallocation data structure for the whole simulation
+%{
+% could create a simulation, associate with a basecase and a zone ?
+
+% State
+z1.STATE = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn, z1.N_iteration + 1);
+% Control: curtailment and battery
+z1.CONTROL_C = zeros(z1.N_genOn, z1.N_iteration + 1);
+z1.CONTROL_B = zeros(z1.N_battOn, z1.N_iteration + 1);
+% Disturbance: DeltaPA, DeltaPG, DeltaPT
+z1.DIST_A = zeros(z1.N_genOn, z1.N_iteration + 1);
+z1.DIST_G = zeros(z1.N_genOn, z1.N_iteration + 1);
+z1.DIST_T = zeros(z1.N_genOn, z1.N_iteration + 1);
+%}
+
+%% Step 0 for simulation: saving the data of initial values
+
+
+% currently only care about 1 zone. Later do a scheduling between several
+
+
+ 
+%{
+Fij         obtained from 'results'
+PC          here it is precomputed, but should be a deduced information
+PB          deduced from control DeltaPB
+EB          computed based on PB and DeltaPB values
+PG          computed using several variables
+PA          Precomputed (L168)
+PT          obtained from 'results', using the associate function getPT
+
+DeltaPC     Control, here precomputed
+DeltaPB     Control, here precomputed
+
+DeltaPG     Computed using the associate function
+
+DeltaPA     Precomputed (L168)
+
+DeltaPT     computed based on PT
+%}
+
+%{
+Fully computed
+PA
+DeltaPA
+PB
+DeltaPB
+PC
+DeltaPC
+
+
+In Alessio's code :
+Initialization
+compute PG
+set PG and PB in the basecase
+'runpf': to get PT and Fij
+compute and save all variables: 
+Fij (from runpf)
+PT (from runpf)
+PC (given data)
+PB
+EB
+PG (previously computed)
+
+
+for k= 2:zone.N_iteration + 1 ?
+DeltaPC
+DeltaPB
+DeltaPG
+DeltaPA
+
+update
+PG(k+1) = PG(k) + DeltaPG(k) - DeltaPC(k-tau)
+PB(k+1) = PB(k) + DeltaPB(k-d)
+on the basecase??
+why not on the case obtained from 'results'??
+
+results = runpf
+Get the updated values for Fij, Pb, Eb, Pa
+
+update
+PC(k+1) = PC(k) + DeltaPC(k)
+PG(k+1) = PG(k) + DeltaPG(k) - DeltaPC(k-tau) , notice here it is
+DeltaPC(k), so the delay does not seem to be considered
+
+line 604: why the PG(k+1) value is computed in Xk, but with:
+PG(k+1) = PG(k) + DeltaPG(k)
+PT(k+1) computed from the results
+hence, DeltaPT(k) = PT(k+1) - PT(k)
+
+%}
 
 
 
-function PT = getPT(results, zone)
-    arguments
-        results
-        zone {mustBeA(zone, 'Zone')}
+    
+
+
+%{
+classdef Simulation
+    properties
+        Basecase
+        Basecase_int
+        cellOfZones
+        
+        cellOfResults
+        PGCD
     end
-    % get the end bus id of the branch
-    fbus = results.branch(zone.Branch_border_idx,1);
-    tbus = results.branch(zone.Branch_border_idx,2);
-    % check what buses are in the zone
-    is_fbus_in_zone = ismember(fbus, zone.Bus_id);
-    is_tbus_in_zone = ismember(tbus, zone.Bus_id);
-    % get the power injection at the buses
-    powerInjection_at_fbus = results.branch(zone.Branch_border_idx, 14);
-    powerInjection_at_tbus = results.branch(zone.Branch_border_idx, 16);
-    % get the power injection at the buses only in the zone
-    PT_fbus = powerInjection_at_fbus(is_fbus_in_zone);
-    PT_tbus = powerInjection_at_tbus(is_tbus_in_zone);
-    PT = [PT_fbus; PT_tbus];
-end
-
-
-function Xk = initialXk(results, zone)
-    Fij = results.branch(zone.Branch_idx, 14); % column 14 is PF: real power injected at "from" end bus
-    PC = zone.PC(:,1);
-    PB = zone.PB(:,1);
-    EB = zone.EB(:,1);
-    PG = zone.PG(:,1);
-    PA = zone.PA(:,1);
-    Xk = [ Fij; PC; PB; EB; PG; PA];
+    
+    methods
+        function obj = Simulation(basecase, basecase_int, cellOfZones)
+            arguments
+                basecase
+                basecase_int
+                cellOfZones
+            end
+        end
+            
+    end
 end
     
+%}
