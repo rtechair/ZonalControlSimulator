@@ -173,32 +173,44 @@ z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
 
 %% Set some preconfigurated curtailment DeltaPC
-z1_maxPA_of_genOn = basecase.gen(z1.GenOn_idx, 9); % computed inside getPAandDeltaPA, but can't be in setDeltaPC as basecase not provided
-z1 = setDeltaPC(z1, [1/7 1/3 2/3], 0.2, z1_maxPA_of_genOn); 
-z1.maxPG = basecase.gen(z1.GenOn_idx, 9);
+z1_maxPG_of_genOn = basecase.gen(z1.GenOn_idx, 9); % computed inside getPAandDeltaPA, but can't be in setDeltaPC as basecase not provided
 
-z2_maxPA_of_genOn = basecase.gen(z2.GenOn_idx, 9);
-z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2_maxPA_of_genOn);
 
 %% Initialize PC and DeltaPC
 %PC(1) = 0; Other PC values will be computed online with DeltaPC values provided by the MPC
 
-z1.PC = zeros(z1.N_genOn, zone.N_iteration+1);
-z1.DeltaPC = zeros(z1.N_genOn, zone.N_iteration);
+z1.PC = zeros(z1.N_genOn, z1.N_iteration+1);
+z1.maxPG = basecase.gen(z1.GenOn_idx, 9);
+z1 = setDeltaPC(z1, [1/7 1/3 2/3], 0.2, z1.maxPG); 
 
+z2.PC = zeros(z2.N_genOn, z2.N_iteration+1);
+z2.maxPG = basecase.gen(z2.GenOn_idx, 9);
+z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2.maxPG); 
 
 %% Initialize PB and DeltaPB
 % DeltaPB has not been set previously however
-
-z1.DeltaPB = zeros(z1.N_battOn, z1.N_iteration);
+%PB(1) = 0; Other PB values will be computed online with DeltaPB values provided by the MPC
 z1.PB = zeros(z1.N_battOn, z1.N_iteration+1);
-%PB(1) = 0; which is already the case from the previous line
-z1 = setPB(z1);
+z1.DeltaPB = zeros(z1.N_battOn, z1.N_iteration);
+
+%% Initialize PG and DeltaPG
+z1.PG = zeros(z1.N_genOn, z1.N_iteration+1);
+z1.DeltaPG = zeros(z1.N_genOn, z1.N_iteration);
+z1 = setInitialPG(z1);
+
+%% Initialize PT and DeltaPT
+z1.PT = zeros(z1.N_branch, z1.N_iteration+1);
+z1.DeltaPT = zeros(z1.N_branch, z1.N_iteration);
+
+%% Initialize EB
+% EB(1) = 0; Other EB values will be computed online
+z1.EB = zeros(z1.N_battOn, z1.N_iteration+1);
+
+%% Initialize Fij
+z1.Fij = zeros(z1.N_branch, z1.N_iteration+1);
 
 %% Initialization
 step = 1;
-
-z1 = setInitialPG(z1);
 
 
 % update both basecase and basecase_int with the initial PG values, due to
