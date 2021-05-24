@@ -6,7 +6,13 @@ function zone = getDeltaPG_k(zone, step)
     % step <= zone.N_iteration
     mustBeLessThanOrEqual(step, zone.N_iteration)
     
-    f = zone.PA(:,step) + zone.DeltaPA(:,step) - zone.PG(:,step) + zone.DeltaPC(k - zone.delay_curt);
+    
+    if step > zone.delay_curt
+        f = zone.PA(:,step) + zone.DeltaPA(:,step) - zone.PG(:,step) + zone.DeltaPC(step - zone.delay_curt);
+    else
+        % there is no information on the curtailement decided prior to the simulation
+        f = zone.PA(:,step) + zone.DeltaPA(:,step) - zone.PG(:,step);
+    end
     g = zone.maxPG(:,step) - zone.PC(:,step) - zone.PG(:,step);
     zone.Delta(:,step) = min(f,g);
 end
