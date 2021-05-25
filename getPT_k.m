@@ -7,7 +7,7 @@ function zone = getPT_k(results, zone, instant)
         zone {mustBeA(zone, 'Zone')}
         instant (1,1) {mustBeInteger, mustBePositive}
     end
-    mustBeLessThanOrEqual(instant, zone.N_iteration)
+    mustBeLessThanOrEqual(instant, zone.N_iteration+1)
     
     % get the end bus id of the branch
     fbus = results.branch(zone.Branch_border_idx,1);

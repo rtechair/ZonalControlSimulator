@@ -223,25 +223,84 @@ z1.Fij = zeros(z1.N_branch, z1.N_iteration+1);
 
 %% Initialization
 
-step = 1;
-initialInstant = true;
-% update both basecase and basecase_int with the initial PG values, due to
-% the generators On
-
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step);
-
-
-% Similarly, update for the batteries On
-[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step);
-
 % matpower option for the runpf function, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
 mpopt = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
         'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
         'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
     
-[results, success] = runpf( basecase_int, mpopt); % https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+%% Simulation using runpf of Matpower
 
+for step = 1: z1.N_iteration
+    % update both basecase and basecase_int with the initial PG values, due to the generators On
+    [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step);
+
+    % Similarly, update for the batteries On
+    [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step);
+    
+    % Run the power flow
+    [results, success] = runpf(basecase_int, mpopt); % https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+    
+    % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
+    z1.Fij(:,step) = results.branch(z1.Branch_idx, 14);
+    % Fij_fromBus = results.branch(z1.Branch_idx, 14);
+    % Fij_endBus = results.branch(z1.Branch_idx, 16);
+    
+    % Extract PT(step)
+    z1 = getPT_k(results, z1, step);
+    
+    %Compute DeltaPT(step-1) except if step = 1
+    if step >= 2
+        z1.DeltaPT(:,step-1) = z1.PT(:,step) - z1.PT(:, step-1);
+    end
+    
+    % Notice DeltaPA(step-1) is already precomputed, so no need to compute
+    % it. Maybe in the future
+    
+    %{
+    Control actions: 
+    here there is no MPC, however in the future there will be
+    z1.DeltaPC(:,step) = getMPCDeltaPC(z1,step);
+    z1.DeltaPB(:,step) = getMPCDeltaPB(z1,step);
+    %}
+    
+    % Compute DeltaPG(step) except if step = N_iteration+1
+    if step <= z1.N_iteration
+        z1 = getDeltaPG_k(z1,step);
+    end
+    
+    % Update the states
+        % PC and PG
+    if step >= z1.Delay_curt + 1
+        z1.PC(:,step+1) = z1.PC(:,step)                      + z1.DeltaPC(:,step - z1.Delay_curt);
+        z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step) - z1.DeltaPC(:,step - z1.Delay_curt);
+    else
+        z1.PC(:,step+1) = z1.PC(:,step);
+        z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step);
+    end
+        % PB and EB
+    if step >= z1.Delay_batt + 1
+        z1.PB(:,step+1) = z1.PB(:,step) + z1.DeltaPB(:,step - z1.Delay_batt);
+        z1.EB(:,step+1) = z1.EB(:,step) - z1.Batt_cst_power_reduc*z1.Simulation_time_unit *...
+            ( z1.PB(:,step) + z1.DeltaPB(:,step - z1.Delay_batt) );
+    else
+        z1.PB(:,step+1) = z1.PB(:,step);
+        z1.EB(:,step+1) = z1.EB(:,step) - z1.Batt_cst_power_reduc*z1.Simulation_time_unit * z1.PB(:,step);
+    end
+    
+    % PA(step+1) being already precomputed, no need to compute it
+    
+end
+
+% Do the power flow on the last iteration to get Fij and DeltaPT
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, z1.N_iteration+1);
+[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, z1.N_iteration+1);
+[results, success] = runpf(basecase_int, mpopt);
+z1.Fij(:,z1.N_iteration+1) = results.branch(z1.Branch_idx, 14);
+z1 = getPT_k(results, z1, z1.N_iteration+1);
+z1.DeltaPT(:,z1.N_iteration) = z1.PT(:,z1.N_iteration+1) - z1.PT(:, z1.N_iteration);
+    
+    
 %% Extraction from results
 % TODO: check if matpower values fits the model, e.g. for PG =
 % results.gen(:,2), real power output,
@@ -255,26 +314,10 @@ providing the internal basecase
 % dimension-wise: [ N_branch N_genOn N_battOn N_battOn N_genOn N_genOn] '
 % X_0 = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn, 1);
 
-% z1_Fij_K = results.branch(z1.Branch_idx, 14); % column 14 is PF: real power injected at "from" end bus
 
 % for the zone 1: EB_init = 750
 
 
-%{
-z2_Fij_K = results.branch(z1.Branch_idx, 14);
-z2_PB_K = results.gen(z1.BattOn_idx, 2);
-z2_PG_K = results.gen(z1.GenOn_idx,2);
-%}
-
-Fij = zeros(z1.N_branch, z1.N_iteration);
-% column 14 of results.branch is PF: real power injected at "from" end bus
-z1.Fij(:,step) = results.branch(z1.Branch_idx, 14); 
-
-
-% set the initial values for PT(k) in x(k)
-z1 = getPT_k(results, z1, step);
-
-z1.DeltaPT = zeros(z1.N_branch,z1.N_iteration);
 
 % store info about 'runpf' convergence
 infoRUNPF(1:3,step) = [results.success results.et results.iterations]';
@@ -284,21 +327,6 @@ cellOfResults = cell(1,z1.N_iteration);
 cellOfResults{1} = results;
 
 
-%% Preallocation data structure for the whole simulation
-%{
-% could create a simulation, associate with a basecase and a zone ?
-
-% State
-z1.STATE = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn, z1.N_iteration + 1);
-% Control: curtailment and battery
-z1.CONTROL_C = zeros(z1.N_genOn, z1.N_iteration + 1);
-z1.CONTROL_B = zeros(z1.N_battOn, z1.N_iteration + 1);
-% Disturbance: DeltaPA, DeltaPG, DeltaPT
-z1.DIST_A = zeros(z1.N_genOn, z1.N_iteration + 1);
-z1.DIST_G = zeros(z1.N_genOn, z1.N_iteration + 1);
-z1.DIST_T = zeros(z1.N_genOn, z1.N_iteration + 1);
-%}
-
 %% Step 0 for simulation: saving the data of initial values
 
 
@@ -307,11 +335,11 @@ z1.DIST_T = zeros(z1.N_genOn, z1.N_iteration + 1);
 
  
 %{
-Fij         obtained from 'results'
+Fij         obtained from 'results', precisely: results.branch(z1.Branch_idx, 14);
 PC          here it is precomputed, but should be a deduced information
-PB          deduced from control DeltaPB
+PB          deduced from control DeltaPB. It also corresponds to results.gen(z1.BattOn_idx, 2);
 EB          computed based on PB and DeltaPB values
-PG          computed using several variables
+PG          computed using several variables. It also corresponds to results.gen(z1.GenOn_idx,2);
 PA          Precomputed (L168)
 PT          obtained from 'results', using the associate function getPT
 
