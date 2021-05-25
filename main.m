@@ -211,8 +211,8 @@ z1.DeltaPG = zeros(z1.N_genOn, z1.N_iteration);
 z1 = setInitialPG(z1);
 
 %% Initialize PT and DeltaPT
-z1.PT = zeros(z1.N_branch, z1.N_iteration+1);
-z1.DeltaPT = zeros(z1.N_branch, z1.N_iteration);
+z1.PT = zeros(z1.N_bus, z1.N_iteration+1);
+z1.DeltaPT = zeros(z1.N_bus, z1.N_iteration);
 
 %% Initialize EB
 % EB(1) = 0; Other EB values will be computed online
