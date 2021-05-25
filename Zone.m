@@ -1,4 +1,7 @@
-classdef Zone < handle
+classdef Zone < matlab.mixin.Copyable
+    % matlab.mixin.Copyable
+    % https://www.mathworks.com/help/matlab/matlab_oop/custom-copy-behavior.html
+    % Zone < handle
     % Now the class inherits 'handle', so it is a handle class and not a
     % value class
     properties
