@@ -114,7 +114,7 @@ zone1_bus_border_id = findBorderBus(zone1_bus_id, zone1_branch_border_idx, basec
 z1 = Zone(basecase, zone1_bus_id);
 z2 = Zone(basecase, zone2_bus_id);
 
-z1 = setInteriorIdAndIdx( z1, mapBus_id_e2i, mapGenOn_idx_e2i);
+setInteriorIdAndIdx( z1, mapBus_id_e2i, mapGenOn_idx_e2i);
 z2 = setInteriorIdAndIdx( z2, mapBus_id_e2i, mapGenOn_idx_e2i);
 
 
@@ -137,7 +137,7 @@ z1_cb = 0.001; % conversion factor for battery power output
 z1.Batt_cst_power_reduc = z1_cb * ones(z1.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 %{
- z1 = setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
+setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
                 mapBus_id_e2i, mapGenOn_idx_e2i, z1.Simulation_time_unit, z1.Batt_cst_power_reduc);
 %}
 %{
@@ -156,6 +156,7 @@ z2.Batt_cst_power_reduc = z2_cb * ones(z2.N_battOn,1); % TODO: needs to be chang
 z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, z2.BattOn_idx,...
                 mapBus_id_e2i, mapGenOn_idx_e2i, z2.Simulation_time_unit, z2.Batt_cst_power_reduc);
 %}
+
 
 %% Simulation initialization
 
@@ -229,6 +230,8 @@ mpopt = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
         'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
         'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
     
+cellOfResults = cell(1,z1.N_iteration+1);
+    
 %% Simulation using runpf of Matpower
 
 for step = 1: z1.N_iteration
@@ -264,7 +267,7 @@ for step = 1: z1.N_iteration
     z1.DeltaPB(:,step) = getMPCDeltaPB(z1,step);
     %}
     
-    % Compute DeltaPG(step) except if step = N_iteration+1
+    % Compute DeltaPG(step) except if step = N_iteration+1, i.e. the last iteration
     if step <= z1.N_iteration
         z1 = getDeltaPG_k(z1,step);
     end
@@ -290,6 +293,9 @@ for step = 1: z1.N_iteration
     
     % PA(step+1) being already precomputed, no need to compute it
     
+    % Store the information regarding the simulation
+    cellOfResults{step} = results;
+  
 end
 
 % Do the power flow on the last iteration to get Fij and DeltaPT
@@ -300,10 +306,47 @@ z1.Fij(:,z1.N_iteration+1) = results.branch(z1.Branch_idx, 14);
 z1 = getPT_k(results, z1, z1.N_iteration+1);
 z1.DeltaPT(:,z1.N_iteration) = z1.PT(:,z1.N_iteration+1) - z1.PT(:, z1.N_iteration);
     
+% Store the info regarding the simulation
+infoRunpf(1:3,z1.N_iteration+1) = [results.success results.et results.iterations]';
+cellOfResults{z1.N_iteration+1} = results;
     
 %% Extraction from results
-% TODO: check if matpower values fits the model, e.g. for PG =
-% results.gen(:,2), real power output,
+
+simulation = copy(z1);
+
+t = 1:simulation.N_iteration+1;
+
+if simulation.N_bus >= 9
+    n_row_graph = 3;
+else
+    n_row_graph = 2;
+end
+
+fGen = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
+    'NumberTitle', 'off'); 
+% see for more info about figures: 
+% https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
+% https://www.mathworks.com/help/matlab/ref/figure.html
+fGen.WindowState = 'maximize';
+
+% plot for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
+for gen = 1:simulation.N_genOn
+    subplot(n_row_graph, n_row_graph, gen); ...
+        hold on; ...
+        stairs(t, simulation.PA(gen,:)); ...
+        stairs(t, simulation.PC(gen,:)); ...
+        f1 = simulation.maxPG(gen) - simulation.PC(gen,:);
+        stairs(t, f1);...
+        stairs(t, min(simulation.PA(gen,:), f1));
+        % Description of the subplot
+        bus_id_of_genOn = basecase.gen(simulation.GenOn_idx(gen),1);
+        name = ['Gen\_idx: ', int2str(simulation.GenOn_idx(gen)), ', at bus: ', int2str(bus_id_of_genOn)];
+        title(name);
+    
+end
+
+
+
 % if PG > 0, does it mean the power goes on the network or in the battery?
 %{
 IMPORTANT: 'results' are returned using 'basecase' data, not
@@ -320,11 +363,10 @@ providing the internal basecase
 
 
 % store info about 'runpf' convergence
-infoRUNPF(1:3,step) = [results.success results.et results.iterations]';
+
 
 % save the whole set of produced data:
-cellOfResults = cell(1,z1.N_iteration);
-cellOfResults{1} = results;
+
 
 
 %% Step 0 for simulation: saving the data of initial values
