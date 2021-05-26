@@ -339,11 +339,15 @@ for gen = 1:simulation.N_genOn
         stairs(t, f1);...
         stairs(t, min(simulation.PA(gen,:), f1));
         % Description of the subplot
+        legend({'PA', 'PC', 'MaxPG - PC' , 'min(PA, MaxPG - PC)'},'Location','Best')
+        xlabel('Number of iterations')
+        ylabel('Power [MW]')
         bus_id_of_genOn = basecase.gen(simulation.GenOn_idx(gen),1);
         name = ['Gen\_idx: ', int2str(simulation.GenOn_idx(gen)), ', at bus: ', int2str(bus_id_of_genOn)];
         title(name);
-    
 end
+
+
 
 
 
