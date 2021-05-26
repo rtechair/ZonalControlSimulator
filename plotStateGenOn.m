@@ -10,8 +10,7 @@ function fGen = plotStateGenOn(basecase,zone, isAxisTemporal, duration, visible)
         isAxisTemporal = false
         duration = -1
         visible = true
-    end
-    
+    end 
     %% Adapt the x axis legend: either the number of iterations or the temporal duration
     if isAxisTemporal
         if duration == -1
@@ -24,20 +23,19 @@ function fGen = plotStateGenOn(basecase,zone, isAxisTemporal, duration, visible)
     else
         t = 1:zone.N_iteration+1;
         xlegend = 'Number of iterations';
-    end
-    
-    fGen = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
-    'NumberTitle', 'off', 'Visible',visible); 
-    % see for more info about figures: 
-    % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
-    % https://www.mathworks.com/help/matlab/ref/figure.html
-    fGen.WindowState = 'maximize';
-    %% Layout on 2 rows or 3 if they are many subplots
+    end    
+        %% Layout on 2 rows or 3 if they are many subplots
     if zone.N_bus >= 9
         n_row_graph = 3;
     else
         n_row_graph = 2;
     end
+    %% Create the figure
+    fGen = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
+    'NumberTitle', 'off', 'Visible',visible, 'WindowState', 'maximize'); 
+    % see for more info about figures: 
+    % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
+    % https://www.mathworks.com/help/matlab/ref/figure.html
     %% plot for each generator On: PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
     for gen = 1:zone.N_genOn
         % decompose the plot into a n_row_graph x n_row_graph grid, gen is
