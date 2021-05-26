@@ -314,8 +314,9 @@ cellOfResults{z1.N_iteration+1} = results;
 
 simulation = copy(z1);
 
-plotStateGenOn(basecase, z1, duration, true)
+figureStateGen = plotStateGenOn(basecase, z1);
 
+figureDeltaGen = plotDeltaGenOn(basecase, z1);
 
 % if PG > 0, does it mean the power goes on the network or in the battery?
 %{
