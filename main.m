@@ -314,41 +314,7 @@ cellOfResults{z1.N_iteration+1} = results;
 
 simulation = copy(z1);
 
-t = 1:simulation.N_iteration+1;
-
-if simulation.N_bus >= 9
-    n_row_graph = 3;
-else
-    n_row_graph = 2;
-end
-
-fGen = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
-    'NumberTitle', 'off'); 
-% see for more info about figures: 
-% https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
-% https://www.mathworks.com/help/matlab/ref/figure.html
-fGen.WindowState = 'maximize';
-
-% plot for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
-for gen = 1:simulation.N_genOn
-    subplot(n_row_graph, n_row_graph, gen); ...
-        hold on; ...
-        stairs(t, simulation.PA(gen,:)); ...
-        stairs(t, simulation.PC(gen,:)); ...
-        f1 = simulation.maxPG(gen) - simulation.PC(gen,:);
-        stairs(t, f1);...
-        stairs(t, min(simulation.PA(gen,:), f1));
-        % Description of the subplot
-        legend({'PA', 'PC', 'MaxPG - PC' , 'min(PA, MaxPG - PC)'},'Location','Best')
-        xlabel('Number of iterations')
-        ylabel('Power [MW]')
-        bus_id_of_genOn = basecase.gen(simulation.GenOn_idx(gen),1);
-        name = ['Gen\_idx: ', int2str(simulation.GenOn_idx(gen)), ', at bus: ', int2str(bus_id_of_genOn)];
-        title(name);
-end
-
-
-
+plotStateGenOn(basecase, z1, duration, true)
 
 
 % if PG > 0, does it mean the power goes on the network or in the battery?
