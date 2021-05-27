@@ -34,9 +34,9 @@ function figDeltaGenOn = plotdeltaGenOn(basecase, zone, isAxisTemporal, duration
         % the linear index in the grid
         subplot(n_row_graph, n_row_graph, gen);
         hold on;
-        stairs(t, zone.DeltaPA(gen,:)); % plot DeltaPA
-        stairs(t, zone.DeltaPG(gen,:)); % plot DeltaPG
-        stairs(t, zone.DeltaPC(gen,:)); % plot DeltaPC: control taken
+        stairs(t, zone.DeltaPA(gen,:), ':'); % plot DeltaPA
+        stairs(t, zone.DeltaPG(gen,:), '-.'); % plot DeltaPG
+        stairs(t, zone.DeltaPC(gen,:), '--'); % plot DeltaPC: control taken
         f1 = [ zeros(1, zone.Delay_curt+1) zone.DeltaPC(gen, 1 : zone.N_iteration - zone.Delay_curt -1)];
         stairs(t, f1); % plot DeltaPC(step + delay_curt): control applied
         

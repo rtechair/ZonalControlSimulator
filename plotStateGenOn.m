@@ -27,21 +27,18 @@ function figStateGenOn = plotStateGenOn(basecase,zone, isAxisTemporal, duration,
     %% Layout of the plot
     n_row_graph = ceil(sqrt(zone.N_bus));
     %% Create the figure
+    % see:  https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
     figStateGenOn = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
     'NumberTitle', 'off', 'Visible',visible, 'WindowState', 'maximize'); 
-    % see for more info about figures: 
-    % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
-    % https://www.mathworks.com/help/matlab/ref/figure.html
     %% plot for each generator On: PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
     for gen = 1:zone.N_genOn
-        % decompose the plot into a n_row_graph x n_row_graph grid, gen is
-        % the linear index in the grid
+        % decompose the plot into a n_row_graph x n_row_graph grid, gen is the linear index in the grid
         subplot(n_row_graph, n_row_graph, gen);
         hold on;
-        stairs(t, zone.PA(gen,:)); % plot PA
-        stairs(t, zone.PC(gen,:)); % plot PC
+        stairs(t, zone.PA(gen,:), ':'); % plot PA
+        stairs(t, zone.PC(gen,:), '-.'); % plot PC
         f1 = zone.maxPG(gen) - zone.PC(gen,:);
-        stairs(t, f1); % plot MaxPG - PC
+        stairs(t, f1, '--'); % plot MaxPG - PC
         stairs(t, min(zone.PA(gen,:), f1)); % plot min(PA, MaxPG - PC)
         
         % Description of the subplot
