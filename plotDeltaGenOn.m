@@ -1,8 +1,7 @@
-function fGen = plotdeltaGenOn(basecase, zone, isAxisTemporal, duration)
+function figDeltaGenOn = plotdeltaGenOn(basecase, zone, isAxisTemporal, duration)
     % plot for each generator On: DeltaPA, DeltaPG, DeltaPC, DeltaPC(step-zone.Delay_curt).
     % if isAxisTemporal = true, then 'duration' is necessary and it displays the values over the duration
-    % time. Else, displays the values over the number of iterations and
-    % 'duration' unnecessary.
+    % time. Else, displays the values over the number of iterations and 'duration' unnecessary.
     
     arguments
         basecase struct
@@ -23,17 +22,12 @@ function fGen = plotdeltaGenOn(basecase, zone, isAxisTemporal, duration)
         t = 1:zone.N_iteration;
         xlegend = 'Number of iterations';
     end   
-    %% Layout on 2 rows or 3 if they are many subplots
-    if zone.N_bus >= 9
-        n_row_graph = 3;
-    else
-        n_row_graph = 2;
-    end
-    fGen = figure('Name','for each generator On : DeltaPA, DeltaPG, DeltaPC, DeltaPC(step - delay_curt + 1)',...
+    %% Layout of the plot
+    n_row_graph = ceil(sqrt(zone.N_bus));
+    %% Create the figure
+    % see: https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
+    figDeltaGenOn = figure('Name','for each generator On : DeltaPA, DeltaPG, DeltaPC, DeltaPC(step - delay_curt + 1)',...
     'NumberTitle', 'off', 'WindowState', 'maximize'); 
-    % see for more info about figures: 
-    % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
-    % https://www.mathworks.com/help/matlab/ref/figure.html    
     %% plot for each generator On: DeltaPA, DeltaPG, DeltaPC, DeltaPC(step - zone.Delay_curt)
     for gen = 1:zone.N_genOn
         % decompose the plot into a n_row_graph x n_row_graph grid, gen is

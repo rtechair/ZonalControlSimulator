@@ -1,4 +1,4 @@
-function fGen = plotStateGenOn(basecase,zone, isAxisTemporal, duration, visible)
+function figStateGenOn = plotStateGenOn(basecase,zone, isAxisTemporal, duration, visible)
     % plot for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
     % if isAxisTemporal = true, then 'duration' is necessary and it displays the values over the duration
     % time. Else, displays the values over the number of iterations and
@@ -24,14 +24,10 @@ function fGen = plotStateGenOn(basecase,zone, isAxisTemporal, duration, visible)
         t = 1:zone.N_iteration+1;
         xlegend = 'Number of iterations';
     end    
-        %% Layout on 2 rows or 3 if they are many subplots
-    if zone.N_bus >= 9
-        n_row_graph = 3;
-    else
-        n_row_graph = 2;
-    end
+    %% Layout of the plot
+    n_row_graph = ceil(sqrt(zone.N_bus));
     %% Create the figure
-    fGen = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
+    figStateGenOn = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
     'NumberTitle', 'off', 'Visible',visible, 'WindowState', 'maximize'); 
     % see for more info about figures: 
     % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html

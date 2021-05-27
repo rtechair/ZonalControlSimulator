@@ -1,5 +1,7 @@
 function figureFlowBranch = plotFlowBranch(basecase, zone, isAxisTemporal, duration)
     % Plot for each branch of the zone, the power flow over the period
+    % if isAxisTemporal = true, then 'duration' is necessary and it displays the values over the duration
+    % time. Else, displays the values over the number of iterations and 'duration' unnecessary.
     arguments
         basecase struct
         zone {mustBeA(zone,'Zone')}
@@ -19,14 +21,11 @@ function figureFlowBranch = plotFlowBranch(basecase, zone, isAxisTemporal, durat
         t = 1:zone.N_iteration+1;
         xlegend = 'Number of iterations';
     end
-    %% Layout on 2 rows or 3 if they are many subplots
-    if zone.N_bus >= 9
-        n_row_graph = 3;
-    else
-        n_row_graph = 2;
-    end
+    %% Layout of the plot
+    n_row_graph = ceil(sqrt(zone.N_branch));
     %% Create the figure
-    fGen = figure('Name', 'power flow on each branch of the zone, over the period',...
+    % see: https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
+    figureFlowBranch = figure('Name', 'power flow on each branch of the zone, over the period',...
         'NumberTitle', 'off', 'WindowState', 'maximize');
     %% Plot for each branch
     for br = 1:zone.N_branch
