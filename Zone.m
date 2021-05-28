@@ -111,6 +111,14 @@ classdef Zone < matlab.mixin.Copyable
                 mapBus_id_e2i, mapGenOn_idx_e2i, sampling_time, batt_cst_power_reduc);
         end   
             
+        function zone = setNumberOfElements(zone)
+            % Set the zone dimensions, i.e. the number of buses / branches
+            % / generators On / batteries On within the zone
+            zone.N_bus = size(zone.Bus_id,1);
+            zone.N_branch = size(zone.Branch_idx,1);
+            zone.N_genOn = size(zone.GenOn_idx,1);
+            zone.N_battOn = size(zone.BattOn_idx,1);
+        end
     end
 end
 
