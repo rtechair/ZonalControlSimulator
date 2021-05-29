@@ -62,22 +62,26 @@ classdef Zone < matlab.mixin.Copyable
         Batt_cst_power_reduc (1,1) {mustBeNonempty}
         Delay_batt (1,1) {mustBeInteger, mustBeNonempty}
         Delay_curt (1,1) {mustBeInteger, mustBeNonempty}
-        maxPG 
+        maxPG (:,1)
     end
     
     methods
-        function obj= Zone(basecase, bus_id)
+        function zone = Zone(basecase, bus_id)
             % create the zone, providing the buses, branches, gen and batt ON of
             % the zone, alongside the buses and branches at the border of
             % the zone
             arguments
                 basecase struct % MatPower Case struct
                 bus_id (:,1) {mustBeInteger, mustBeNonempty, mustBusBeFromBasecase(bus_id, basecase)}
-            end            
-            obj.Bus_id = bus_id;
-            [obj.Branch_idx, obj.Branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
-            obj.Bus_border_id = findBorderBus(basecase, bus_id, obj.Branch_border_idx);
-            [obj.GenOn_idx, obj.BattOn_idx] = findGenAndBattOnInZone(bus_id, basecase);
+            end
+            % Define the bus id, branch indices, generators and batteries On within the zone.            
+            % plus bus and branches at the border of the zone
+            zone.Bus_id = bus_id;
+            [zone.Branch_idx, zone.Branch_border_idx] = findInnerAndBorderBranch(basecase, bus_id);
+            zone.Bus_border_id = findBorderBus(basecase, bus_id, zone.Branch_border_idx);
+            [zone.GenOn_idx, zone.BattOn_idx] = findGenAndBattOnInZone(bus_id, basecase);
+            
+            zone = setNumberOfElements(zone);
         end
         
         function obj = setInteriorIdAndIdx(obj, mapBus_id_e2i, mapGenOn_idx_e2i)
