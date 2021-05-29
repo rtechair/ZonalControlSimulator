@@ -129,8 +129,6 @@ cf Powertech paper
 [n_bus, n_branch, n_gen, n_batt] = findBasecaseDimension(basecase); % [6469, 9001, 1228, 77]
 [n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
-% Zone 1
-[z1.N_bus, z1.N_branch, z1.N_genOn, z1.N_battOn] = findZoneDimension(z1.Bus_id, z1.Branch_idx,z1.GenOn_idx, z1.BattOn_idx);
 
 z1.Simulation_time_unit = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
 z1_cb = 0.001; % conversion factor for battery power output
@@ -218,6 +216,7 @@ z1.DeltaPT = zeros(z1.N_bus, z1.N_iteration);
 %% Initialize EB
 % EB(1) = 0; Other EB values will be computed online
 z1.EB = zeros(z1.N_battOn, z1.N_iteration+1);
+% for the zone 1: EB_init = 750 in Alessio's code
 
 %% Initialize Fij
 z1.Fij = zeros(z1.N_branch, z1.N_iteration+1);
@@ -234,17 +233,54 @@ cellOfResults = cell(1,z1.N_iteration+1);
     
 %% Simulation using runpf of Matpower
 
+%{
+1) The simulator receives the controls DeltaPB(k) and DeltaPC(k), from the controller
+
+2) "Receive" DeltaPA(k), i.e. take the value from the array
+
+3) Update STATE to get STATE(k+1) except Fij
+
+4) using PG(k+1) and PB(k+1) freshly computed, update the internal basecase
+
+5) run the Power Flow simulation using Matpower function 'runpf'
+ 
+6) extract from the simualtion Fij(k+1) and PT(k+1), thus DeltaPT(k).
+    Fij(k+1) corresponds to results.branch(zone.Branch_idx, 14)
+    PT(k+1) is obtained using the 'getPT_k' function
+
+7) Give to the controller:
+    the full STATE(k+1)
+    previous CONTROL(k+1 - delay + i) for all i in [[0, delay -1 ]]
+
+
+Regarding the initialization:
+
+1) build the dynamic model in order to send it the controller which will
+use it for the optimization
+
+2) fully compute PA and DeltaPA for the whole duration, prior to the simulation
+    - PA: computed using the profile data 'tauxDeCharge'
+    - DeltaPA: computed using PA, based on DeltaPA(k) = PA(k+1) - PA(k)
+
+%}
+
 for step = 1: z1.N_iteration
     % update both basecase and basecase_int with the initial PG values, due to the generators On
+    % TODO: if PG > 0, does it mean the power goes on the network or in the battery for Matpower?
     [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step);
-
+    
     % Similarly, update for the batteries On
     [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step);
     
     % Run the power flow
-    [results, success] = runpf(basecase_int, mpopt); % https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+    results = runpf(basecase_int, mpopt); % https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+    %{
+    Regarding the functioning: the 'runpf' computation is done using the internal basecase 'basecase_int' data.
+    However, the result'results' are returned using the external basecase 'basecase' data.
+    %}
     
     % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
+    % as explained previously on 'runpf' functioning, notice 'zone.Branch_idx' is used, not 'zone.Branch_int_idx'
     z1.Fij(:,step) = results.branch(z1.Branch_idx, 14);
     % Fij_fromBus = results.branch(z1.Branch_idx, 14);
     % Fij_endBus = results.branch(z1.Branch_idx, 16);
@@ -261,10 +297,10 @@ for step = 1: z1.N_iteration
     % it. Maybe in the future
     
     %{
-    Control actions: 
+    CONTROL ACTIONS: 
     here there is no MPC, however in the future there will be
-    z1.DeltaPC(:,step) = getMPCDeltaPC(z1,step);
-    z1.DeltaPB(:,step) = getMPCDeltaPB(z1,step);
+    z1.DeltaPC(:,step) = controllerDeltaPC(z1,step);
+    z1.DeltaPB(:,step) = controllerDeltaPB(z1,step);
     %}
     
     % Compute DeltaPG(step) except if step = N_iteration+1, i.e. the last iteration
@@ -307,124 +343,36 @@ z1 = getPT_k(results, z1, z1.N_iteration+1);
 z1.DeltaPT(:,z1.N_iteration) = z1.PT(:,z1.N_iteration+1) - z1.PT(:, z1.N_iteration);
     
 % Store the info regarding the simulation
-infoRunpf(1:3,z1.N_iteration+1) = [results.success results.et results.iterations]';
 cellOfResults{z1.N_iteration+1} = results;
     
-%% Extraction from results
+%% Graphic representation
 
 simulation = copy(z1);
 
-figureStateGen = plotStateGenOn(basecase, simulation);
+isFigurePlotted = false;
 
-figureDeltaGen = plotDeltaGenOn(basecase, simulation);
+if isFigurePlotted
+    figureStateGen = plotStateGenOn(basecase, simulation);
 
-figureFlowBranch = plotFlowBranch(basecase, simulation);
+    figureDeltaGen = plotDeltaGenOn(basecase, simulation);
 
-% if PG > 0, does it mean the power goes on the network or in the battery?
-%{
-IMPORTANT: 'results' are returned using 'basecase' data, not
-'basecase_int' even though the 'runpf' computation was done while
-providing the internal basecase
-%}
+    figureFlowBranch = plotFlowBranch(basecase, simulation);
+end
+
+
+
 % X = [ Fij PC PB EB PG PA]', 
 % dimension-wise: [ N_branch N_genOn N_battOn N_battOn N_genOn N_genOn] '
-% X_0 = zeros(z1.N_branch + 3*z1.N_genOn + 2*z1.N_battOn, 1);
 
-
-% for the zone 1: EB_init = 750
-
-
-
-% store info about 'runpf' convergence
-
-
-% save the whole set of produced data:
-
-
-
-%% Step 0 for simulation: saving the data of initial values
-
+%% Scheduling between several zones
 
 % currently only care about 1 zone. Later do a scheduling between several
 
 
  
-%{
-Fij         obtained from 'results', precisely: results.branch(z1.Branch_idx, 14);
-PC          here it is precomputed, but should be a deduced information
-PB          deduced from control DeltaPB. It also corresponds to results.gen(z1.BattOn_idx, 2);
-EB          computed based on PB and DeltaPB values
-PG          computed using several variables. It also corresponds to results.gen(z1.GenOn_idx,2);
-PA          Precomputed (L168)
-PT          obtained from 'results', using the associate function getPT
-
-DeltaPC     Control, here precomputed
-DeltaPB     Control, here precomputed
-
-DeltaPG     Computed using the associate function
-
-DeltaPA     Precomputed (L168)
-
-DeltaPT     computed based on PT
-%}
 
 %{
-Fully computed
-PA
-DeltaPA
-PB
-DeltaPB
-PC
-DeltaPC
-
-
-In Alessio's code :
-Initialization
-compute PG
-set PG and PB in the basecase
-'runpf': to get PT and Fij
-compute and save all variables: 
-Fij (from runpf)
-PT (from runpf)
-PC (given data)
-PB
-EB
-PG (previously computed)
-
-
-for k= 2:zone.N_iteration + 1 ?
-DeltaPC
-DeltaPB
-DeltaPG
-DeltaPA
-
-update
-PG(k+1) = PG(k) + DeltaPG(k) - DeltaPC(k-tau)
-PB(k+1) = PB(k) + DeltaPB(k-d)
-on the basecase??
-why not on the case obtained from 'results'??
-
-results = runpf
-Get the updated values for Fij, Pb, Eb, Pa
-
-update
-PC(k+1) = PC(k) + DeltaPC(k)
-PG(k+1) = PG(k) + DeltaPG(k) - DeltaPC(k-tau) , notice here it is
-DeltaPC(k), so the delay does not seem to be considered
-
-line 604: why the PG(k+1) value is computed in Xk, but with:
-PG(k+1) = PG(k) + DeltaPG(k)
-PT(k+1) computed from the results
-hence, DeltaPT(k) = PT(k+1) - PT(k)
-
-%}
-
-
-
-    
-
-
-%{
+    %Later for the scheduling:
 classdef Simulation
     properties
         Basecase
