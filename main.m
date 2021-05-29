@@ -231,6 +231,20 @@ mpopt = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
     
 cellOfResults = cell(1,z1.N_iteration+1);
     
+
+%% Initialization
+
+% State(1) is already defined from the variables initilization, except
+% Fij(1). DeltaPT(0) is not important, so let it remain at value = 0
+
+[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, 1);
+[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, 1);
+results = runpf(basecase_int, mpopt);
+z1.Fij(:,1) = results.branch(z1.Branch_idx, 14);
+
+
+
+
 %% Simulation using runpf of Matpower
 
 %{
@@ -264,87 +278,69 @@ use it for the optimization
 
 %}
 
-for step = 1: z1.N_iteration
-    % update both basecase and basecase_int with the initial PG values, due to the generators On
-    % TODO: if PG > 0, does it mean the power goes on the network or in the battery for Matpower?
-    [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step);
+for step = 1:z1.N_iteration
     
-    % Similarly, update for the batteries On
-    [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step);
-    
-    % Run the power flow
-    results = runpf(basecase_int, mpopt); % https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+    %% CONTROL from the controller 
     %{
-    Regarding the functioning: the 'runpf' computation is done using the internal basecase 'basecase_int' data.
-    However, the result'results' are returned using the external basecase 'basecase' data.
+    [DeltaPB, DeltaPC] = controller(z1, step);
+    z1.DeltaPB(:,step) = DeltaPB;
+    z1.DeltaPC(:,step) = DeltaPC;
     %}
     
-    % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
-    % as explained previously on 'runpf' functioning, notice 'zone.Branch_idx' is used, not 'zone.Branch_int_idx'
-    z1.Fij(:,step) = results.branch(z1.Branch_idx, 14);
-    % Fij_fromBus = results.branch(z1.Branch_idx, 14);
-    % Fij_endBus = results.branch(z1.Branch_idx, 16);
+    %% Update STATE
     
-    % Extract PT(step)
-    z1 = getPT_k(results, z1, step);
-    
-    %Compute DeltaPT(step-1) except if step = 1
-    if step >= 2
-        z1.DeltaPT(:,step-1) = z1.PT(:,step) - z1.PT(:, step-1);
-    end
-    
-    % Notice DeltaPA(step-1) is already precomputed, so no need to compute
-    % it. Maybe in the future
-    
-    %{
-    CONTROL ACTIONS: 
-    here there is no MPC, however in the future there will be
-    z1.DeltaPC(:,step) = controllerDeltaPC(z1,step);
-    z1.DeltaPB(:,step) = controllerDeltaPB(z1,step);
-    %}
-    
-    % Compute DeltaPG(step) except if step = N_iteration+1, i.e. the last iteration
-    if step <= z1.N_iteration
-        z1 = getDeltaPG_k(z1,step);
-    end
-    
-    % Update the states
-        % PC and PG
+    % DeltaPG(step)
+    z1 = getDeltaPG_k(z1,step);
+    % PC(step+1) and PG(step+1)
     if step >= z1.Delay_curt + 1
         z1.PC(:,step+1) = z1.PC(:,step)                      + z1.DeltaPC(:,step - z1.Delay_curt);
         z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step) - z1.DeltaPC(:,step - z1.Delay_curt);
     else
+        % past commands are not known so they are considered null
         z1.PC(:,step+1) = z1.PC(:,step);
         z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step);
     end
-        % PB and EB
+    % PB(step+1) and EB(step+1)
     if step >= z1.Delay_batt + 1
         z1.PB(:,step+1) = z1.PB(:,step) + z1.DeltaPB(:,step - z1.Delay_batt);
         z1.EB(:,step+1) = z1.EB(:,step) - z1.Batt_cst_power_reduc*z1.Simulation_time_unit *...
             ( z1.PB(:,step) + z1.DeltaPB(:,step - z1.Delay_batt) );
     else
+        % past commands are not known so they are considered null
         z1.PB(:,step+1) = z1.PB(:,step);
         z1.EB(:,step+1) = z1.EB(:,step) - z1.Batt_cst_power_reduc*z1.Simulation_time_unit * z1.PB(:,step);
     end
     
-    % PA(step+1) being already precomputed, no need to compute it
+    %% Update the internal basecase framing step k+1
+    [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step+1); % write PG(k+1) in the basecase_int
+    [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step+1); % write PB(k+1) in the basecase_int
+    
+    %% Run the Power Flower corresponding to step k+1
+    results = runpf(basecase_int, mpopt); 
+    
+    %{
+    Regarding the functioning: the 'runpf' computation is done using the internal basecase 'basecase_int' data.
+    However, the result'results' are returned using the external basecase 'basecase' data.
+    help: https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+    %}
     
     % Store the information regarding the simulation
     cellOfResults{step} = results;
-  
+    
+    %% Extract the results from the Power Flow
+    % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
+    % as explained previously on 'runpf' functioning, notice 'zone.Branch_idx' is used, not 'zone.Branch_int_idx'
+    z1.Fij(:,step+1) = results.branch(z1.Branch_idx, 14);
+    
+    % Extract PT(step+1)
+    z1 = getPT_k(results, z1, step+1);
+    
+    % Compute DeltaPT(step)
+    z1.DeltaPT(:,step) = z1.PT(:,step+1) - z1.PT(:, step);
+
 end
 
-% Do the power flow on the last iteration to get Fij and DeltaPT
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, z1.N_iteration+1);
-[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, z1.N_iteration+1);
-[results, success] = runpf(basecase_int, mpopt);
-z1.Fij(:,z1.N_iteration+1) = results.branch(z1.Branch_idx, 14);
-z1 = getPT_k(results, z1, z1.N_iteration+1);
-z1.DeltaPT(:,z1.N_iteration) = z1.PT(:,z1.N_iteration+1) - z1.PT(:, z1.N_iteration);
-    
-% Store the info regarding the simulation
-cellOfResults{z1.N_iteration+1} = results;
-    
+
 %% Graphic representation
 
 simulation = copy(z1);
