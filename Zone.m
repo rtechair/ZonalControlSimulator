@@ -82,7 +82,7 @@ classdef Zone < matlab.mixin.Copyable
         %% Other
         SamplingTime (1,1) {mustBeInteger, mustBeNonempty} = 5 
         % 'SamplingTime' default value  is necessary for function 'updateNumberIteration'
-        SimulationTimeUnit (1,1) {mustBeInteger, mustBeNonempty}
+        SimulationTime (1,1) {mustBeInteger, mustBeNonempty}
         BattConstPowerReduc (1,1) {mustBeNonempty}
         
         DelayBattSec (1,1) {mustBeInteger}
@@ -115,6 +115,7 @@ classdef Zone < matlab.mixin.Copyable
             [obj.GenOnIdx, obj.BattOnIdx] = findGenAndBattOnInZone(busId, basecase);
             
             obj.updateNumberElement;
+            obj.updateMaxPG(basecase);
         end
         
         function obj = setInteriorIdAndIdx(obj, mapBus_id_e2i, mapGenOn_idx_e2i)
@@ -194,12 +195,16 @@ classdef Zone < matlab.mixin.Copyable
             obj.NumberIteration = floor( obj.Duration / obj.SamplingTime);
         end
 
-        function obj = updateNumberElement(obj)
-        % Set the zone dimensions: within the zone, number of buses/branches/generators On/batteries On
-        obj.NumberBus = size(obj.BusId,1);
-        obj.NumberBranch = size(obj.BranchIdx,1);
-        obj.NumberGenOn = size(obj.GenOnIdx,1);
-        obj.NumberBattOn = size(obj.BattOnIdx,1);
+        function updateNumberElement(obj)
+            % Set the zone dimensions: within the zone, number of buses/branches/generators On/batteries On
+            obj.NumberBus = size(obj.BusId,1);
+            obj.NumberBranch = size(obj.BranchIdx,1);
+            obj.NumberGenOn = size(obj.GenOnIdx,1);
+            obj.NumberBattOn = size(obj.BattOnIdx,1);
+        end
+        
+        function updateMaxPG(obj, basecase)
+            obj.MaxPG = basecase.gen(obj.GenOnIdx,9);
         end
         
     end
