@@ -80,13 +80,12 @@ classdef Zone < matlab.mixin.Copyable
         EB
         
         %% Other
-        SamplingTime (1,1) {mustBeInteger, mustBeNonempty} = 5 
-        % 'SamplingTime' default value  is necessary for function 'updateNumberIteration'
-        SimulationTime (1,1) {mustBeInteger, mustBeNonempty}
+        SamplingTime (1,1) {mustBeInteger, mustBePositive} = 5 % default value necessary for function 'updateNumberIteration'
+        SimulationTime (1,1) {mustBeInteger}
         BattConstPowerReduc (1,1) {mustBeNonempty}
         
-        DelayBattSec (1,1) {mustBeInteger}
-        DelayCurtSec (1,1) {mustBeInteger}
+        DelayBattSec (1,1) {mustBeInteger, mustBeNonnegative}
+        DelayCurtSec (1,1) {mustBeInteger, mustBeNonnegative}
         
         MaxPG (:,1)
         Duration (1,1) {mustBeInteger}
@@ -94,8 +93,8 @@ classdef Zone < matlab.mixin.Copyable
     
     properties (SetAccess = private)
         NumberIteration (1,1) {mustBeInteger}
-        DelayBatt (1,1) {mustBeInteger, mustBeNonempty}
-        DelayCurt (1,1) {mustBeInteger, mustBeNonempty}      
+        DelayBatt (1,1) {mustBeInteger, mustBeNonnegative}
+        DelayCurt (1,1) {mustBeInteger, mustBeNonnegative}      
     end
     
     methods
@@ -154,7 +153,7 @@ classdef Zone < matlab.mixin.Copyable
         function set.Duration(obj, duration)
             arguments
                 obj
-                duration {mustBeInteger, mustBePositive}
+                duration (1,1) {mustBeInteger, mustBePositive}
             end
             obj.Duration = duration;
             obj.updateNumberIteration;
@@ -163,7 +162,7 @@ classdef Zone < matlab.mixin.Copyable
         function set.SamplingTime(obj, samplingTime)
             arguments
                 obj
-                samplingTime {mustBeInteger, mustBePositive}
+                samplingTime (1,1) {mustBeInteger, mustBePositive}
             end
             obj.SamplingTime = samplingTime;
             obj.updateNumberIteration;
@@ -174,7 +173,7 @@ classdef Zone < matlab.mixin.Copyable
             obj.updateDelayBatt;
         end
         
-        function set.DelayCurtSec(obj, delayCurtSec)
+        function set.DelayCurtSec(obj, delayCurtSec)                
             obj.DelayCurtSec = delayCurtSec;
             obj.updateDelayCurt;
         end
