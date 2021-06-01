@@ -17,9 +17,9 @@ function [basecase, basecase_int] = updateGeneration(basecase, basecase_int, zon
     mustBePositive(zone.GenOn_idx);
     mustBePositive(zone.GenOn_int_idx);
     %}
-    mustBePositive(zone.N_iteration);
+    mustBePositive(zone.NumberIteration);
     % instant <= 1 + zone.N_iteration 
-    mustBeLessThanOrEqual(instant, 1 + zone.N_iteration);
+    mustBeLessThanOrEqual(instant, 1 + zone.NumberIteration);
     
     
     newRealPower = zone.PG(:,instant);
@@ -30,6 +30,6 @@ function [basecase, basecase_int] = updateGeneration(basecase, basecase_int, zon
     end
     %}
     % update the generation at the given instant, for both external and internal basecases
-    basecase.gen(zone.GenOn_idx, 2) = newRealPower;
-    basecase_int.gen(zone.GenOn_int_idx,2) = newRealPower;
+    basecase.gen(zone.GenOnIdx, 2) = newRealPower;
+    basecase_int.gen(zone.GenOnIntIdx,2) = newRealPower;
 end

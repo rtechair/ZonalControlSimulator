@@ -11,5 +11,5 @@ function zone = setInitialPG(zone)
     end
     % Initialization of PG, i.e. PG(k=1), with PG formulation:
     % PG(k) = min { PA(k), maxPA - PC(k) }
-    zone.PG(:,1) = min( zone.PA(:,1), zone.maxPG - zone.PC(:,1) );
+    zone.PG(:,1) = min( zone.PA(:,1), zone.MaxPG - zone.PC(:,1) );
 end

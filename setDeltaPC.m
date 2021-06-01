@@ -21,14 +21,14 @@ function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn)
     
     %% Handling error
     
-    mustBePositive(zone.N_iteration); % check zone.N_iteration has been computed
-    if isempty(zone.N_genOn)
+    mustBePositive(zone.NumberIteration); % check zone.NumberIteration has been computed
+    if isempty(zone.NumberGenOn)
         error('compute Zone.N_genOn using the findZoneDimension function, prior to using setGivenCurtailment')
     end
     
             
     
-    if size(maxPA_per_genOn,1) ~= zone.N_genOn
+    if size(maxPA_per_genOn,1) ~= zone.NumberGenOn
         error('maxPA_of_genOn is of incorrect size, it is a vector of length zone.N_genOn')
     end
     
@@ -36,7 +36,7 @@ function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn)
     [n_row_curt, n_col_curt] = size(curtailment);
     
     % check if curtailment is of correct size, if not then abort function
-    if  (n_row_curt ~= 1 && n_row_curt ~= zone.N_genOn) || (n_col_curt ~= 1 && n_col_curt ~= n_instant)
+    if  (n_row_curt ~= 1 && n_row_curt ~= zone.NumberGenOn) || (n_col_curt ~= 1 && n_col_curt ~= n_instant)
         error(['curtailment is of incorrect size. The number of rows is 1 or zone.N_genOn.' newline ...
             'The number of columns is 1 or the same length as instant'])
     end
@@ -45,13 +45,13 @@ function zone = setDeltaPC(zone, instant, curtailment, maxPA_per_genOn)
     
     % initialize DeltaPC if necessary
     if isempty(zone.DeltaPC)
-        zone.DeltaPC = zeros(zone.N_genOn,zone.N_iteration);
+        zone.DeltaPC = zeros(zone.NumberGenOn,zone.NumberIteration);
     end
     
-    instant_to_modify = floor(zone.N_iteration * instant);
+    instant_to_modify = floor(zone.NumberIteration * instant);
     
     % case 4
-    if n_row_curt == zone.N_genOn && n_col_curt == n_instant
+    if n_row_curt == zone.NumberGenOn && n_col_curt == n_instant
         zone.DeltaPC(:,instant_to_modify) = curtailment .* maxPA_per_genOn;
     else
         % case 1 & 2 & 3

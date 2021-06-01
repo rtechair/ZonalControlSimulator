@@ -7,15 +7,15 @@ function [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, 
         zone {mustBeA(zone, 'Zone')}
         instant (1,1) {mustBeInteger,mustBePositive}
     end
-    mustBePositive(zone.N_iteration)
-    % instant <= 1 + zone.N_iteration 
-    mustBeLessThanOrEqual(instant, 1 + zone.N_iteration);
+    mustBePositive(zone.NumberIteration)
+    % instant <= 1 + zone.NumberIteration 
+    mustBeLessThanOrEqual(instant, 1 + zone.NumberIteration);
     
     newRealPower = zone.PB(:,instant);
     %TODO: handling when PB is computed, but there is no battOn, what
     %behiavor
     %to expect?
     
-    basecase.gen(zone.BattOn_idx,2) = newRealPower;
-    basecase_int.gen(zone.BattOn_int_idx,2) = newRealPower;
+    basecase.gen(zone.BattOnIdx,2) = newRealPower;
+    basecase_int.gen(zone.BattOnIntIdx,2) = newRealPower;
 end
