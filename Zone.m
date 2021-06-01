@@ -51,11 +51,7 @@ classdef Zone < matlab.mixin.Copyable
         BusBorderId (:,1) {mustBeInteger}
         BranchBorderIdx (:,1) {mustBeInteger}
         
-        %% Number of elements
-        NumberBus (1,1) {mustBeInteger}
-        NumberBranch (1,1) {mustBeInteger}
-        NumberGenOn (1,1) {mustBeInteger}
-        NumberBattOn (1,1) {mustBeInteger}
+        
              
         %% Dynamic Model Operator
         A   % state
@@ -80,21 +76,27 @@ classdef Zone < matlab.mixin.Copyable
         EB
         
         %% Other
-        SamplingTime (1,1) {mustBeInteger, mustBePositive} = 5 % default value necessary for function 'updateNumberIteration'
-        SimulationTime (1,1) {mustBeInteger}
+        SamplingTime (1,1) {mustBeInteger, mustBePositive} = 5 % [second] , default value necessary for function 'updateNumberIteration'
+        SimulationTime (1,1) {mustBeInteger} % [unit, no dimension]
         BattConstPowerReduc (1,1) {mustBeNonempty}
         
-        DelayBattSec (1,1) {mustBeInteger, mustBeNonnegative}
-        DelayCurtSec (1,1) {mustBeInteger, mustBeNonnegative}
+        DelayBattSec (1,1) {mustBeInteger, mustBeNonnegative} % [second]
+        DelayCurtSec (1,1) {mustBeInteger, mustBeNonnegative} % [second]
         
-        MaxPG (:,1)
-        Duration (1,1) {mustBeInteger}
+        MaxPG (:,1) % [MW]
+        Duration (1,1) {mustBeInteger} % [second]
     end
     
     properties (SetAccess = private)
+        %% Number of elements
+        NumberBus (1,1) {mustBeInteger}
+        NumberBranch (1,1) {mustBeInteger}
+        NumberGenOn (1,1) {mustBeInteger}
+        NumberBattOn (1,1) {mustBeInteger}
         NumberIteration (1,1) {mustBeInteger}
-        DelayBatt (1,1) {mustBeInteger, mustBeNonnegative}
-        DelayCurt (1,1) {mustBeInteger, mustBeNonnegative}      
+        % Delay corresponding to the unit used in the simulation
+        DelayBatt (1,1) {mustBeInteger, mustBeNonnegative} % [unit, no dimension]
+        DelayCurt (1,1) {mustBeInteger, mustBeNonnegative} % [unit, no dimension]
     end
     
     methods
@@ -115,6 +117,12 @@ classdef Zone < matlab.mixin.Copyable
             
             obj.updateNumberElement;
             obj.updateMaxPG(basecase);
+            
+            % the following function requires NumberIteration to be
+            % computed
+            % so there should be a check maybe, prior to accessing the
+            % function
+            % obj.initializeDynamicVariables;
         end
         
         function obj = setInteriorIdAndIdx(obj, mapBus_id_e2i, mapGenOn_idx_e2i)
@@ -135,8 +143,7 @@ classdef Zone < matlab.mixin.Copyable
             obj.BattOnIntIdx = full(mapGenOn_idx_e2i(obj.BattOnIdx));
         end
         
-        function obj = setDynamicSystem(obj, basecase_int, bus_id, branch_idx, genOn_idx, battOn_idx,...
-                mapBus_id_e2i, mapGenOn_idx_e2i, sampling_time, batt_cst_power_reduc)
+        function obj = setDynamicSystem(obj, basecaseInt,mapBus_id_e2i, mapGenOn_idx_e2i)
             % Set the dynamic model operators:
             % A: state               
             % Bc: control curtailment
@@ -144,10 +151,36 @@ classdef Zone < matlab.mixin.Copyable
             % Dg: disturbance from power generation variation
             % Dt: disturbance from power transmission variation
             % Da: disturbance from power availibity variation
-            [obj.A, obj.Bc, obj.Bb, obj.Dg, obj.Dt, obj.Da] = dynamicSystem(basecase_int, bus_id, branch_idx, genOn_idx, battOn_idx,...
-                mapBus_id_e2i, mapGenOn_idx_e2i, sampling_time, batt_cst_power_reduc);
+            [obj.A, obj.Bc, obj.Bb, obj.Dg, obj.Dt, obj.Da] = dynamicSystem(basecaseInt, obj.BusId, obj.BranchIdx, obj.GenOnIdx, obj.BattOnIdx,...
+                mapBus_id_e2i, mapGenOn_idx_e2i, obj.SamplingTime, obj.BattConstPowerReduc);
         end   
 
+        %% initialize the dynamic model
+        function obj = initializeDynamicVariables(obj)
+            % Initialize the variables used for the dynamic model.
+            % This concerns the state:
+            % Fij, PC, PB, EB, PG, PA
+            % The control: DeltaPC, DeltaPB
+            % The disturbance: DeltaPA, DeltaPG, PT, DeltaPT
+            
+            % State: Fij, PC, PB, EB, PG, PA
+            obj.Fij = zeros(obj.NumberBranch,   obj.NumberIteration+1);
+            obj.PC  = zeros(obj.NumberGenOn,    obj.NumberIteration+1);
+            obj.PB  = zeros(obj.NumberBattOn,   obj.NumberIteration+1);
+            obj.EB  = zeros(obj.NumberBattOn,   obj.NumberIteration+1);
+            obj.PA  = zeros(obj.NumberGenOn,    obj.NumberIteration+1);
+            obj.PG  = zeros(obj.NumberGenOn,    obj.NumberIteration+1);
+
+            % Control: DeltaPC, DeltaPB       
+            obj.PC  = zeros(obj.NumberGenOn,    obj.NumberIteration);
+            obj.DeltaPB = zeros(obj.NumberBattOn, obj.NumberIteration);
+            
+            % Disturbance: DeltaPa, DeltaPG, PT, DeltaPT          
+            obj.DeltaPA = zeros(obj.NumberGenOn, obj.NumberIteration);
+            obj.DeltaPG = zeros(obj.NumberGenOn, obj.NumberIteration);
+            obj.PT = zeros(obj.NumberBus,       obj.NumberIteration+1);
+            obj.DeltaPT = zeros(obj.NumberBus,  obj.NumberIteration);
+        end
         
         %% Set property
         function set.Duration(obj, duration)
