@@ -82,7 +82,7 @@ bus_idx_back using mapBus_id2idx(bus_id_back)
 %{ 
 TODO check branches are not moved during the conversion.
 
-he branches are accessed through their idx, they do not have an id.
+the branches are accessed through their idx, they do not have an id.
 if no branch is deleted during the internal conversion, then the branch
 will remain as the same index in the internal basecase.
 
@@ -98,18 +98,7 @@ removed in the internal basecase from the external basecase.
 the generators are accessed through their idx, they do not have an id
 %}
 
-%% CONVERSION OF ZONE 1
-
-
-% create the object associated to the zone
-
-% get the rest of the info about the zone
-%{
-[zone1_branch_inner_idx, zone1_branch_border_idx] = findInnerAndBorderBranch(zone1_bus_id, basecase);
-zone1_bus_border_id = findBorderBus(zone1_bus_id, zone1_branch_border_idx, basecase);
-[zone1_gen_idx, zone1_battery_idx] = findGenAndBattOnInZone(zone1_bus_id, basecase);
-%}
-
+%% Creation of zone
 
 z1 = Zone(basecase, zone1_bus_id);
 z2 = Zone(basecase, zone2_bus_id);
@@ -117,38 +106,27 @@ z2 = Zone(basecase, zone2_bus_id);
 setInteriorIdAndIdx( z1, mapBus_id_e2i, mapGenOn_idx_e2i);
 z2 = setInteriorIdAndIdx( z2, mapBus_id_e2i, mapGenOn_idx_e2i);
 
-
-
 %% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
 %{
-x = [Fij Pc Pb Eb Pg ]'     uc = DeltaPc      ub =DeltaPb    w = DeltaPg      h = DeltaPT
+x = [Fij Pc Pb Eb Pg Pa ]'     uc = DeltaPc      ub =DeltaPb    w = DeltaPg      h = DeltaPT
 The model is described by the equations x(k+1) = A*x(k) + Bc*DPC(k-tau_c) + Bb*DPB(k-tau_b) + Dg*DPG(k) + Dn*DPT(k) + Da*DPA(k)
 cf Powertech paper
 %}
-% External and internal basecase
-[n_bus, n_branch, n_gen, n_batt] = findBasecaseDimension(basecase); % [6469, 9001, 1228, 77]
-[n_bus_int, n_branch_int, n_gen_int, n_batt_int] = findBasecaseDimension(basecase_int); % [6469, 9001, 396, 13]
 
 
-z1.Simulation_time_unit = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
+z1.SimulationTime = 1; 
 z1_cb = 0.001; % conversion factor for battery power output
-z1.Batt_cst_power_reduc = z1_cb * ones(z1.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
+z1.BattConstPowerReduc = z1_cb * ones(z1.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
-%{
-setDynamicSystem(z1, basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
-                mapBus_id_e2i, mapGenOn_idx_e2i, z1.Simulation_time_unit, z1.Batt_cst_power_reduc);
-%}
-%{
- [z1.A, z1.Bc, z1.Bb, z1.Dg, z1.Dt, z1.Da] = dynamicSystem(basecase_int, z1.Bus_id, z1.Branch_idx, z1.GenOn_idx, z1.BattOn_idx,...
-               mapBus_id_e2i, mapGenOn_idx_e2i, z1.Simulation_time_unit, z1.Batt_cst_power_reduc);
- %}
+
+setDynamicSystem(z1, basecase_int, mapBus_id_e2i, mapGenOn_idx_e2i);
+
  
 % Zone 2
-[z2.N_bus, z2.N_branch, z2.N_genOn, z2.N_battOn] = findZoneDimension(z2.Bus_id, z2.Branch_idx,z2.GenOn_idx, z2.BattOn_idx);
 
-z2.Simulation_time_unit = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
+z2.SimulationTime = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
 z2_cb = 0.001; % conversion factor for battery power output
-z2.Batt_cst_power_reduc = z2_cb * ones(z2.N_battOn,1); % TODO: needs to be changed afterwards, with each battery coef
+z2.BattConstPowerReduc = z2_cb * ones(z2.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 %{
 z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, z2.BattOn_idx,...
@@ -158,70 +136,60 @@ z2 = setDynamicSystem(z2, basecase_int, z2.Bus_id, z2.Branch_idx, z2.GenOn_idx, 
 
 %% Simulation initialization
 
-duration = 600;
-z1.Sampling_time = 5;
-z1.N_iteration = floor(duration / z1.Sampling_time);
-z1.maxPG = basecase.gen(z1.GenOn_idx, 9);
+z1.Duration = 600;
+z1.SamplingTime = 5;
 
-z1_delay_batt_sec = 1;
-z1_delay_curt_sec = 45;
-z1.Delay_batt = ceil(z1_delay_batt_sec/ z1.Sampling_time);
-z1.Delay_curt = ceil(z1_delay_curt_sec/ z1.Sampling_time);
+z1.DelayBattSec = 1;
+z1.DelayCurtSec = 45;
 
-
-z2.Sampling_time = 5;
-z2.N_iteration = floor(duration / z2.Sampling_time);
-z2.maxPG = basecase.gen(z2.GenOn_idx, 9);
+z1.initializeDynamicVariables;
 
 %% Compute available power (PA) and delta PA using real data
 % all PA and DeltaPA values are computed prior to the simulation
 
 z1 = getPAandDeltaPA(z1, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
-
-z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
-
-
-%% Set some preconfigurated curtailment DeltaPC
-z1_maxPG_of_genOn = basecase.gen(z1.GenOn_idx, 9); % computed inside getPAandDeltaPA, but can't be in setDeltaPC as basecase not provided
-
+%z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
 %% Initialize PC and DeltaPC
 %PC(1) = 0; Other PC values will be computed online with DeltaPC values provided by the MPC
 
-z1.PC = zeros(z1.N_genOn, z1.N_iteration+1);
+%z1.PC = zeros(z1.NumberGenOn, z1.NumberIteration+1);
 
-z1 = setDeltaPC(z1, [1/7 1/3 2/3], 0.2, z1.maxPG); 
+z1 = setDeltaPC(z1, [1/7 1/3 2/3], 0.2, z1.MaxPG); 
 
-z2.PC = zeros(z2.N_genOn, z2.N_iteration+1);
+%z2.PC = zeros(z2.NumberGenOn, z2.NumberIteration+1);
 
-z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2.maxPG); 
+%z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2.MaxPG); 
 
 %% Initialize PB and DeltaPB
 % DeltaPB has not been set previously however
 %PB(1) = 0; Other PB values will be computed online with DeltaPB values provided by the MPC
-z1.PB = zeros(z1.N_battOn, z1.N_iteration+1);
-z1.DeltaPB = zeros(z1.N_battOn, z1.N_iteration);
+%{
+z1.PB = zeros(z1.NumberBattOn, z1.NumberIteration+1);
+z1.DeltaPB = zeros(z1.NumberBattOn, z1.NumberIteration);
 
 %% Initialize PG and DeltaPG
-z1.PG = zeros(z1.N_genOn, z1.N_iteration+1);
-z1.DeltaPG = zeros(z1.N_genOn, z1.N_iteration);
+z1.PG = zeros(z1.NumberGenOn, z1.NumberIteration+1);
+z1.DeltaPG = zeros(z1.NumberGenOn, z1.NumberIteration);
 % Define PG(1)
-z1 = setInitialPG(z1);
 
 %% Initialize PT and DeltaPT
-z1.PT = zeros(z1.N_bus, z1.N_iteration+1);
-z1.DeltaPT = zeros(z1.N_bus, z1.N_iteration);
+z1.PT = zeros(z1.NumberBus, z1.NumberIteration+1);
+z1.DeltaPT = zeros(z1.NumberBus, z1.NumberIteration);
 
 %% Initialize EB
 % EB(1) = 0; Other EB values will be computed online
-z1.EB = zeros(z1.N_battOn, z1.N_iteration+1);
+z1.EB = zeros(z1.NumberBattOn, z1.NumberIteration+1);
 % for the zone 1: EB_init = 750 in Alessio's code
 
 %% Initialize Fij
-z1.Fij = zeros(z1.N_branch, z1.N_iteration+1);
-
+z1.Fij = zeros(z1.NumberBranch, z1.NumberIteration+1);
+%}
 %% Initialization
+
+z1 = setInitialPG(z1);
+
 
 % matpower option for the runpf function, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
@@ -229,7 +197,7 @@ mpopt = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
         'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
         'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
     
-cellOfResults = cell(1,z1.N_iteration+1);
+cellOfResults = cell(1,z1.NumberIteration+1);
     
 
 %% Initialization
@@ -240,7 +208,7 @@ cellOfResults = cell(1,z1.N_iteration+1);
 [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, 1);
 [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, 1);
 results = runpf(basecase_int, mpopt);
-z1.Fij(:,1) = results.branch(z1.Branch_idx, 14);
+z1.Fij(:,1) = results.branch(z1.BranchIdx, 14);
 
 
 
@@ -278,7 +246,7 @@ use it for the optimization
 
 %}
 
-for step = 1:z1.N_iteration
+for step = 1:z1.NumberIteration
     
     %% CONTROL from the controller 
     %{
@@ -292,23 +260,23 @@ for step = 1:z1.N_iteration
     % DeltaPG(step)
     z1 = getDeltaPG_k(z1,step);
     % PC(step+1) and PG(step+1)
-    if step >= z1.Delay_curt + 1
-        z1.PC(:,step+1) = z1.PC(:,step)                      + z1.DeltaPC(:,step - z1.Delay_curt);
-        z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step) - z1.DeltaPC(:,step - z1.Delay_curt);
+    if step >= z1.DelayCurt + 1
+        z1.PC(:,step+1) = z1.PC(:,step)                      + z1.DeltaPC(:,step - z1.DelayCurt);
+        z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step) - z1.DeltaPC(:,step - z1.DelayCurt);
     else
         % past commands are not known so they are considered null
         z1.PC(:,step+1) = z1.PC(:,step);
         z1.PG(:,step+1) = z1.PG(:,step) + z1.DeltaPG(:,step);
     end
     % PB(step+1) and EB(step+1)
-    if step >= z1.Delay_batt + 1
-        z1.PB(:,step+1) = z1.PB(:,step) + z1.DeltaPB(:,step - z1.Delay_batt);
-        z1.EB(:,step+1) = z1.EB(:,step) - z1.Batt_cst_power_reduc*z1.Simulation_time_unit *...
-            ( z1.PB(:,step) + z1.DeltaPB(:,step - z1.Delay_batt) );
+    if step >= z1.DelayBatt + 1
+        z1.PB(:,step+1) = z1.PB(:,step) + z1.DeltaPB(:,step - z1.DelayBatt);
+        z1.EB(:,step+1) = z1.EB(:,step) - z1.BattConstPowerReduc*z1.SimulationTime *...
+            ( z1.PB(:,step) + z1.DeltaPB(:,step - z1.DelayBatt) );
     else
         % past commands are not known so they are considered null
         z1.PB(:,step+1) = z1.PB(:,step);
-        z1.EB(:,step+1) = z1.EB(:,step) - z1.Batt_cst_power_reduc*z1.Simulation_time_unit * z1.PB(:,step);
+        z1.EB(:,step+1) = z1.EB(:,step) - z1.BattConstPowerReduc*z1.SimulationTime * z1.PB(:,step);
     end
     
     %% Update the internal basecase framing step k+1
@@ -330,7 +298,7 @@ for step = 1:z1.N_iteration
     %% Extract the results from the Power Flow
     % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
     % as explained previously on 'runpf' functioning, notice 'zone.Branch_idx' is used, not 'zone.Branch_int_idx'
-    z1.Fij(:,step+1) = results.branch(z1.Branch_idx, 14);
+    z1.Fij(:,step+1) = results.branch(z1.BranchIdx, 14);
     
     % Extract PT(step+1)
     z1 = getPT_k(results, z1, step+1);
@@ -345,7 +313,7 @@ end
 
 simulation = copy(z1);
 
-isFigurePlotted = false;
+isFigurePlotted = true;
 
 if isFigurePlotted
     figureStateGen = plotStateGenOn(basecase, simulation);
