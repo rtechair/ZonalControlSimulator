@@ -8,8 +8,8 @@ function [mapGenOn_idx_e2i, mapGenOn_idx_i2e] = mapGenOn_idx_e2i_i2e(basecase_in
     %% INPUT
     % basecase_int: internal basecase
     %% OUTPUT
-    % mapGen_idx_e2i: sparse matrix, converts exterior -> interior online generator index
-    % mapGen_idx_i2e: continuous indexing matrix, converts exterior -> interior online generator index
+    % mapGenOn_idx_e2i: sparse matrix, converts exterior -> interior online generator index
+    % mapGenOn_idx_i2e: continuous indexing matrix, converts exterior -> interior online generator index
     
     genOn_idx_ext = basecase_int.order.gen.status.on; % column vector where each line indicates what line (=index) is each Online generator in the original basecase
     n_genOn = size(genOn_idx_ext,1);

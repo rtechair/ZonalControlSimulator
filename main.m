@@ -29,7 +29,11 @@ zones_bus = {zone1_bus_id, zone2_bus_id, zone3_bus};
 % if the basecase is not correctly updated, update it
 handleBasecase();
 
-basecase = loadcase('case6468rte_zone1and2'); %mpc_ext
+% load and work on basecase
+basecaseName = 'case6468rte_zone1and2';
+
+[basecase, basecaseInt, mapBus_id2idx, mapBus_idx2id, ...
+    mapBus_id_e2i, mapBus_id_i2e, mapGenOn_idx_e2i, mapGenOn_idx_i2e] = getBasecaseAndMap(basecaseName);
 
 % crash test, add a island bus, not connected to the rest of the network
 % issue is: matpower does not delete this bus, 
@@ -41,27 +45,6 @@ basecase = addBus(basecase,99999,    2,   0 ,      0,       0 ,  0,   1,  1.0386
 basecase = addBus(basecase,99998,    2,   0 ,      0,       0 ,  0,   1,  1.03864259,	-11.9454015,	63,	1,	1.07937,	0.952381);
 basecase.branch(end+1,:) = [ 99998, 99999, 0.2, 0.4, 0.5, 0, 0, 0, 1, 0, 1, 0, 0];
 %}
-
-%% MAP
-% convert to the internal basecase structure for Matpower
-basecase_int = ext2int(basecase);
-
-% check if a bus or a branch has been deleted, currently the code does not
-% handle the case if some are deleted/off
-[isBusDeleted, isBranchDeleted] = isBusOrBranchDeleted(basecase_int);
-if isBusDeleted
-    disp('a bus has been deleted, nothing has been made to handle this situation, the code should not work')
-end
-if isBranchDeleted
-    disp('a branch has been deleted, nothing has been made to handle this situation, the code should not work')
-end
-% bus map
-[mapBus_id2idx, mapBus_idx2id] = mapBus_id2idx_idx2id(basecase);
-mapBus_id_e2i = basecase_int.order.bus.e2i; % sparse column vector
-mapBus_id_i2e = basecase_int.order.bus.i2e; % full column vector
-
-% online gen map, this include batteries
-[mapGenOn_idx_e2i, mapGenOn_idx_i2e] = mapGenOn_idx_e2i_i2e(basecase_int);
 
 %% HOW CONVERSION WORKS
 
@@ -119,7 +102,7 @@ z1_cb = 0.001; % conversion factor for battery power output
 z1.BattConstPowerReduc = z1_cb * ones(z1.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
 
-setDynamicSystem(z1, basecase_int, mapBus_id_e2i, mapGenOn_idx_e2i);
+setDynamicSystem(z1, basecaseInt, mapBus_id_e2i, mapGenOn_idx_e2i);
 
  
 % Zone 2
@@ -205,9 +188,9 @@ cellOfResults = cell(1,z1.NumberIteration+1);
 % State(1) is already defined from the variables initilization, except
 % Fij(1). DeltaPT(0) is not important, so let it remain at value = 0
 
-[basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, 1);
-[basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, 1);
-results = runpf(basecase_int, mpopt);
+[basecase, basecaseInt] = updateGeneration(basecase, basecaseInt, z1, 1);
+[basecase, basecaseInt] = updateRealPowerBatt(basecase, basecaseInt, z1, 1);
+results = runpf(basecaseInt, mpopt);
 z1.Fij(:,1) = results.branch(z1.BranchIdx, 14);
 
 
@@ -280,11 +263,11 @@ for step = 1:z1.NumberIteration
     end
     
     %% Update the internal basecase framing step k+1
-    [basecase, basecase_int] = updateGeneration(basecase, basecase_int, z1, step+1); % write PG(k+1) in the basecase_int
-    [basecase, basecase_int] = updateRealPowerBatt(basecase, basecase_int, z1, step+1); % write PB(k+1) in the basecase_int
+    [basecase, basecaseInt] = updateGeneration(basecase, basecaseInt, z1, step+1); % write PG(k+1) in the basecase_int
+    [basecase, basecaseInt] = updateRealPowerBatt(basecase, basecaseInt, z1, step+1); % write PB(k+1) in the basecase_int
     
     %% Run the Power Flower corresponding to step k+1
-    results = runpf(basecase_int, mpopt); 
+    results = runpf(basecaseInt, mpopt); 
     
     %{
     Regarding the functioning: the 'runpf' computation is done using the internal basecase 'basecase_int' data.
