@@ -14,6 +14,10 @@ zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
 % https://matpower.org/docs/ref/
 
 zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
+zone1_busBorder = [1446;2504;2694;4231;5313;5411];
+
+zone1_bus_id = [zone1_bus_id ; zone1_busBorder];
+
 zone1_bus_name = ["CR" "GR" "GY" "MC" "TR" "VG"];
 
 zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
@@ -31,6 +35,7 @@ handleBasecase();
 
 % load and work on basecase
 basecaseName = 'case6468rte_zone1and2';
+windDataName= 'tauxDeChargeMTJLMA2juillet2018.txt';
 
 [basecase, basecaseInt, mapBus_id2idx, mapBus_idx2id, ...
     mapBus_id_e2i, mapBus_id_i2e, mapGenOn_idx_e2i, mapGenOn_idx_i2e] = getBasecaseAndMap(basecaseName);
@@ -85,10 +90,26 @@ the generators are accessed through their idx, they do not have an id
 %% Creation of zone
 
 zone1 = Zone(basecase, zone1_bus_id);
-zone2 = Zone(basecase, zone2_bus_id);
+
+
+
+%% Information about zone 1 or its simulation
+
+zone1.SimulationTime = 1; 
+z1_cb = 0.001; % conversion factor for battery power output
+zone1.BattConstPowerReduc = z1_cb * ones(zone1.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
+
+zone1.Duration = 600;
+zone1.SamplingTime = 5;
+
+zone1.DelayBattSec = 1;
+zone1.DelayCurtSec = 45;
+
+
+%% Set the interior id and indices related to the internal basecase, for the zone
 
 setInteriorIdAndIdx( zone1, mapBus_id_e2i, mapGenOn_idx_e2i);
-zone2 = setInteriorIdAndIdx( zone2, mapBus_id_e2i, mapGenOn_idx_e2i);
+
 
 %% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
 %{
@@ -97,42 +118,21 @@ The model is described by the equations x(k+1) = A*x(k) + Bc*DPC(k-tau_c) + Bb*D
 cf Powertech paper
 %}
 
-
-zone1.SimulationTime = 1; 
-z1_cb = 0.001; % conversion factor for battery power output
-zone1.BattConstPowerReduc = z1_cb * ones(zone1.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
-
-
 setDynamicSystem(zone1, basecaseInt, mapBus_id_e2i, mapGenOn_idx_e2i);
-
- 
-% Zone 2
-
-zone2.SimulationTime = 1; % sec, TODO look at the previous main, Sampling_time = 5 and simulation_time_unit = 1, I do not understand
-z2_cb = 0.001; % conversion factor for battery power output
-zone2.BattConstPowerReduc = z2_cb * ones(zone2.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
-
-% z2 = setDynamicSystem(z2, basecaseInt, mapBus_id_e2i, mapGenOn_idx_e2i);
 
 %% Simulation initialization
 
-zone1.Duration = 600;
-zone1.SamplingTime = 5;
-
-zone1.DelayBattSec = 1;
-zone1.DelayCurtSec = 45;
 
 zone1.initializeDynamicVariables;
 
 %% Compute available power (PA) and delta PA using real data
 % all PA and DeltaPA values are computed prior to the simulation
 
-zone1 = getPAandDeltaPA(zone1, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
+zone1 = getPAandDeltaPA(zone1, basecase, windDataName);
 
 %z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
 %% Initialize PC and DeltaPC
-
 
 
 zone1 = setDeltaPC(zone1, [1/7 1/3 2/3], 0.2, zone1.MaxPG); 
