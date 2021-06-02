@@ -1,5 +1,5 @@
 function G = graphStatic(basecase,branchIdx)
-% plot the static graph of a zone defined by its branch indices in the
+% Create the static graph of a zone defined by its branch indices in the
 % basecase. The buses are branch's node ends.
     arguments
         basecase struct
@@ -18,3 +18,5 @@ function G = graphStatic(basecase,branchIdx)
     %}
     G = graph(string(fbus), string(tbus)); 
 end
+
+%https://www.mathworks.com/help/matlab/ref/graph.html

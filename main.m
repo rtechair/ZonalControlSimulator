@@ -14,9 +14,8 @@ zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
 % https://matpower.org/docs/ref/
 
 zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
-zone1_busBorder = [1446;2504;2694;4231;5313;5411];
-
-zone1_bus_id = [zone1_bus_id ; zone1_busBorder];
+%zone1_busBorder = [1446;2504;2694;4231;5313;5411];
+%zone1_bus_id = [zone1_bus_id ; zone1_busBorder];
 
 zone1_bus_name = ["CR" "GR" "GY" "MC" "TR" "VG"];
 
@@ -267,6 +266,9 @@ if isFigurePlotted
     figureDeltaGen = plotDeltaGenOn(basecase, simulation);
 
     figureFlowBranch = plotFlowBranch(basecase, simulation);
+    
+    graphZoneAndBorder = graphStatic(basecase, [simulation.BranchIdx; simulation.BranchBorderIdx]);
+    P = plotWithLabel(graphZoneAndBorder, basecase, simulation.BusId, simulation.GenOnIdx, simulation.BattOnIdx);
 end
 
 
