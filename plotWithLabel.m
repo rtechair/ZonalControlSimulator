@@ -54,5 +54,6 @@ function P = plotWithLabel(graphStatic, basecase, busId, genOnIdx, battOnIdx)
 end
 
 % https://www.mathworks.com/help/matlab/math/label-graph-nodes-and-edges.html
-% https://www.mathworks.com/help/matlab/ref/matlab.graphics.chart.primitive.graphplot-properties.html
+% https://www.mathworks.com/help/matlab/math/graph-plotting-and-customization.html
+% https://www.mathworks.com/help/matlab/ref/matlab.graphics.chart.primitive.graphplot.html
 % https://www.mathworks.com/help/matlab/ref/graph.plot.html#namevaluepairarguments

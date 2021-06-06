@@ -36,6 +36,7 @@ handleBasecase();
 basecaseName = 'case6468rte_zone1and2';
 windDataName= 'tauxDeChargeMTJLMA2juillet2018.txt';
 durationSimulation = 600;
+branchPowerLimit = 45;
 
 [basecase, basecaseInt, mapBus_id2idx, mapBus_idx2id, ...
     mapBus_id_e2i, mapBus_id_i2e, mapGenOn_idx_e2i, mapGenOn_idx_i2e] = getBasecaseAndMap(basecaseName);
@@ -134,8 +135,10 @@ zone1 = getPAandDeltaPA(zone1, basecase, windDataName);
 
 %% Initialize PC and DeltaPC
 
+% the following line is now a comment, as a limiter/ controller is used
+% instead
+% zone1 = setDeltaPC(zone1, [1/7 1/3 2/3], 0.2, zone1.MaxPG); 
 
-zone1 = setDeltaPC(zone1, [1/7 1/3 2/3], 0.2, zone1.MaxPG); 
 
 %PC(1) = 0; Other PC values will be computed online with DeltaPC values provided by the MPC
 
@@ -214,11 +217,11 @@ use it for the optimization
 for step = 2:zone1.NumberIteration+1
     
     %% CONTROL from the controller 
-    %{
-    [DeltaPB, DeltaPC] = controller(z1, step);
-    z1.DeltaPB(:,step) = DeltaPB;
-    z1.DeltaPC(:,step) = DeltaPC;
-    %}
+    
+    [DeltaPB, DeltaPC] = limiter(zone1, step, branchPowerLimit);
+    zone1.DeltaPB(:,step-1) = DeltaPB;
+    zone1.DeltaPC(:,step-1) = DeltaPC;
+    
        
     [basecase, basecaseInt, zone1, cellOfResults, ~] = simulationIteration(...
         basecase, basecaseInt, zone1, step, cellOfResults, mpopt, 0, 0); % currently the last 2 inputs are not used in the function
@@ -241,6 +244,24 @@ if isFigurePlotted
     P = plotWithLabel(graphZoneAndBorder, basecase, simulation.BusId, simulation.GenOnIdx, simulation.BattOnIdx);
 end
 
+function [deltaPB, deltaPC] = limiter(zone, step, branchPowerLimit)
+    isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > branchPowerLimit);
+    isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < branchPowerLimit);
+    if isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne
+        deltaPC(1:zone.NumberGenOn,1) = 0.2*branchPowerLimit;
+    elseif isAllBranchPowerFlowUnder60PercentAtStepMinusOne
+            deltaPC(1:zone.NumberGenOn,1) = - 0.1*branchPowerLimit;
+    else
+        deltaPC(1:zone.NumberGenOn,1) = 0;
+    end
+    deltaPB(1:zone.NumberBattOn,1) = 0;
+end
+           
+        
+    
+    
+    
+
 function  [basecase, basecaseInt, zone, cellOfResults, state_step, disturbance_step, control_multiPreviousSteps] = simulationIteration(...
     basecase, basecaseInt, zone, step, cellOfResults, mpopt, deltaPC_previousStep, deltaPB_previousStep)
     % from the previous step state, and the previous step control, update
@@ -252,6 +273,9 @@ function  [basecase, basecaseInt, zone, cellOfResults, state_step, disturbance_s
     state_step = 0;
     disturbance_step = 0;
     control_multiPreviousSteps = 0;
+    
+    deltaPC_previousStep = 0;
+    deltaPB_previousStep = 0;
     
     %% Function starts here until previous outputs are correctly set up and used
     % DeltaPG(step-1)

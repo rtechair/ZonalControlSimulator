@@ -1,4 +1,4 @@
-function figDeltaGenOn = plotdeltaGenOn(basecase, zone, isAxisTemporal)
+function figDeltaGenOn = plotDeltaGenOn(basecase, zone, isAxisTemporal)
     % plot for each generator On: DeltaPA, DeltaPG, DeltaPC, DeltaPC(step-zone.Delay_curt).
     % if isAxisTemporal = true, then 'duration' is necessary and it displays the values over the duration
     % time. Else, displays the values over the number of iterations and 'duration' unnecessary.
