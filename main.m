@@ -35,6 +35,7 @@ handleBasecase();
 % load and work on basecase
 basecaseName = 'case6468rte_zone1and2';
 windDataName= 'tauxDeChargeMTJLMA2juillet2018.txt';
+durationSimulation = 600;
 
 [basecase, basecaseInt, mapBus_id2idx, mapBus_idx2id, ...
     mapBus_id_e2i, mapBus_id_i2e, mapGenOn_idx_e2i, mapGenOn_idx_i2e] = getBasecaseAndMap(basecaseName);
@@ -98,7 +99,7 @@ zone1.SimulationTime = 1;
 z1_cb = 0.001; % conversion factor for battery power output
 zone1.BattConstPowerReduc = z1_cb * ones(zone1.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
 
-zone1.Duration = 600;
+zone1.Duration = durationSimulation;
 zone1.SamplingTime = 5;
 
 zone1.DelayBattSec = 1;
@@ -150,28 +151,33 @@ zone1 = setDeltaPC(zone1, [1/7 1/3 2/3], 0.2, zone1.MaxPG);
 zone1 = setInitialPG(zone1);
 
 
-% matpower option for the runpf function, see help runpf and help mpoption
+% matpower option for the 'runpf' function configuration, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
 mpopt = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
         'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
         'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
     
+% save the power flow results, i.e. take a snapshot of the whole electric
+% network for each time frame of the simulation
 cellOfResults = cell(1,zone1.NumberIteration+1);
     
 
 %% Initialization
 
 % State(1) is already defined from the variables initilization, except
-% Fij(1). DeltaPT(0) is not important, so let it remain at value = 0
+% Fij(1). DeltaPT(0) is not necessary for the rest of the simulation, so let it remain at value = 0
 
+% update the generator productions and battery injections in the matpower case structs 
 [basecase, basecaseInt] = updateGeneration(basecase, basecaseInt, zone1, 1);
 [basecase, basecaseInt] = updateRealPowerBatt(basecase, basecaseInt, zone1, 1);
+% run the Power Flow
 results = runpf(basecaseInt, mpopt);
+% Extract the power flows in the zone
 zone1.Fij(:,1) = results.branch(zone1.BranchIdx, 14);
+% store the snapshot of the whole electric network 
+ cellOfResults{1} = results;
 
-
-
-
+ 
 %% Simulation using runpf of Matpower
 
 %{
@@ -213,45 +219,9 @@ for step = 2:zone1.NumberIteration+1
     z1.DeltaPB(:,step) = DeltaPB;
     z1.DeltaPC(:,step) = DeltaPC;
     %}
-    
-    %% Update STATE
-    % X = [ Fij PC PB EB PG PA]'
-    % dimension-wise: [ NumberBranch NumberGenOn NumberBattOn NumberBattOn NumberGenOn NumberGenOn] '
-   
-    
-    % DeltaPG(step-1)
-    zone1 = getDeltaPG_k(zone1,step-1);
-    % state at step k
-    zone1 = updateStateToStep(zone1, step);
-    
-    
-    %% Update the internal basecase framing step
-    [basecase, basecaseInt] = updateGeneration(basecase, basecaseInt, zone1, step); % write PG(k) in the basecase_int
-    [basecase, basecaseInt] = updateRealPowerBatt(basecase, basecaseInt, zone1, step); % write PB(k) in the basecase_int
-    
-    %% Run the Power Flower corresponding to step k
-    results = runpf(basecaseInt, mpopt); 
-    
-    %{
-    Regarding the functioning: the 'runpf' computation is done using the internal basecase 'basecase_int' data.
-    However, the result'results' are returned using the external basecase 'basecase' data.
-    help: https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
-    %}
-    
-    % Store the information regarding the simulation
-    cellOfResults{step} = results;
-    
-    %% Extract the results from the Power Flow
-    % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
-    % as explained previously on 'runpf' functioning, notice 'zone.Branch_idx' is used, not 'zone.Branch_int_idx'
-    zone1.Fij(:,step) = results.branch(zone1.BranchIdx, 14);
-    
-    % Extract PT(step+1)
-    zone1 = getPT_k(results, zone1, step);
-    
-    % Compute DeltaPT(step-1)
-    zone1.DeltaPT(:,step-1) = zone1.PT(:,step) - zone1.PT(:, step-1);
-
+       
+    [basecase, basecaseInt, zone1, cellOfResults, ~] = simulationIteration(...
+        basecase, basecaseInt, zone1, step, cellOfResults, mpopt, 0, 0); % currently the last 2 inputs are not used in the function
 end
 
 %% Graphic representation
@@ -271,6 +241,61 @@ if isFigurePlotted
     P = plotWithLabel(graphZoneAndBorder, basecase, simulation.BusId, simulation.GenOnIdx, simulation.BattOnIdx);
 end
 
+function  [basecase, basecaseInt, zone, cellOfResults, state_step, disturbance_step, control_multiPreviousSteps] = simulationIteration(...
+    basecase, basecaseInt, zone, step, cellOfResults, mpopt, deltaPC_previousStep, deltaPB_previousStep)
+    % from the previous step state, and the previous step control, update
+    % the system state to time 'step'. Complement the system state with the
+    % simulated value of power flow on zone's branches Fij at time 'step'
+    % and get the disturbance from the outside DeltaPT at time 'step' - 1.
+    
+    %% currently unused and unassigned
+    state_step = 0;
+    disturbance_step = 0;
+    control_multiPreviousSteps = 0;
+    
+    %% Function starts here until previous outputs are correctly set up and used
+    % DeltaPG(step-1)
+    zone = getDeltaPG_k(zone,step-1);
+    
+    %% Update STATE using the dynamical model, to get the current state, i.e. state at time 'step'
+    % X = [ Fij PC PB EB PG PA]'
+    % dimension-wise: [ NumberBranch NumberGenOn NumberBattOn NumberBattOn NumberGenOn NumberGenOn]'
+    
+    % State at time 'step' using the dynamic model, except Fij
+    zone = updateStateToStep(zone, step);
+    
+    %% Update the internal basecase framing the electric system at time 'step' 
+    %{
+    the current snapshot of the electric network uses the generations and battery injections from 
+    the previous step, thus the basecases require to be modified to portray the correct state 
+    of the system, in order to do the power flow simulation
+    %}
+    [basecase, basecaseInt] = updateGeneration(basecase, basecaseInt, zone, step); % write PG(k) in the basecaseInt
+    [basecase, basecaseInt] = updateRealPowerBatt(basecase, basecaseInt, zone, step); % write PB(k) in the basecaseInt
+    
+    %% Run the Power Flower corresponding to to time 'step'
+    %{
+    Regarding the functioning: the 'runpf' computation is done using the internal basecase 'basecase_int' data.
+    However, the result'results' are returned using the external basecase 'basecase' data.
+    help: https://matpower.org/docs/ref/matpower7.1/lib/runpf.html
+    %}
+    results = runpf(basecaseInt, mpopt); 
+    
+    % Store the information regarding the simulation
+    cellOfResults{step} = results;
+    
+    %% Extract the results from the Power Flow
+    % Extract Fij column 14 of results.branch is PF: real power injected at "from" end bus
+    % as explained previously on 'runpf' functioning, notice 'zone.Branch_idx' is used, not 'zone.Branch_int_idx'
+    zone.Fij(:,step) = results.branch(zone.BranchIdx, 14);
+    
+     % Extract PT(step)
+    zone = getPT_k(results, zone, step);
+    
+    % Compute DeltaPT(step-1)
+    zone.DeltaPT(:,step-1) = zone.PT(:,step) - zone.PT(:, step-1);
+
+end
 
 %% Scheduling between several zones
 
