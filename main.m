@@ -13,13 +13,25 @@ zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
 %MatPower functions 
 % https://matpower.org/docs/ref/
 
-zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
-%zone1_busBorder = [1446;2504;2694;4231;5313;5411];
-%zone1_bus_id = [zone1_bus_id ; zone1_busBorder];
 
+
+
+zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
+zone1_busBorder = [1446;2504;2694;4231;5313;5411];
+% zone1_busBorderSecondExtension = [28;1285;1459;1964;2695;3329;3610;4927;4928;5526];
+% zone1_bus_id = [zone1_bus_id ; zone1_busBorder ; zone1_busBorderSecondExtension];
+
+%{
+zone1_bus_id = 3329;
+busBorderOf3329 = [766;1563;1961;1965;3063;3330;3705;4327;5411;5615;5780];
+zone1_bus_id = [ zone1_bus_id; busBorderOf3329];
+%}
 zone1_bus_name = ["CR" "GR" "GY" "MC" "TR" "VG"];
 
 zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
+zone2_busBorder = [347;1614;2093;4170;4236;4548];
+
+zone2_bus_id = [zone2_bus_id ; zone2_busBorder];
 zone2_bus_name = ["LAZ" "SIS" "SPC" "TRE" "VTV" "VEY"];
 
 
@@ -91,7 +103,7 @@ the generators are accessed through their idx, they do not have an id
 %% Creation of zone
 
 zone1 = Zone(basecase, zone1_bus_id);
-
+zone2 = Zone(basecase, zone2_bus_id);
 
 
 %% Information about zone 1 or its simulation
@@ -118,9 +130,9 @@ x = [Fij Pc Pb Eb Pg Pa ]'     uc = DeltaPc      ub =DeltaPb    w = DeltaPg     
 The model is described by the equations x(k+1) = A*x(k) + Bc*DPC(k-tau_c) + Bb*DPB(k-tau_b) + Dg*DPG(k) + Dn*DPT(k) + Da*DPA(k)
 cf Powertech paper
 %}
-
+%{
 setDynamicSystem(zone1, basecaseInt, mapBus_id_e2i, mapGenOn_idx_e2i);
-
+%}
 %% Simulation initialization
 
 
@@ -245,8 +257,8 @@ if isFigurePlotted
 end
 
 function [deltaPB, deltaPC] = limiter(zone, step, branchPowerLimit)
-    isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > branchPowerLimit);
-    isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < branchPowerLimit);
+    isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > 0.8*branchPowerLimit);
+    isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < 0.6*branchPowerLimit);
     if isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne
         deltaPC(1:zone.NumberGenOn,1) = 0.2*branchPowerLimit;
     elseif isAllBranchPowerFlowUnder60PercentAtStepMinusOne
