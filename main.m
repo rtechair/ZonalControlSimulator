@@ -14,8 +14,9 @@ However, selection of column vectors instead of row vectors is meant for consist
 MatPower functions: https://matpower.org/docs/ref/
 %}
 
-zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
+% zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
 
+zone1_bus_id = [2506 4169 4546 4710 4875 4915]'; % which is in fact zone 2
 
 zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
 
@@ -23,7 +24,7 @@ zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
 %% BASECASE
 
 % if the basecase is not correctly updated, update it
-handleBasecase();
+handleBasecaseForZone1And2();
 
 % load and work on basecase
 basecaseName = 'case6468rte_zone1and2';
@@ -63,8 +64,6 @@ bus_idx_back using mapBus_id2idx(bus_id_back)
 
 % BRANCH
 %{ 
-
-
 the branches are accessed through their idx, they do not have an id.
 if no branch is deleted during the internal conversion, then the branch
 will remain as the same index in the internal basecase.
@@ -207,13 +206,17 @@ use it for the optimization
 
 %}
 
+DELTAPC_TO_BE_APPLIED = 0; % for limiterWithBounds function, 
+% TODO delete this global variable and the associate function after
+
 for step = 2:zone1.NumberIteration+1
     
     %% CONTROL from the controller 
     
-    [DeltaPB, DeltaPC] = limiter(zone1, step, branchPowerLimit);
+    [DeltaPB, DeltaPC, DELTAPC_TO_BE_APPLIED] = limiterWithBounds(zone1, step, branchPowerLimit, DELTAPC_TO_BE_APPLIED);
+    % [DeltaPB, DeltaPC] = limiter(zone1, step, branchPowerLimit);
     zone1.DeltaPB(:,step-1) = DeltaPB;
-    zone1.DeltaPC(:,step-1) = DeltaPC;
+    zone1.DeltaPC(1:zone1.NumberGenOn,step-1) = DeltaPC;
     
        
     [basecase, basecaseInt, zone1, cellOfResults, ~] = simulationIteration(...
@@ -237,6 +240,7 @@ if isFigurePlotted
     P = plotWithLabel(graphZoneAndBorder, basecase, simulation.BusId, simulation.GenOnIdx, simulation.BattOnIdx);
 end
 
+
 function [deltaPB, deltaPC] = limiter(zone, step, branchPowerLimit)
     isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > 0.8*branchPowerLimit);
     isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < 0.6*branchPowerLimit);
@@ -250,9 +254,21 @@ function [deltaPB, deltaPC] = limiter(zone, step, branchPowerLimit)
     deltaPB(1:zone.NumberBattOn,1) = 0;
 end
            
-        
-    
-    
+
+function [deltaPB, deltaPC, DELTAPC_TO_BE_APPLIED] = limiterWithBounds(zone, step, branchPowerLimit, DELTAPC_TO_BE_APPLIED)
+    isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > 0.8*branchPowerLimit);
+    isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < 0.6*branchPowerLimit);
+    if isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne && DELTAPC_TO_BE_APPLIED <= 0.8
+            deltaPC(1:zone.NumberGenOn,1) = 0.1*branchPowerLimit;
+            DELTAPC_TO_BE_APPLIED = DELTAPC_TO_BE_APPLIED + 0.1;
+    elseif isAllBranchPowerFlowUnder60PercentAtStepMinusOne && DELTAPC_TO_BE_APPLIED >= 0.1
+            deltaPC(1:zone.NumberGenOn,1) = - 0.01*branchPowerLimit;
+            DELTAPC_TO_BE_APPLIED = DELTAPC_TO_BE_APPLIED - 0.01;
+    else
+        deltaPC(1:zone.NumberGenOn,1) = 0;
+    end
+    deltaPB(1:zone.NumberBattOn,1) = 0;
+end
     
 
 function  [basecase, basecaseInt, zone, cellOfResults, state_step, disturbance_step, control_multiPreviousSteps] = simulationIteration(...
