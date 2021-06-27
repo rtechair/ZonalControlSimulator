@@ -28,8 +28,11 @@ function P = plotWithLabel(graphStatic, basecase, busId, genOnIdx, battOnIdx)
     P.EdgeLabelColor = 'k';
     
     % display each bus in busId in red
-    highlight(P, string(busId), 'NodeColor','r')
-    
+    % highlight(P, string(busId), 'NodeColor','r')
+    % zone1_bus = [1445 2076 2135 2745 4720 10000]';
+    % highlight(P, string(zone1_bus), 'NodeColor','r')
+    % zone2_bus = [2506 4169 4546 4710 4875 4915]';
+    %highlight(P, string(zone2_bus), 'NodeColor','r')
     
     % for each bus, show a text displaying: bus id, if there is a
     % generator and if there is a battery
