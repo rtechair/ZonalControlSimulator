@@ -33,6 +33,6 @@ zone.initializeDynamicVariables;
 zone = getPAandDeltaPA(zone, basecase, windDataName);
 
 %% Initialization
-
+% create the PG variable and define PG(1)
 zone = setInitialPG(zone);
 
