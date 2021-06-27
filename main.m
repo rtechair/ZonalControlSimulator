@@ -14,9 +14,9 @@ However, selection of column vectors instead of row vectors is meant for consist
 MatPower functions: https://matpower.org/docs/ref/
 %}
 
-% zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
+zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
 
-zone1_bus_id = [2506 4169 4546 4710 4875 4915]'; % which is in fact zone 2
+%zone1_bus_id = [2506 4169 4546 4710 4875 4915]'; % which is in fact zone 2
 
 zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
 
