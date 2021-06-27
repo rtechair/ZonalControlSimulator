@@ -1,26 +1,3 @@
-%{
-JEAN'S ORDERING
-zone1_bus = [2076 2135 2745 4720  1445 10000]';
-zone1_bus_name = ["GR" "GY" "MC" "TR" "CR" "VG"];
-
-zone2_bus = [4875 4710 2506 4915 4546 4169]';
-zone2_bus_name = ["VTV" "TRE" "LAZ" "VEY" "SPC" "SIS"];
-%}
-
-%{
-PERSONAL ORDERING, the ascending order has no impact regarding
-the effectiveness of the code. 
-However, selection of column vectors instead of row vectors is meant for consistency with column vectors obtained using
-MatPower functions: https://matpower.org/docs/ref/
-%}
-
-%zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
-
-%zone1_bus_id = [2506 4169 4546 4710 4875 4915]'; % which is in fact zone 2
-
-%zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
-
-
 %% BASECASE
 
 % if the basecase is not correctly updated, update it
@@ -80,61 +57,20 @@ removed in the internal basecase from the external basecase.
 the generators are accessed through their idx, they do not have an id
 %}
 
+%% Load data and create zones for simulation
+
 loadDataZoneVG
 
 zone1 = initializeZoneForSimulation(basecase, zoneVG_bus_id, zoneVG_simulationTimeStep, ...
     zoneVG_battConstPowerReduc, durationSimulation, zoneVG_SamplingTime, zoneVG_DelayBattSec, ...
     zoneVG_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i);
 
-
-%%
 loadDataZoneVTV
 
 zone2 = initializeZoneForSimulation(basecase, zoneVTV_bus_id, zoneVTV_simulationTimeStep, ...
     zoneVTV_battConstPowerReduc, durationSimulation, zoneVTV_SamplingTime, zoneVTV_DelayBattSec, ...
     zoneVTV_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i);
 
-
-%{
-%% Creation of zone
-
-zone1 = Zone(basecase, zone1_bus_id);
-zone2 = Zone(basecase, zone2_bus_id);
-
-
-%% Information about zone 1 or its simulation
-
-zone1.SimulationTime = 1; 
-z1_cb = 0.001; % conversion factor for battery power output
-zone1.BattConstPowerReduc = z1_cb * ones(zone1.NumberBattOn,1); % TODO: needs to be changed afterwards, with each battery coef
-
-zone1.Duration = durationSimulation;
-zone1.SamplingTime = 5;
-
-zone1.DelayBattSec = 1;
-zone1.DelayCurtSec = 45;
-
-
-%% Set the interior id and indices related to the internal basecase, for the zone
-
-setInteriorIdAndIdx( zone1, mapBus_id_e2i, mapGenOn_idx_e2i);
-
-%% Simulation initialization
-
-
-zone1.initializeDynamicVariables;
-
-%% Compute available power (PA) and delta PA using real data
-% all PA and DeltaPA values are computed prior to the simulation
-
-zone1 = getPAandDeltaPA(zone1, basecase, windDataName);
-
-
-%% Initialization
-% Define PG(1)
-zone1 = setInitialPG(zone1);
-
-%}
 
 % matpower option for the 'runpf' function configuration, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
