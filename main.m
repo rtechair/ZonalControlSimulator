@@ -115,22 +115,6 @@ zone1 = getPAandDeltaPA(zone1, basecase, windDataName);
 
 %z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
-%% Initialize PC and DeltaPC
-
-% the following line is now a comment, as a limiter/ controller is used
-% instead
-% zone1 = setDeltaPC(zone1, [1/7 1/3 2/3], 0.2, zone1.MaxPG); 
-
-
-%PC(1) = 0; Other PC values will be computed online with DeltaPC values provided by the MPC
-
-%z2 = setDeltaPC(z2, [1/7 1/3 2/3], 0.2, z2.MaxPG); 
-
-%PB(1) = 0; Other PB values will be computed online with DeltaPB values provided by the MPC
-
-% EB(1) = 0; Other EB values will be computed online
-% for the zone 1: EB_init = 750 in Alessio's code
-
 %% Initialization
 % Define PG(1)
 zone1 = setInitialPG(zone1);
