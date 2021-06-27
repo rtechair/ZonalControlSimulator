@@ -30,7 +30,7 @@ zone.initializeDynamicVariables;
 %% Compute available power (PA) and delta PA using real data
 % all PA and DeltaPA values are computed prior to the simulation
 
-zone = getPAandDeltaPA(zone, basecase, windDataName);
+zone = getPAandDeltaPAwithRandomness(zone, basecase, windDataName);
 
 %% Initialization
 % create the PG variable and define PG(1)
