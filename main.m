@@ -103,16 +103,6 @@ zone1.DelayCurtSec = 45;
 
 setInteriorIdAndIdx( zone1, mapBus_id_e2i, mapGenOn_idx_e2i);
 
-
-%% Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k-tau)+Dd(k)
-%{
-x = [Fij Pc Pb Eb Pg Pa ]'     uc = DeltaPc      ub =DeltaPb    w = DeltaPg      h = DeltaPT
-The model is described by the equations x(k+1) = A*x(k) + Bc*DPC(k-tau_c) + Bb*DPB(k-tau_b) + Dg*DPG(k) + Dn*DPT(k) + Da*DPA(k)
-cf Powertech paper
-%}
-%{
-setDynamicSystem(zone1, basecaseInt, mapBus_id_e2i, mapGenOn_idx_e2i);
-%}
 %% Simulation initialization
 
 
