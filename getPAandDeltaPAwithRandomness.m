@@ -1,4 +1,4 @@
-function zone = getPAandDeltaPA(zone, basecase, filenameChargingRate)
+function zone = getPAandDeltaPAwithRandomness(zone, basecase, filenameChargingRate)
     arguments
         zone {mustBeA(zone, 'Zone')}
         basecase struct
