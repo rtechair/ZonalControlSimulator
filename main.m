@@ -14,11 +14,11 @@ However, selection of column vectors instead of row vectors is meant for consist
 MatPower functions: https://matpower.org/docs/ref/
 %}
 
-zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
+%zone1_bus_id = [1445 2076 2135 2745 4720 10000]';
 
 %zone1_bus_id = [2506 4169 4546 4710 4875 4915]'; % which is in fact zone 2
 
-zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
+%zone2_bus_id = [2506 4169 4546 4710 4875 4915]';
 
 
 %% BASECASE
@@ -80,6 +80,22 @@ removed in the internal basecase from the external basecase.
 the generators are accessed through their idx, they do not have an id
 %}
 
+loadDataZoneVG
+
+zone1 = initializeZoneForSimulation(basecase, zoneVG_bus_id, zoneVG_simulationTimeStep, ...
+    zoneVG_battConstPowerReduc, durationSimulation, zoneVG_SamplingTime, zoneVG_DelayBattSec, ...
+    zoneVG_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i);
+
+
+%%
+loadDataZoneVTV
+
+zone2 = initializeZoneForSimulation(basecase, zoneVTV_bus_id, zoneVTV_simulationTimeStep, ...
+    zoneVTV_battConstPowerReduc, durationSimulation, zoneVTV_SamplingTime, zoneVTV_DelayBattSec, ...
+    zoneVTV_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i);
+
+
+%{
 %% Creation of zone
 
 zone1 = Zone(basecase, zone1_bus_id);
@@ -113,12 +129,12 @@ zone1.initializeDynamicVariables;
 
 zone1 = getPAandDeltaPA(zone1, basecase, windDataName);
 
-%z2 = getPAandDeltaPA(z2, basecase, 'tauxDeChargeMTJLMA2juillet2018.txt');
 
 %% Initialization
 % Define PG(1)
 zone1 = setInitialPG(zone1);
 
+%}
 
 % matpower option for the 'runpf' function configuration, see help runpf and help mpoption
 % https://matpower.org/docs/ref/matpower7.1/lib/mpoption.html
