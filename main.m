@@ -63,13 +63,13 @@ loadDataZoneVG
 
 zone1 = initializeZoneForSimulation(basecase, zoneVG_bus_id, zoneVG_simulationTimeStep, ...
     zoneVG_battConstPowerReduc, durationSimulation, zoneVG_SamplingTime, zoneVG_DelayBattSec, ...
-    zoneVG_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i);
+    zoneVG_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i, zoneVG_startingIterationOfWindForGen);
 
 loadDataZoneVTV
 
 zone2 = initializeZoneForSimulation(basecase, zoneVTV_bus_id, zoneVTV_simulationTimeStep, ...
     zoneVTV_battConstPowerReduc, durationSimulation, zoneVTV_SamplingTime, zoneVTV_DelayBattSec, ...
-    zoneVTV_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i);
+    zoneVTV_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i, zoneVTV_startingIterationOfWindForGen);
 
 
 % matpower option for the 'runpf' function configuration, see help runpf and help mpoption

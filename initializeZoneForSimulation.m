@@ -1,6 +1,6 @@
 function zone = initializeZoneForSimulation(basecase, zone_bus_id, simulationTimeStep, ...
     battConstrPowerReduc, durationSimulation, samplingTime, delayBattSec, delayCurtSec, ...
-   windDataName, mapBus_id_e2i, mapGenOn_idx_e2i)
+   windDataName, mapBus_id_e2i, mapGenOn_idx_e2i, startingIterationOfWindForGen)
 
 
 %% Creation of zone
@@ -30,7 +30,11 @@ zone.initializeDynamicVariables;
 %% Compute available power (PA) and delta PA using real data
 % all PA and DeltaPA values are computed prior to the simulation
 
-zone = getPAandDeltaPAwithRandomness(zone, basecase, windDataName);
+% zone = getPAandDeltaPAwithRandomness(zone, basecase, windDataName);
+
+zone = getPAandDeltaPAstartingSamplingConfigured(zone, basecase, windDataName, startingIterationOfWindForGen);
+
+
 
 %% Initialization
 % create the PG variable and define PG(1)
