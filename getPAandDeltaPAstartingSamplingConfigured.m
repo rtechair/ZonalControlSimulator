@@ -19,9 +19,15 @@ function zone = getPAandDeltaPAstartingSamplingConfigured(zone, basecase, filena
 
     % set the initial sample of Power_available_rate_simulationtime to be
     % considered for the simulation, for each generator ON
-    max_discrete_range = n_sample_power_available_rate_realtime - zone.NumberIteration; 
-    %TODO put a bound to check correct input regarding the starting sample
-    %of each generator
+    max_discrete_range = n_sample_power_available_rate_realtime - zone.NumberIteration;
+    
+    if any(startingIterationOfWindForGen > max_discrete_range)
+        message = ['the starting iterations chosen for wind time series of the generators exceeds ' ...
+            'the max discrete range, check that startingIterationOfWindForGen is < ' ...
+            num2str(max_discrete_range) ', in the load data zone script'];
+        error(message)
+    end
+    
     PA_starting_time = startingIterationOfWindForGen;
 
     % Compute the Power Available for the simulation: PA(k)
