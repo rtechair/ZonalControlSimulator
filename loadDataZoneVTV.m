@@ -11,6 +11,7 @@ MatPower functions: https://matpower.org/docs/ref/
 
 zoneVTV_bus_id = [2506 4169 4546 4710 4875 4915]';
 
+zoneVTV_startingIterationOfWindForGen = [195 185 175]';
 zoneVTV_numberOfGenerators = 3;
 zoneVTV_numberOfBatteries = 1;
 
