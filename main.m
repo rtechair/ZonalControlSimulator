@@ -142,17 +142,10 @@ use it for the optimization
 
 
 
-DELTAPC_TO_BE_APPLIED = 0; % for limiterWithBounds function, 
-% TODO delete this global variable and the associate function after
-
 for step = 2:zone1.NumberIteration+1
     
     %% CONTROL from the controller 
-    %{
-    [DeltaPB, DeltaPC, DELTAPC_TO_BE_APPLIED] = limiterWithBounds(zone1, step, branchPowerLimit, DELTAPC_TO_BE_APPLIED);
-    zone1.DeltaPB(:,step-1) = DeltaPB;
-    zone1.DeltaPC(1:zone1.NumberGenOn,step-1) = DeltaPC;
-    %}
+   
     currentBranchFlow = zone1.Fij(:,step-1);
     
     limiterVG.computeControls(currentBranchFlow);
@@ -179,26 +172,7 @@ if isFigurePlotted
     graphZoneAndBorder = graphStatic(basecase, [simulation.BranchIdx; simulation.BranchBorderIdx]);
     P = plotWithLabel(graphZoneAndBorder, basecase, simulation.BusId, simulation.GenOnIdx, simulation.BattOnIdx);
 end
-
-
-
-           
-
-function [deltaPB, deltaPC, DELTAPC_TO_BE_APPLIED] = limiterWithBounds(zone, step, branchPowerLimit, DELTAPC_TO_BE_APPLIED)
-    isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > 0.8*branchPowerLimit);
-    isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < 0.6*branchPowerLimit);
-    if isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne && DELTAPC_TO_BE_APPLIED <= 0.8
-            deltaPC(1:zone.NumberGenOn,1) = 0.1*branchPowerLimit;
-            DELTAPC_TO_BE_APPLIED = DELTAPC_TO_BE_APPLIED + 0.1;
-    elseif isAllBranchPowerFlowUnder60PercentAtStepMinusOne && DELTAPC_TO_BE_APPLIED >= 0.1
-            deltaPC(1:zone.NumberGenOn,1) = - 0.01*branchPowerLimit;
-            DELTAPC_TO_BE_APPLIED = DELTAPC_TO_BE_APPLIED - 0.01;
-    else
-        deltaPC(1:zone.NumberGenOn,1) = 0;
-    end
-    deltaPB(1:zone.NumberBattOn,1) = 0;
-end
-    
+ 
 
 function  [basecase, basecaseInt, zone, cellOfResults, state_step, disturbance_step, control_multiPreviousSteps] = simulationIteration(...
     basecase, basecaseInt, zone, step, cellOfResults, mpopt, deltaPC_previousStep, deltaPB_previousStep)
