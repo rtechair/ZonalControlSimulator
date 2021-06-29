@@ -65,10 +65,9 @@ zone1 = initializeZoneForSimulation(basecase, zoneVG_bus_id, zoneVG_simulationTi
     zoneVG_battConstPowerReduc, durationSimulation, zoneVG_SamplingTime, zoneVG_DelayBattSec, ...
     zoneVG_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i, zoneVG_startingIterationOfWindForGen);
 
-zoneVG_coefIncreaseCurt = 0.1;
-zoneVG_coefDecreaseCurt = 0.01;
-zoneVG_coefLowerThreshold = 0.6;
-zoneVG_coefUpperThreshold = 0.8;
+
+loadLimiterDataZoneVG
+
 limiterVG = Limiter(branchPowerLimit, zoneVG_numberOfGenerators, zoneVG_numberOfBatteries, ...
     zoneVG_coefIncreaseCurt, zoneVG_coefDecreaseCurt,...
     zoneVG_coefLowerThreshold, zoneVG_coefUpperThreshold, zone1.DelayCurt);
