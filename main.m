@@ -65,6 +65,14 @@ zone1 = initializeZoneForSimulation(basecase, zoneVG_bus_id, zoneVG_simulationTi
     zoneVG_battConstPowerReduc, durationSimulation, zoneVG_SamplingTime, zoneVG_DelayBattSec, ...
     zoneVG_DelayCurtSec, windDataName, mapBus_id_e2i, mapGenOn_idx_e2i, zoneVG_startingIterationOfWindForGen);
 
+zoneVG_coefIncreaseCurt = 0.1;
+zoneVG_coefDecreaseCurt = 0.01;
+zoneVG_coefLowerThreshold = 0.6;
+zoneVG_coefUpperThreshold = 0.8;
+limiterVG = Limiter(branchPowerLimit, zoneVG_numberOfGenerators, zoneVG_numberOfBatteries, ...
+    zoneVG_coefIncreaseCurt, zoneVG_coefDecreaseCurt,...
+    zoneVG_coefLowerThreshold, zoneVG_coefUpperThreshold, zone1.DelayCurt);
+
 loadDataZoneVTV
 
 zone2 = initializeZoneForSimulation(basecase, zoneVTV_bus_id, zoneVTV_simulationTimeStep, ...
@@ -132,18 +140,24 @@ use it for the optimization
 
 %}
 
+
+
 DELTAPC_TO_BE_APPLIED = 0; % for limiterWithBounds function, 
 % TODO delete this global variable and the associate function after
 
 for step = 2:zone1.NumberIteration+1
     
     %% CONTROL from the controller 
-    
+    %{
     [DeltaPB, DeltaPC, DELTAPC_TO_BE_APPLIED] = limiterWithBounds(zone1, step, branchPowerLimit, DELTAPC_TO_BE_APPLIED);
-    % [DeltaPB, DeltaPC] = limiter(zone1, step, branchPowerLimit);
     zone1.DeltaPB(:,step-1) = DeltaPB;
     zone1.DeltaPC(1:zone1.NumberGenOn,step-1) = DeltaPC;
+    %}
+    currentBranchFlow = zone1.Fij(:,step-1);
     
+    limiterVG.computeControls(currentBranchFlow);
+    zone1.DeltaPB(:,step-1) = limiterVG.getBatteryInjectionControl();
+    zone1.DeltaPC(:,step-1) = limiterVG.getCurtailmentControl();
        
     [basecase, basecaseInt, zone1, cellOfResults, ~] = simulationIteration(...
         basecase, basecaseInt, zone1, step, cellOfResults, mpopt, 0, 0); % currently the last 2 inputs are not used in the function
