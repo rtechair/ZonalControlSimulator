@@ -181,18 +181,7 @@ if isFigurePlotted
 end
 
 
-function [deltaPB, deltaPC] = limiter(zone, step, branchPowerLimit)
-    isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne = any( abs(zone.Fij(:,step-1)) > 0.8*branchPowerLimit);
-    isAllBranchPowerFlowUnder60PercentAtStepMinusOne = all( abs(zone.Fij(:,step-1)) < 0.6*branchPowerLimit);
-    if isAnyBranchPowerFlowOver80PercentOfLimitAtStepMinusOne
-        deltaPC(1:zone.NumberGenOn,1) = 0.2*branchPowerLimit;
-    elseif isAllBranchPowerFlowUnder60PercentAtStepMinusOne
-            deltaPC(1:zone.NumberGenOn,1) = - 0.1*branchPowerLimit;
-    else
-        deltaPC(1:zone.NumberGenOn,1) = 0;
-    end
-    deltaPB(1:zone.NumberBattOn,1) = 0;
-end
+
            
 
 function [deltaPB, deltaPC, DELTAPC_TO_BE_APPLIED] = limiterWithBounds(zone, step, branchPowerLimit, DELTAPC_TO_BE_APPLIED)
