@@ -39,7 +39,7 @@ classdef DynamicTimeSeries < handle
             currentVariation = obj.PowerAvailableVariation(:,obj.CurrentStep);
         end
         
-       function updateCurrentStep(obj)
+       function prepareForNextStep(obj)
             obj.CurrentStep = obj.CurrentStep + 1;
        end 
         
