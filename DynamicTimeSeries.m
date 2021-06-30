@@ -26,35 +26,31 @@ classdef DynamicTimeSeries < handle
             obj.NumberOfGen = zone_numberOfGen;
             
             obj.CurrentStep = 1;
-            
-            %TODO compute PowerAvailableState, PowerAvailableVariation
+
             obj.setWindChargingRate(filenameWindChargingRate, zone_samplingTime);
             
             obj.checkInitialIterationCorrectness()
             
             obj.setPowerAvailableState();
             obj.setPowerAvailableVariation();
-            
         end
         
         function currentVariation = getCurrentPowerAvailableVariation(obj)
             currentVariation = obj.PowerAvailableVariation(:,obj.CurrentStep);
-            obj.updateCurrentStep();
         end
         
-        
-        
+       function updateCurrentStep(obj)
+            obj.CurrentStep = obj.CurrentStep + 1;
+       end 
         
     end
     
     methods (Access = protected)
         
-       function updateCurrentStep(obj)
-            obj.CurrentStep = obj.CurrentStep + 1;
-       end 
+
        
        function setWindChargingRate(obj, filenameWindChargingRate, zone_samplingTime)
-           % the apostrophe is meant to obtain a row vector, each column is a different instant 
+           % the apostrophe is to obtain a row vector, such that columns represent the time
            rateInRealTime = table2array(readtable(filenameWindChargingRate))';
            numberOfSamples = size(rateInRealTime,2);
            discretTime = 1:  zone_samplingTime : numberOfSamples;

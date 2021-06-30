@@ -19,5 +19,5 @@ windTimeSeries = DynamicTimeSeries(filenameWindChargingRate, ...
             
 
 windTimeSeries.getCurrentPowerAvailableVariation()
-
+windTimeSeries.updateCurrentStep()
 windTimeSeries.getCurrentPowerAvailableVariation()
