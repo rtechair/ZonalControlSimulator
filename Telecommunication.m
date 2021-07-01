@@ -44,7 +44,7 @@ classdef Telecommunication < handle
         function delayedAndModifiedCurt = getCurtailmentControl(obj)
             curtControl = obj.getCurtailmentControlFromLimiter();
             modifiedCurtControl = modify(obj, curtControl);
-            obj.storAtEndOfCurtBuffer(modifiedCurtControl);
+            obj.storeAtEndOfCurtBuffer(modifiedCurtControl);
             delayedAndModifiedCurt =  obj.getDelayedCurtControl();
             obj.updateCurtBuffer();
         end
@@ -55,6 +55,17 @@ classdef Telecommunication < handle
            obj.storeAtEndOfBattBuffer(modifiedBattControl);
            delayedAndModifiedBattControl = obj.getDelayedBattControl();
            obj.updateBattBuffer();
+        end
+        
+        function orderLimiterToComputeControls(obj, branchFlowState)
+            obj.Limiter.computeControls(branchFlowState);
+        end
+        
+        function [disturbance, curtailmentControl, batteryControl] = getControlsAndDisturbance(obj, branchFlowState)
+            obj.orderLimiterToComputeControls(branchFlowState);
+            curtailmentControl = obj.getCurtailmentControl();
+            batteryControl = obj.getBatteryInjectionControl();
+            disturbance = obj.getDisturbance();
         end
     end
     
@@ -88,7 +99,9 @@ classdef Telecommunication < handle
         end
         
         function updateDisturbanceBuffer(obj)
-            obj.BufferTimeSeriesDisturbance = [obj.BufferTimeSeriesDisturbance(:,2:end) 0];
+            oldestDisturbanceDropped = obj.BufferTimeSeriesDisturbance(:,2:end);
+            prepareForNextDisturbance = zeros(obj.NumberOfGen, 1);
+            obj.BufferTimeSeriesDisturbance = [oldestDisturbanceDropped prepareForNextDisturbance];
         end
         
         %% Curtailment Control
@@ -97,7 +110,7 @@ classdef Telecommunication < handle
             curtControl = obj.Limiter.getCurtailmentControl();
          end
          
-         function storAtEndOfCurtBuffer(obj, columnVector)
+         function storeAtEndOfCurtBuffer(obj, columnVector)
              obj.BufferCurtailmentControl(:,end) = columnVector;
          end
          
@@ -106,10 +119,11 @@ classdef Telecommunication < handle
          end
          
          function updateCurtBuffer(obj)
-             obj.BufferCurtailmentControl = [obj.BufferCurtailmentControl(:, 2:end) 0];
+             oldestCurtControlDropped = obj.BufferCurtailmentControl(:, 2:end);
+             prepareForNextCurtControl = zeros(obj.NumberOfGen,1);
+             obj.BufferCurtailmentControl = [oldestCurtControlDropped prepareForNextCurtControl];
          end
-         
-        
+                 
         
         %% Battery injection control
         %% TODO similarly, notice how close it is from the curtailment control part
@@ -127,7 +141,9 @@ classdef Telecommunication < handle
         end
         
         function updateBattBuffer(obj)
-            obj.BufferBattControl = [ obj.BufferBattControl(:, 2:end) 0];
+            oldestBattControlDropped = obj.BufferBattControl(:, 2:end);
+            prepareForNextBattControl = zeros(obj.NumberOfBatt,1);
+            obj.BufferBattControl = [ oldestBattControlDropped prepareForNextBattControl];
         end
        
         
