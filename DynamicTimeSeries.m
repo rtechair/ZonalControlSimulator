@@ -19,9 +19,9 @@ classdef DynamicTimeSeries < handle
         
         function obj = DynamicTimeSeries(filenameWindChargingRate, ...
                 zone_startingIterationOfWindForGen, zone_samplingTime, ...
-                zone_numberOfIterations, maxGenerationPerGen, zone_numberOfGen)
+                durationSimulation, maxGenerationPerGen, zone_numberOfGen)
             obj.StartingIterationOfWindForGen = zone_startingIterationOfWindForGen;
-            obj.NumberOfIterations = zone_numberOfIterations;
+            obj.NumberOfIterations = floor(durationSimulation / zone_samplingTime);
             obj.GenerationCapacity = maxGenerationPerGen;
             obj.NumberOfGen = zone_numberOfGen;
             
@@ -35,8 +35,14 @@ classdef DynamicTimeSeries < handle
             obj.setPowerAvailableVariation();
         end
         
-        function currentVariation = getCurrentPowerAvailableVariation(obj)
-            currentVariation = obj.PowerAvailableVariation(:,obj.CurrentStep);
+        function disturbance = getDisturbancePowerAvailable(obj)
+            disturbance = obj.PowerAvailableVariation(:,obj.CurrentStep);
+        end
+        
+        function objectDisturbance = getTimeSeries(obj)
+            objectDisturbance = DisturbancePowerAvailable(obj.NumberOfGen);      
+            value = obj.getDisturbancePowerAvailable();
+            objectDisturbance.setDisturbancePowerAvailable(value);
         end
         
        function prepareForNextStep(obj)
