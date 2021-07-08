@@ -37,6 +37,9 @@ classdef TopologicalZone < handle
         end
         
         function G = getGraphStatic(obj, electricalGrid)
+            % Create the static graph of a zone defined by its branch indices in the
+            % basecase.
+        
             insideAndBorderBranches = [obj.BranchIdx; obj.BranchBorderIdx];
             [fromBus, toBus] = electricalGrid.getEndBuses(insideAndBorderBranches);
             %{
