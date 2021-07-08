@@ -125,7 +125,7 @@ classdef TopologicalZone < handle
        
         function setBranchesInZoneAndInBorder(obj, electricalGrid)
             [obj.BranchIdx, obj.BranchBorderIdx] = ...
-                electricalGrid.getZoneAndBorderBranchIdx(obj.BusId);
+                electricalGrid.getInnerAndBorderBranchIdx(obj.BusId);
         end
         
         function setBusBorderId(obj, electricalGrid)

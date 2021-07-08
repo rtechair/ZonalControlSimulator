@@ -41,7 +41,11 @@ classdef ElectricalGrid < handle
             
         end
         
-        function [branch_zone_idx, branch_border_idx] = getZoneAndBorderBranchIdx(obj, busId)
+        function [branch_zone_idx, branch_border_idx] = getInnerAndBorderBranchIdx(obj, busId)
+            % Given a zone with its buses id, return the branch indices
+            % from the matpowercase of: the branches within the zone (both end buses in zone)
+            % and the branches at the border of zone ( 1 end bus in the zone), respectively
+            
             buses_of_branch = obj.Matpowercase.branch(:,[1 2]);
             % determine what end buses are from the zone or outside, as boolean
             is_fbus_tbus_of_branch_in_zone = ismember(buses_of_branch, busId);
@@ -55,21 +59,22 @@ classdef ElectricalGrid < handle
             
         end
         
-        function busBorderId = getBusBorderId(obj, busId, branchIdx)
+        function busBorderId = getBusBorderId(obj, busId, branchBorderIdx)
             % Given a zone based on its buses, the branches at the border of the
             % zone and a basecase,
             % return the column vector of the buses at the border of the zone   
 
             % from the basecase, extract the branches' "from" bus and "to" bus info, for each branch (row)
-            fromBus = obj.Matpowercase.branch(branchIdx,1);
-            toBus = obj.Matpowercase.branch(branchIdx,2);          
+            fromBus = obj.Matpowercase.branch(branchBorderIdx,1);
+            toBus = obj.Matpowercase.branch(branchBorderIdx,2);
+            
             % look for the end buses of each branch at the border, i.e. not in the zone. As boolean column vectors
             is_fromBus_in_border = ~ismember(fromBus, busId);
             is_toBus_in_border = ~ismember(toBus, busId);
             if any(is_fromBus_in_border + is_toBus_in_border ~= 1)
                 % error if a branch does not have exactly 1 end bus inside the zone
                 error(['A branch does not have exactly 1 end bus inside the zone.'...
-                        newline ' Check input branchIdx is correct, i.e. all branches are at the border of the zone'...
+                        newline ' Check input branchBorderIdx is correct, i.e. all branches are at the border of the zone'...
                         ' which should be BranchBorderIdx'])
             end
             % Get the buses id of the end buses at the border
