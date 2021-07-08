@@ -2,17 +2,17 @@ classdef ElectricalGrid < handle
    
     properties
         Matpowercase
-        InternalMatpowercase
+        InternalMatpowercase % used by matpower 'runpf' function
         
-        MapBus_id_e2i % sparse column vector
-        MapBus_id_i2e % dense column vector
-        MapBus_id2idx % sparse column vector
-        MapBus_idx2id % dense column vector
+        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
+        MapBus_id_i2e % dense column vector, convert internal bus id -> external bus id
+        MapBus_id2idx % sparse column vector, converts identity -> index of buses in Matpowercase.bus
+        MapBus_idx2id % dense column vector, convert index -> identity of buses in Matpowercase.bus
         
-        MapGenOn_idx_e2i % sparse column vector
-        MapGenOn_idx_i2e % dense column vector
+        MapGenOn_idx_e2i % sparse column vector, converts exterior -> interior online generator or battery index
+        MapGenOn_idx_i2e % dense column vector,, converts interior -> exterior online generator or battery index
         
-        MatpowerOption
+        MatpowerOption % option for matpower 'runpf' function 
         
         ResultPowerFlow
     end
@@ -147,7 +147,18 @@ classdef ElectricalGrid < handle
             numberOfGenPlusNumberOfBatt = size(obj.Matpowercase.gen,1);
             numberOfGenNotBatt = numberOfGenPlusNumberOfBatt - numberOfBatt;
         end
-        
+
+        function boolean = isBusDeleted(obj)
+        % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
+            numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
+            boolean = numberOfDeletedBuses ~= 0;
+        end
+
+        function boolean = isBranchDeleted(obj)
+        % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
+            numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
+            boolean = numberOfDeletedBranches ~= 0;
+        end
     end
     
     methods (Access = protected)
