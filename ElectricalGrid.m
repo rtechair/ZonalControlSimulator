@@ -137,14 +137,14 @@ classdef ElectricalGrid < handle
         end
         
         function [numberOfBuses, numberOfBranches, ...
-                  numberOfGenNotBatt, numberOfBatt] getMatpowerCaseDimensions(obj)
+                  numberOfGenNotBatt, numberOfBatt] = getMatpowerCaseDimensions(obj)
             numberOfBuses = size(obj.Matpowercase.bus,1);
-            numberOfBranches = size4(obj.Matpowercase.branch, 1);
+            numberOfBranches = size(obj.Matpowercase.branch, 1);
 
             minPowerGeneration = obj.Matpowercase.gen(:,10);
             isGenABatt = minPowerGeneration < 0;
             numberOfBatt = sum(isGenABatt);
-            numberOfGenPlusNumberOfBatt = size(basecase.gen,1);
+            numberOfGenPlusNumberOfBatt = size(obj.Matpowercase.gen,1);
             numberOfGenNotBatt = numberOfGenPlusNumberOfBatt - numberOfBatt;
         end
         
