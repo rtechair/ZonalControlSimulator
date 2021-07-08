@@ -59,6 +59,10 @@ classdef ElectricalGrid < handle
         end
         
         function busBorderId = getBusBorderId(obj, busId, branchIdx)
+            % Given a zone based on its buses, the branches at the border of the
+            % zone and a basecase,
+            % return the column vector of the buses at the border of the zone   
+
             % from the basecase, extract the branches' "from" bus and "to" bus info, for each branch (row)
             fromBus = obj.Matpowercase.branch(branchIdx,1);
             toBus = obj.Matpowercase.branch(branchIdx,2);          
