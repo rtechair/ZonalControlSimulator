@@ -112,7 +112,7 @@ classdef SimulatedZone < handle
             
             % EnergyBattery requires PowerBattery, thus the former must be
             % updated prior to the latter
-            % EB += -CB * ( PB(k) + DeltaPB(k - delayBatt) )
+            % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
             obj.State.EnergyBattery = obj.State.EnergyBattery ...
                 - obj.BattConstPowerReduc * ...
                 ( obj.State.PowerBattery + appliedControlBatt);
