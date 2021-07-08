@@ -27,7 +27,7 @@ classdef ElectricalGrid < handle
             
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);
             
-            obj.checkNoBusOrBranchDeleted();
+            obj.checkNoBusNorBranchDeleted();
             
             obj.setMapBus_id2idx();
             obj.setMapBus_idx2id();
@@ -147,18 +147,9 @@ classdef ElectricalGrid < handle
             numberOfGenPlusNumberOfBatt = size(obj.Matpowercase.gen,1);
             numberOfGenNotBatt = numberOfGenPlusNumberOfBatt - numberOfBatt;
         end
+        
+        
 
-        function boolean = isBusDeleted(obj)
-        % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
-            numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
-            boolean = numberOfDeletedBuses ~= 0;
-        end
-
-        function boolean = isBranchDeleted(obj)
-        % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
-            numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
-            boolean = numberOfDeletedBranches ~= 0;
-        end
     end
     
     methods (Access = protected)
@@ -175,19 +166,23 @@ classdef ElectricalGrid < handle
             end
         end
         
-        function checkNoBusOrBranchDeleted(obj)
-            if obj.isABusOrBranchDeleted()
-                error(['A bus or a branch has been deleted in the internal matpowercase.'...
-                    'The code can not handle this case. Take a different matpowercase.'])
-            end
+        function boolean = isBusDeleted(obj)
+        % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
+            numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
+            boolean = numberOfDeletedBuses ~= 0;
         end
-            
-        function [isABusDeleted, isABranchDeleted] = isABusOrBranchDeleted(obj)
-            % Check if some buses or branches have been deleted during the internal
-            % conversion by MatPower function 'ext2int'
-            % Return booleans, respectively for deleted buses and for deleted branches
-           isABusDeleted = size(obj.InternalMatpowercase.order.bus.status.off,1) ~= 0;
-           isABranchDeleted = size(obj.InternalMatpowercase.order.branch.status.off,1) ~= 0;  
+
+        function boolean = isBranchDeleted(obj)
+        % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
+            numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
+            boolean = numberOfDeletedBranches ~= 0;
+        end
+        
+        function checkNoBusNorBranchDeleted(obj)
+            if obj.isBusDeleted() || obj.isBranchDeleted()
+                error(['A bus or a branch has been deleted in the internal matpowercase.'...
+                    'The code can not handle this case. Take a different matpowercase or modify it'])
+            end
         end
         
         function setMapBus_id2idx(obj)
