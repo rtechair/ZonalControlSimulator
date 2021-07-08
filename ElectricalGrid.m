@@ -83,7 +83,10 @@ classdef ElectricalGrid < handle
         end
         
         function [genOnIdx, battOnIdx] = getGenAndBattOnIdx(obj, busId)
-            % A battery is a generator with possible negative injection
+            % Given a zone based on its buses id and a basecase, 
+            % return the column vectors of the indices, from the basecase, of the generators and
+            % batteries online and in the zone
+            
             
             % 1st condition: gen and batt are in the zone, i.e. in one of the zone's buses
             busOfGen = obj.Matpowercase.gen(:,1);
@@ -95,7 +98,7 @@ classdef ElectricalGrid < handle
             intersection = isBusInZone .* isGenAndBattOn;
             genAndBattOnInZone = find(intersection);
             
-            % separate gen and batt
+            % separate gen and batt,a battery is a generator with possible negative injection
             Pg_min = obj.Matpowercase.gen(:,10);
             battOnIdx = find(intersection .* Pg_min < 0);
             genOnIdx = setdiff(genAndBattOnInZone, battOnIdx);
