@@ -20,9 +20,6 @@ classdef ElectricalGrid < handle
     methods
         
         function obj = ElectricalGrid(filenameBasecase)
-            arguments
-               filenameBasecase
-            end
             
             obj.checkItIsCase6468rte_zone1and2(filenameBasecase)
             
