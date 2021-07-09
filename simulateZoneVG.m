@@ -66,6 +66,9 @@ electricalGrid.updateBattInjection(topologyZoneVG.BattOnIdx, simulatedZoneVG.Sta
 electricalGrid.runPowerFlow();
 
 simulatedZoneVG.State.updatePowerBranchFlow(topologyZoneVG.BranchIdx, electricalGrid);
+simulatedZoneVG.updatePowerTransit(electricalGrid, topologyZoneVG.BusId, topologyZoneVG.BranchBorderIdx);
+% do not compute disturbance Transit, as there is not enough data initially
+simulatedZoneVG.dropOldestPowerTransit();
 simulatedZoneVG.saveState(memoryZoneVG);
 
 telecomZone2Controller.receiveThenSend(simulatedZoneVG, limiterZoneVG);
@@ -94,7 +97,11 @@ for k = start:step:durationSimulation
     electricalGrid.runPowerFlow();
 
     simulatedZoneVG.State.updatePowerBranchFlow(topologyZoneVG.BranchIdx, electricalGrid);
-
+    simulatedZoneVG.updatePowerTransit(electricalGrid, topologyZoneVG.BusId, topologyZoneVG.BranchBorderIdx);
+    % can update disturbance transit now, there is enough data
+    simulatedZoneVG.updateDisturbanceTransit();
+    simulatedZoneVG.dropOldestPowerTransit();
+    
     telecomZone2Controller.receiveThenSend(simulatedZoneVG, limiterZoneVG);
     limiterZoneVG.computeControl();
     
