@@ -3,13 +3,15 @@ classdef SimulatedZone < handle
    
     properties
         State
-        %Control
+        
+        BufferQueueControlCurt
+        BufferQueueControlBatt
+        
+        BufferQueuePowerTransit
+        
         DisturbanceTransit
         DisturbanceGeneration
         DisturbanceAvailable
-        BufferQueueControlCurt
-        BufferQueueControlBatt
-       
     end
     
     properties (SetAccess = immutable)
@@ -28,6 +30,7 @@ classdef SimulatedZone < handle
         function obj = SimulatedZone(numberOfBuses, numberOfGenerators, numberOfBatteries, ...
                 numberOfBranches, delayCurtailment, delayBattery, maxGeneration, ...
                 battConstPowerReduc)
+            obj.NumberOfBuses = numberOfBuses;
             obj.NumberOfGen = numberOfGenerators;
             obj.NumberOfBatt = numberOfBatteries;
             obj.DelayCurt = delayCurtailment;
@@ -39,14 +42,16 @@ classdef SimulatedZone < handle
             obj.State = StateOfZone(numberOfGenerators, numberOfBatteries, ...
                 numberOfBranches);
             
-            % blank transit disturbance
-            obj.DisturbanceTransit = zeros(numberOfBuses, 1);
             
-            % blank buffers control
+            % blank buffers
             obj.BufferQueueControlCurt = zeros(numberOfGenerators, delayCurtailment);
             obj.BufferQueueControlBatt = zeros(numberOfBatteries, delayBattery);
             
-            %TODO 
+            obj.BufferQueuePowerTransit = zeros(obj.NumberOfBuses,1);
+            
+            % blank transit disturbance
+            obj.DisturbanceTransit = zeros(numberOfBuses, 1);
+            
         end
         
         function receiveTimeSeries(obj, disturbancePowerAvailable)
@@ -63,6 +68,18 @@ classdef SimulatedZone < handle
             obj.BufferQueueControlBatt = obj.BufferQueueControlBatt(:, 2:end);
         end
         
+        function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
+            obj.BufferQueuePowerTransit(:,end+1) = ...
+                electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
+        end
+                
+        function updateDisturbanceTransit(obj)
+            obj.DisturbanceTransit = obj.BufferQueuePowerTransit(:,2) - obj.BufferQueuePowerTransit(:,1);
+        end
+        
+        function dropOldestPowerTransit(obj)
+            obj.BufferQueuePowerTransit = obj.BufferQueuePowerTransit(:, 2:end);
+        end
         
         function saveState(obj, memory)
             memory.saveState(obj.State.PowerBranchFlow, ...
@@ -84,9 +101,6 @@ classdef SimulatedZone < handle
                 obj.DisturbanceGeneration,...
                 obj.DisturbanceAvailable);
         end
-            
-            
-        
         
         function object = getStateAndDistTransit(obj)
             object = StateAndDisturbanceTransit(obj.State, obj.DisturbanceTransit);

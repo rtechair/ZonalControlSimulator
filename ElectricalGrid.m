@@ -153,6 +153,38 @@ classdef ElectricalGrid < handle
             numberOfGenNotBatt = numberOfGenPlusNumberOfBatt - numberOfBatt;
         end
         
+        function sumPowerTransit = getPowerTransit(obj, zoneBuses, branchBorderIdx)
+            numberOfBuses = size(zoneBuses, 1);
+            sumPowerTransit = zeros(numberOfBuses,1);
+            numberOfBranchesAtBorder = size(branchBorderIdx,1);
+            for br = 1:numberOfBranchesAtBorder
+               branch = branchBorderIdx(br,1);
+               fromBus = obj.ResultPowerFlow.branch(branch,1);
+               isFromBusInsideZone = ismember(fromBus, zoneBuses);
+               if isFromBusInsideZone
+                  powerTransiting = obj.getPowerTransitBusFrom(branch);
+                  busIdx = find(fromBus == zoneBuses);
+                  % PT += powerInjection
+                  sumPowerTransit(busIdx) = sumPowerTransit(busIdx) + powerTransiting;
+               else
+                   powerTransiting = obj.getPowerTransitBusTo(branch);
+                   toBus = obj.ResultPowerFlow.branch(branch, 2);
+                   busIdx = find(toBus == zoneBuses);
+                   % PT += powerInjection
+                   sumPowerTransit(busIdx) = sumPowerTransit(busIdx) + powerTransiting;
+               end
+            end
+        end
+        
+        %TODO see 'getPowerBranchFlow' method, it is the same
+        function powerTransit = getPowerTransitBusFrom(obj, branchIdx)
+            powerTransit = obj.ResultPowerFlow.branch(branchIdx, 14);
+        end
+        
+        function powerTransit = getPowerTransitBusTo(obj, branchIdx)
+            powerTransit = obj.ResultPowerFlow.branch(branchIdx, 16);
+        end
+        
         
 
     end

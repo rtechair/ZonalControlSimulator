@@ -11,10 +11,11 @@ function zone = getPT_k(results, zone, step)
     mapBusZone_id2idx = sparse(zone.BusId, ones(zone.NumberBus,1), 1:zone.NumberBus);
 
     % for each branch at the border
-    for br = 1: size(zone.BranchBorderIdx,1)
+    numberOfBranchesAtBorder = size(zone.BranchBorderIdx,1);
+    for br = 1: numberOfBranchesAtBorder
         br_idx = zone.BranchBorderIdx(br,1);
         fbus = results.branch(br_idx,1);
-        % is fbus inside the zone
+        % if fbus inside the zone
         if ismember(fbus, zone.BusId)
             fbus_idx = mapBusZone_id2idx(fbus);
             powerInjection_at_fbus = results.branch(br_idx, 14);
