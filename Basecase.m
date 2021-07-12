@@ -1,4 +1,4 @@
-classdef Matpowercase < handle
+classdef Basecase < handle
    
     properties
         MpcStruct
@@ -6,7 +6,7 @@ classdef Matpowercase < handle
     
     methods
         
-        function obj = Matpowercase(filenameBasecase)
+        function obj = Basecase(filenameBasecase)
             obj.MpcStruct = loadcase(filenameBasecase);
         end
         
