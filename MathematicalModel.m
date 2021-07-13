@@ -128,17 +128,24 @@ classdef MathematicalModel < handle
         end
         
         function computeOperatorDisturbAvailable(obj)
-            %TODO
+            obj.OperatorDisturbAvailable = zeros(obj.NumberOfStateVariables, obj.NumberOfGen);
+            startRow = obj.NumberOfStateVariables - obj.NumberOfGen + 1;
+            rangeRow = startRow : obj.NumberOfStateVariables;
+            obj.OperatorDisturbAvailable(rangeRow, :) = eye(obj.NumberOfGen);
         end
         
         function computeOperatorDisturbGeneration(obj)
-            %TODO
+            obj.OperatorDisturbGeneration = zeros(obj.NumberOfStateVariables, obj.NumberOfGen);
+            busOfGen = obj.InternalMatpowercase.gen(obj.InternalGenIdx, 1);
+            obj.OperatorDisturbGeneration(1:obj.NumberOfBranches, :) = ...
+                obj.InjectionShiftFactor(obj.InternalBranchIdx, busOfGen);
         end
         
         function computeOperatorDisturbTransit(obj)
-            %TODO
+            obj.OperatorDisturbTransit = zeros(obj.NumberOfStateVariables, obj.NumberOfBuses);
+            obj.OperatorDisturbTransit = ...
+                obj.InjectionShiftFactor(obj.InternalBranchIdx, obj.InternalBusId);
         end
-   
-        
+ 
     end
 end
