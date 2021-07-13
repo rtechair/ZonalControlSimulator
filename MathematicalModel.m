@@ -1,16 +1,13 @@
 classdef MathematicalModel < handle
     % To obtain the operators / matrices for the dynamic mathematical model
-    % of a zone
-    
-    
-    %{ 
-    Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k+tau)+Dd(k)
-    x = [Fij Pc Pb Eb Pg Pa]     uc = DeltaPc      ub =DeltaPb     
-    w = DeltaPg      h = DeltaPT
-    The model is described by the equation:
-    x(k+1) = A*x(k) + Bc*DeltaPC(k-tau_c) + Bb*DeltaPB(k-tau_b) 
-    + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
-    %}
+    % of a zone.
+    % Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k+tau)+Dd(k)
+%     x = [Fij Pc Pb Eb Pg Pa]     uc = DeltaPc      ub =DeltaPb     
+%     w = DeltaPg      h = DeltaPT
+%     The model is described by the equation:
+%     x(k+1) = A*x(k) + Bc*DeltaPC(k-tau_c) + Bb*DeltaPB(k-tau_b) 
+%              + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
+
     properties
       OperatorState             % A
       OperatorControlCurt       % Bc
@@ -20,9 +17,9 @@ classdef MathematicalModel < handle
       OperatorDisturbTransit    % Dt
       
       InjectionShiftFactor % ISF
-      
-      
+
       InternalMatpowercase
+      
       % Regarding the studied zone 
       InternalBusId
       InternalBranchIdx
@@ -37,9 +34,6 @@ classdef MathematicalModel < handle
       NumberOfStateVariables
       
       BattConstPowerReduc % must be a vector of length 'NumberOfBatt'
-      
-      
-      
     end
     
     methods 
@@ -114,8 +108,23 @@ classdef MathematicalModel < handle
             obj.OperatorControlCurt( rangeRow, :) = - eye(obj.NumberOfGen);
         end
         
-        function computeOperationControlBatt(obj)
-            %TODO
+        function computeOperatorControlBatt(obj)
+            obj.OperatorControlBatt = zeros(obj.NumberOfStateVariables, obj.NumberOfBatt);
+            
+            % F(k+1) += diag(ptdf)*DeltaPb(k-delayBatt), i.e. matrix Mb in the paper
+            busOfBatt = obj.InternalMatpowercase.gen(obj.InternalBattIdx, 1);
+            obj.OperatorControlBatt(1:obj.NumberOfBranches, :) = ...
+                obj.InjectionShiftFactor(obj.InternalBranchIdx, busOfBatt);
+            
+            % PB(k+1) += DeltaPB(k-delayBatt), i.e. identity matrix
+            startRow = obj.NumberOfBranches + obj.NumberOfGen + 1;
+            rangeRow = startRow : startRow + obj.NumberOfBatt - 1;
+            obj.OperatorControlBatt(rangeRow, :) = eye(obj.NumberOfBatt);
+            
+            % EB(k+1) -= T*diag(cb)*DeltaPB(k-delayBatt), i.e. matrix -Ab in the paper
+            startRow = obj.NumberOfBranches + obj.NumberOfGen + obj.NumberOfBatt + 1;
+            rangeRow = startRow : startRow + obj.NumberOfBatt - 1;
+            obj.OperatorControlBatt( rangeRow, :) = - diag(obj.BattConstPowerReduc);
         end
         
         function computeOperatorDisturbAvailable(obj)
@@ -132,8 +141,4 @@ classdef MathematicalModel < handle
    
         
     end
-    
-    
-    
-    
 end
