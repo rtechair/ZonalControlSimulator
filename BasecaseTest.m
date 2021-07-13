@@ -19,6 +19,13 @@ classdef BasecaseTest < matlab.unittest.TestCase
             expectedRowGen = [bus 0 0 300 -300 1.025 100 1 maxGeneration minGeneration zeros(1,11)];
             testCase.verifyEqual(basicCase.Matpowercase.gen(end,:), expectedRowGen);
         end
+        
+        function case6468rte_modAddZoneVG(testCase)
+            basicCase = Basecase('case6468rte_mod');
+            basicCase.addZoneVG();
+            % TODO...
+            
+        end
             
     end
     
