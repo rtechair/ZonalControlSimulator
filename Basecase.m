@@ -138,12 +138,12 @@ classdef Basecase < handle
             busVG = 10000;
             obj.addBus(busVG, 2, 0, 0, 0, 0, 1, 1.03864259, -11.9454015, 63, 1, 1.07937, 0.952381);
             obj.addGenerator(busVG, maxGeneration10000);
-            
-            minBatteryInjection10000 = - maxBatteryInjection10000;
-            obj.addBattery(busVG, maxBatteryInjection10000, minBatteryInjection10000);
             obj.addGenerator(2076, maxGeneration2076);
             obj.addGenerator(2745, maxGeneration2745);
             obj.addGenerator(4720, maxGeneration4720);
+            
+            minBatteryInjection10000 = - maxBatteryInjection10000;
+            obj.addBattery(busVG, maxBatteryInjection10000, minBatteryInjection10000);
             
             busMC = 2745;
             busGR = 2076;
@@ -159,7 +159,26 @@ classdef Basecase < handle
         end
         
         function addZoneVTV(obj)
-            % TODO
+            busLAZ = 2506;
+            busSIS = 4169;
+            busSPC = 4546;
+            busTRE = 4710;
+            busVTV = 4875;
+            busVEY = 4915;
+            
+            maxGeneration4710 = 64.7;
+            maxGeneration4875 = 53.07;
+            maxBatteryInjection4875 = 10;
+            minBatteryInjection4875 = - maxBatteryInjection4875;
+            maxGeneration4915 = 35.5;
+            % max generation of other generators are unchanged compared to
+            % the basecase
+            
+            obj.addGenerator(busTRE, maxGeneration4710);
+            obj.addGenerator(busVTV, maxGeneration4875);
+            obj.addGenerator(busVEY, maxGeneration4915);
+            
+            obj.addBattery(busVTV, maxBatteryInjection4875, minBatteryInjection4875);
         end
         
         function boolean = isBusDeleted(obj)

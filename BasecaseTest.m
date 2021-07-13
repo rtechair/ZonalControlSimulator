@@ -26,6 +26,13 @@ classdef BasecaseTest < matlab.unittest.TestCase
             % TODO...
             
         end
+        
+        function case6468rte_modAddZoneVTV(testCase)
+            basicCase = Basecase('case6468rte_mod');
+            basicCase.addZoneVTV();
+            % TODO...
+            
+        end
             
     end
     
