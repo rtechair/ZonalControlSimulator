@@ -1,14 +1,14 @@
 classdef MathematicalModel < handle
-    % To obtain the operators / matrices for the dynamic mathematical model
-    % of a zone.
-    % Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k+tau)+Dd(k)
-%     x = [Fij Pc Pb Eb Pg Pa]     uc = DeltaPc      ub =DeltaPb     
-%     w = DeltaPg      h = DeltaPT
-%     The model is described by the equation:
-%     x(k+1) = A*x(k) + Bc*DeltaPC(k-tau_c) + Bb*DeltaPB(k-tau_b) 
-%              + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
+%   To obtain the operators / matrices for the dynamic mathematical model
+%   of a zone.
+%   Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k+tau)+Dd(k)
+%   x = [Fij Pc Pb Eb Pg Pa]     uc = DeltaPc      ub =DeltaPb     
+%   w = DeltaPg      h = DeltaPT
+%   The model is described by the equation:
+%   x(k+1) = A*x(k) + Bc*DeltaPC(k-delayCurt) + Bb*DeltaPB(k-delayBatt) 
+%            + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
 
-    properties
+    properties (SetAccess = protected)
       OperatorState             % A
       OperatorControlCurt       % Bc
       OperatorControlBatt       % Bb
@@ -50,7 +50,15 @@ classdef MathematicalModel < handle
             
             obj.BattConstPowerReduc = battConstPowerReduc;
             
+            obj.setNumberOfElements;
+            obj.setInjectionShiftFactor;
             
+            obj.setOperatorState;
+            obj.setOperatorControlCurt;
+            obj.setOperatorControlBatt;
+            obj.setOperatorDisturbAvailable;
+            obj.setOperatorDisturbGeneration;
+            obj.setOperatorDisturbTransit;            
         end
         
         function setNumberOfElements(obj)
@@ -64,11 +72,11 @@ classdef MathematicalModel < handle
                 obj.NumberOfBranches + 3*obj.NumberOfGen + 2*obj.NumberOfBatt;
         end
         
-        function computeInjectionShiftFactor(obj)
+        function setInjectionShiftFactor(obj)
             obj.InjectionShiftFactor = makePTDF(obj.InternalMatpowercase);
         end
         
-        function computeOperatorState(obj)
+        function setOperatorState(obj)
             %{
             Fij(k+1) += Fij(k)
             Pc(k+1) += Pc(k)
@@ -89,7 +97,7 @@ classdef MathematicalModel < handle
             obj.OperatorState( rangeRow, rangeCol) = - diag(obj.BattConstPowerReduc);
         end
         
-        function computeOperatorControlCurt(obj)
+        function setOperatorControlCurt(obj)
             obj.OperatorControlCurt = zeros(obj.NumberOfStateVariables, obj.NumberOfGen);
             
             %F(k+1) -= diag(ISF)*DeltaPC(k-delayCurt)
@@ -108,7 +116,7 @@ classdef MathematicalModel < handle
             obj.OperatorControlCurt( rangeRow, :) = - eye(obj.NumberOfGen);
         end
         
-        function computeOperatorControlBatt(obj)
+        function setOperatorControlBatt(obj)
             obj.OperatorControlBatt = zeros(obj.NumberOfStateVariables, obj.NumberOfBatt);
             
             % F(k+1) += diag(ptdf)*DeltaPb(k-delayBatt), i.e. matrix Mb in the paper
@@ -127,23 +135,26 @@ classdef MathematicalModel < handle
             obj.OperatorControlBatt( rangeRow, :) = - diag(obj.BattConstPowerReduc);
         end
         
-        function computeOperatorDisturbAvailable(obj)
+        function setOperatorDisturbAvailable(obj)
             obj.OperatorDisturbAvailable = zeros(obj.NumberOfStateVariables, obj.NumberOfGen);
             startRow = obj.NumberOfStateVariables - obj.NumberOfGen + 1;
             rangeRow = startRow : obj.NumberOfStateVariables;
             obj.OperatorDisturbAvailable(rangeRow, :) = eye(obj.NumberOfGen);
         end
         
-        function computeOperatorDisturbGeneration(obj)
+        function setOperatorDisturbGeneration(obj)
             obj.OperatorDisturbGeneration = zeros(obj.NumberOfStateVariables, obj.NumberOfGen);
+            start = obj.NumberOfStateVariables - 2*obj.NumberOfGen + 1;
+            rangeRow = start : start + obj.NumberOfGen - 1;
+            obj.OperatorDisturbGeneration(rangeRow, :) = eye(obj.NumberOfGen);
             busOfGen = obj.InternalMatpowercase.gen(obj.InternalGenIdx, 1);
             obj.OperatorDisturbGeneration(1:obj.NumberOfBranches, :) = ...
                 obj.InjectionShiftFactor(obj.InternalBranchIdx, busOfGen);
         end
         
-        function computeOperatorDisturbTransit(obj)
+        function setOperatorDisturbTransit(obj)
             obj.OperatorDisturbTransit = zeros(obj.NumberOfStateVariables, obj.NumberOfBuses);
-            obj.OperatorDisturbTransit = ...
+            obj.OperatorDisturbTransit(1: obj.NumberOfBranches, :) = ...
                 obj.InjectionShiftFactor(obj.InternalBranchIdx, obj.InternalBusId);
         end
  
