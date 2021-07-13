@@ -84,19 +84,34 @@ classdef MathematicalModel < handle
             Pa(k+1) += Pa(k)
             %}
             obj.OperatorState = eye(obj.NumberOfStateVariables);
+            
             % Eb(k+1) -= T*diag(cb)*Pb(k), T = 1 sec
+            % if there is no battery, then the following lines won't do anything,
+            % because the concerned submatrix will be an empty matrix
             startRow = obj.NumberOfBranches + obj.NumberOfGen + obj.NumberOfBatt + 1;
             startCol = obj.NumberOfBranches + obj.NumberOfGen + 1;
             rangeRow = startRow : startRow + obj.NumberOfBatt - 1;
             rangeCol = startCol : startCol + obj.NumberOfBatt - 1;
             obj.OperatorState( rangeRow, rangeCol) = - diag(obj.BattConstPowerReduc);
-            % notice with the previous operation, if there is no battery, then the submatrix to be modified 
-            % is a empty double matrix which does not modify the matrix, so no special case to handle
-            
         end
         
         function computeOperatorControlCurt(obj)
-            %TODO
+            obj.OperatorControlCurt = zeros(obj.NumberOfStateVariables, obj.NumberOfGen);
+            
+            %F(k+1) -= diag(ISF)*DeltaPC(k-delayCurt)
+            busOfGen = obj.InternalMatpowercase.gen(obj.InternalGenIdx, 1);
+            obj.OperatorControlCurt(1:obj.NumberOfBranches, :) = ...
+                - obj.InjectionShiftFactor( obj.InternalBranchIdx, busOfGen);
+            
+            % PC(k+1) += DeltaPC(k-delayCurt)
+            startRow = obj.NumberOfBranches + 1;
+            rangeRow = startRow : startRow + obj.NumberOfGen - 1;
+            obj.OperatorControlCurt( rangeRow, :) = eye(obj.NumberOfGen);
+            
+            % PG(k+1) -= DeltaPC(k-delayCurt)
+            startRow = obj.NumberOfBranches + obj.NumberOfGen + 2*obj.NumberOfBatt + 1;
+            rangeRow = startRow : startRow + obj.NumberOfGen - 1;
+            obj.OperatorControlCurt( rangeRow, :) = - eye(obj.NumberOfGen);
         end
         
         function computeOperationControlBatt(obj)
