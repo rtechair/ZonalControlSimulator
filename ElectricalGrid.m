@@ -192,6 +192,8 @@ classdef ElectricalGrid < handle
     methods (Access = protected)
         
         function setMatpowerOption(obj)
+            % mpoption is a configuration for Matpower's 'runpf' function
+            
             obj.MatpowerOption = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
             'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
             'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text

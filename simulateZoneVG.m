@@ -1,9 +1,37 @@
+%{
+Abstract:
 
+INITIALIZATION PRIOR TO THE SIMULATION
+
+- define the basecase used
+- define the duration of simulation
+- build the basecase as an 'ElectricalGrid' object, which is used during
+the simulation
+- load the zone setting 
+- define the topology of the zone as a 'TopologicalZone' object
+- define the time series used for the simulation as a 'DynamicTimeSeries' object
+- define the simulated zone which is used during the simulation
+- load the limiter setting
+- define the limiter as a 'Limiter' object
+
+- define the 3 telecommunications used during the simulation
+    - TelecomTimeSeries2Zone
+    - TelecomController2Zone
+    - TelecomZone2Controller
+
+- define the memory to save results of the simulation
+
+
+INITIALIZATION / FIRST ITERATION OF THE SIMULATION
+
+ITERATIONS OF THE SIMULATION
+
+DISPLAY RESULTS
+
+%}
 
 filenameBasecase = 'case6468rte_zone1and2';
-filenameWindChargingRate = 'tauxDeChargeMTJLMA2juillet2018.txt';
 
-branchFlowLimit = 45;
 
 durationSimulation = 600;
 
@@ -12,27 +40,29 @@ electricalGrid = ElectricalGrid(filenameBasecase);
 
 loadInputZoneVG;
 
-topologyZoneVG = TopologicalZone(inputZoneVG.BusId, electricalGrid);
+settingZoneVG = inputZoneVG; % inputZoneVG is from loadInputZoneVG
+
+topologyZoneVG = TopologicalZone(settingZoneVG.BusId, electricalGrid);
 
 maxGen = electricalGrid.getMaxGeneration(topologyZoneVG.GenOnIdx);
 
-timeSeriesVG = DynamicTimeSeries(filenameWindChargingRate, ...
-    inputZoneVG.StartTimeSeries, inputZoneVG.SamplingTime, durationSimulation, ...
+timeSeriesVG = DynamicTimeSeries(settingZoneVG.FilenameWindChargingRate, ...
+    settingZoneVG.StartTimeSeries, settingZoneVG.SamplingTime, durationSimulation, ...
     maxGen, topologyZoneVG.NumberOfGen);
 
 
 simulatedZoneVG = SimulatedZone(topologyZoneVG.NumberOfBuses,...
     topologyZoneVG.NumberOfGen, topologyZoneVG.NumberOfBatt,...
-     topologyZoneVG.NumberOfBranches, inputZoneVG.DelayCurt, inputZoneVG.DelayBatt,...
-     maxGen, inputZoneVG.BattConstPowerReduc);
+     topologyZoneVG.NumberOfBranches, settingZoneVG.DelayCurt, settingZoneVG.DelayBatt,...
+     maxGen, settingZoneVG.BattConstPowerReduc);
  
  
 loadInputLimiterZoneVG;
 
-limiterZoneVG = Limiter(branchFlowLimit, topologyZoneVG.NumberOfGen, ...
+limiterZoneVG = Limiter(settingZoneVG.BranchFlowLimit, topologyZoneVG.NumberOfGen, ...
     topologyZoneVG.NumberOfBatt, inputLimiterZoneVG.IncreaseCurtPercentEchelon, ...
     inputLimiterZoneVG.DecreaseCurtPercentEchelon, inputLimiterZoneVG.LowerThresholdPercent, ...
-    inputLimiterZoneVG.UpperThresholdPercent, inputZoneVG.DelayCurt, maxGen);
+    inputLimiterZoneVG.UpperThresholdPercent, settingZoneVG.DelayCurt, maxGen);
 
 
 %% Telecom
@@ -47,11 +77,11 @@ telecomZone2Controller = TelecomZone2Controller(delayTelecomZoneVG, topologyZone
     topologyZoneVG.NumberOfBatt, topologyZoneVG.NumberOfBuses, topologyZoneVG.NumberOfBranches);
 
 %% Memory of simulation
-memoryZoneVG = Memory(durationSimulation, inputZoneVG.SamplingTime, ...
+memoryZoneVG = Memory(durationSimulation, settingZoneVG.SamplingTime, ...
     topologyZoneVG.NumberOfBuses, topologyZoneVG.NumberOfBranches, ...
     topologyZoneVG.NumberOfGen, topologyZoneVG.NumberOfBatt, ...
     maxGen, topologyZoneVG.GenOnIdx, topologyZoneVG.BranchIdx,...
-    inputZoneVG.DelayCurt, inputZoneVG.DelayBatt);
+    settingZoneVG.DelayCurt, settingZoneVG.DelayBatt);
 
 %% Initialization
 
@@ -78,7 +108,7 @@ memoryZoneVG.prepareForNextStep();
 
 
 %% an iteration for each zone
-step = inputZoneVG.SamplingTime;
+step = settingZoneVG.SamplingTime;
 start = step;
 
 
