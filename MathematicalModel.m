@@ -178,6 +178,21 @@ classdef MathematicalModel < handle
             obj.OperatorDisturbTransit(1: obj.NumberOfBranches, :) = ...
                 obj.InjectionShiftFactor(obj.InternalBranchIdx, obj.InternalBusId);
         end
+        
+        function saveOperators(obj, filename)
+            operatorState = obj.OperatorState;                          % A
+            operatorControlCurt = obj.OperatorControlCurt;              % Bc
+            operatorControlBatt = obj.OperatorControlBatt;              % Bb
+            operatorDisturbAvailable = obj.OperatorDisturbAvailable;    % Da
+            operatorDisturbGeneration = obj.OperatorDisturbGeneration;  % Dg
+            operatorDisturbTransit = obj.OperatorDisturbGeneration;     % Dt
+            save(filename, 'operatorState', ...            % A
+                          'operatorControlCurt', ...       % Bc
+                          'operatorControlBatt', ...       % Bb
+                          'operatorDisturbAvailable', ...  % Da
+                          'operatorDisturbGeneration', ... % Dg
+                          'operatorDisturbTransit')        % Dt
+        end
  
     end
 end
