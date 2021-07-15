@@ -9,9 +9,8 @@ classdef DynamicTimeSeries < handle
     
     properties (SetAccess = immutable)
         StartingIterationOfWindForGen
-        Zone
         NumberOfIterations
-        GenerationCapacity
+        maxPowerGeneration
         NumberOfGen
     end
     
@@ -22,7 +21,7 @@ classdef DynamicTimeSeries < handle
                 durationSimulation, maxGenerationPerGen, zone_numberOfGen)
             obj.StartingIterationOfWindForGen = zone_startingIterationOfWindForGen;
             obj.NumberOfIterations = floor(durationSimulation / zone_samplingTime);
-            obj.GenerationCapacity = maxGenerationPerGen;
+            obj.maxPowerGeneration = maxGenerationPerGen;
             obj.NumberOfGen = zone_numberOfGen;
             
             obj.CurrentStep = 1;
@@ -69,7 +68,7 @@ classdef DynamicTimeSeries < handle
                start = obj.StartingIterationOfWindForGen(gen);
                range = start : start + obj.NumberOfIterations;
                windRate = obj.DiscretizedWindChargingRate(1,range);
-               maxGen = obj.GenerationCapacity(gen,1);
+               maxGen = obj.maxPowerGeneration(gen,1);
                obj.PowerAvailableState(gen,:) = maxGen * windRate;
            end
        end

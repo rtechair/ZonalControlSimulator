@@ -4,8 +4,8 @@ classdef TopologicalZone < handle
     properties
         BusId
         BranchIdx
-        GenOnIdx
-        BattOnIdx
+        GenOnIdx % offline generators within the zone are not considered
+        BattOnIdx % offline batteries withing the zone are not considered
         
         BusBorderId
         BranchBorderIdx

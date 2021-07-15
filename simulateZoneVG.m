@@ -44,17 +44,17 @@ settingZoneVG = inputZoneVG; % inputZoneVG is from loadInputZoneVG
 
 topologyZoneVG = TopologicalZone(settingZoneVG.BusId, electricalGrid);
 
-maxGen = electricalGrid.getMaxGeneration(topologyZoneVG.GenOnIdx);
+maxPowerGeneration = electricalGrid.getMaxPowerGeneration(topologyZoneVG.GenOnIdx);
 
 timeSeriesVG = DynamicTimeSeries(settingZoneVG.FilenameWindChargingRate, ...
     settingZoneVG.StartTimeSeries, settingZoneVG.SamplingTime, durationSimulation, ...
-    maxGen, topologyZoneVG.NumberOfGen);
+    maxPowerGeneration, topologyZoneVG.NumberOfGen);
 
 
 simulatedZoneVG = SimulatedZone(topologyZoneVG.NumberOfBuses,...
     topologyZoneVG.NumberOfGen, topologyZoneVG.NumberOfBatt,...
      topologyZoneVG.NumberOfBranches, settingZoneVG.DelayCurt, settingZoneVG.DelayBatt,...
-     maxGen, settingZoneVG.BattConstPowerReduc);
+     maxPowerGeneration, settingZoneVG.BattConstPowerReduc);
  
  
 loadInputLimiterZoneVG;
@@ -62,7 +62,7 @@ loadInputLimiterZoneVG;
 limiterZoneVG = Limiter(settingZoneVG.BranchFlowLimit, topologyZoneVG.NumberOfGen, ...
     topologyZoneVG.NumberOfBatt, inputLimiterZoneVG.IncreaseCurtPercentEchelon, ...
     inputLimiterZoneVG.DecreaseCurtPercentEchelon, inputLimiterZoneVG.LowerThresholdPercent, ...
-    inputLimiterZoneVG.UpperThresholdPercent, settingZoneVG.DelayCurt, maxGen);
+    inputLimiterZoneVG.UpperThresholdPercent, settingZoneVG.DelayCurt, maxPowerGeneration);
 
 
 %% Telecom
@@ -80,14 +80,14 @@ telecomZone2Controller = TelecomZone2Controller(delayTelecomZoneVG, topologyZone
 memoryZoneVG = Memory(durationSimulation, settingZoneVG.SamplingTime, ...
     topologyZoneVG.NumberOfBuses, topologyZoneVG.NumberOfBranches, ...
     topologyZoneVG.NumberOfGen, topologyZoneVG.NumberOfBatt, ...
-    maxGen, topologyZoneVG.GenOnIdx, topologyZoneVG.BranchIdx,...
+    maxPowerGeneration, topologyZoneVG.GenOnIdx, topologyZoneVG.BranchIdx,...
     settingZoneVG.DelayCurt, settingZoneVG.DelayBatt);
 
 %% Initialization
 
 % CHEATING: set PA(0) directly, need to be later changed
 simulatedZoneVG.State.PowerAvailable = timeSeriesVG.PowerAvailableState(:,1);
-simulatedZoneVG.State.PowerGeneration = min(timeSeriesVG.PowerAvailableState(:,1), maxGen);
+simulatedZoneVG.State.PowerGeneration = min(timeSeriesVG.PowerAvailableState(:,1), maxPowerGeneration);
 
 electricalGrid.updateGeneration(topologyZoneVG.GenOnIdx, simulatedZoneVG.State.PowerGeneration);
 electricalGrid.updateBattInjection(topologyZoneVG.BattOnIdx, simulatedZoneVG.State.PowerBattery);

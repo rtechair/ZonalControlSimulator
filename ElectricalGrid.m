@@ -137,7 +137,7 @@ classdef ElectricalGrid < handle
             busId = unique(obj.Matpowercase.gen(genOrBattIdx,1));
         end
         
-        function maxGen = getMaxGeneration(obj, genIdx)
+        function maxGen = getMaxPowerGeneration(obj, genIdx)
             maxGen = obj.Matpowercase.gen(genIdx, 9);
         end
         
