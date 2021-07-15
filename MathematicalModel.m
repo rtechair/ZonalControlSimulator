@@ -17,6 +17,8 @@ classdef MathematicalModel < handle
       OperatorDisturbTransit    % Dt
       
       InjectionShiftFactor % ISF
+      
+      ISFreduced
 
       InternalMatpowercase
       
@@ -74,6 +76,25 @@ classdef MathematicalModel < handle
         
         function setInjectionShiftFactor(obj)
             obj.InjectionShiftFactor = makePTDF(obj.InternalMatpowercase);
+        end
+        
+        function setISFreduced(obj)
+            % METHOD NOT WORKING
+            bus = obj.InternalMatpowercase.bus;
+            gen = obj.InternalMatpowercase.gen;
+            [slack,~,~] = bustypes(bus, gen);
+            % Warning, regarding the dimensions of 'slack', if it is a
+            % scalar, then it is fine
+            
+            %{
+                Error, makePTDF not working:
+                Error using accumarray
+                First input SUBS must be a real, full, numeric matrix or a cell vector.
+                Error in makePTDF (line 151)
+                dP = accumarray([bidx (1:nbi)'], 1, [nb, nbi]);
+            %}
+            obj.ISFreduced = makePTDF(obj.InternalMatpowercase, slack, obj.InternalBusId);
+            
         end
         
         function setOperatorState(obj)

@@ -16,6 +16,3 @@ dynamicModelZoneVG = MathematicalModel(electricalGrid.InternalMatpowercase,...
     internalZoneVGBusId, topologyZoneVG.BranchIdx, internalZoneVGGenIdx,...
     internalZoneVGBattIdx, inputZoneVG.BattConstPowerReduc);
 
-
-alessioMatrices = load('alessioABCmatrices');
-
