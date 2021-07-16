@@ -9,6 +9,9 @@ classdef MathematicalModel < handle
 %            + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
 
     properties (SetAccess = protected)
+      
+      InternalMatpowercase  
+        
       OperatorState             % A
       OperatorControlCurt       % Bc
       OperatorControlBatt       % Bb
@@ -16,12 +19,9 @@ classdef MathematicalModel < handle
       OperatorDisturbGeneration % Dg
       OperatorDisturbTransit    % Dt
       
-      InjectionShiftFactor % ISF
-      
+      InjectionShiftFactor % ISF      
       ISFreduced
 
-      InternalMatpowercase
-      
       % Regarding the studied zone 
       InternalBusId
       InternalBranchIdx
@@ -69,7 +69,7 @@ classdef MathematicalModel < handle
             obj.NumberOfGen = size(obj.InternalGenIdx, 1);
             obj.NumberOfBatt = size(obj.InternalBattIdx, 1);
             
-            % The state is x = [Fij Pc Pb Eb Pg Pa], thus
+            % The state is x = [Fij Pc Pb Eb Pg Pa]', thus
             obj.NumberOfStateVariables = ...
                 obj.NumberOfBranches + 3*obj.NumberOfGen + 2*obj.NumberOfBatt;
         end

@@ -81,14 +81,16 @@ classdef Basecase < handle
             % find the index of the first branch going from busFrom to
             % busTo, does not find a branch if it is from busTo to busFrom,
             % thus the order of the buses is important
-            branches = obj.Matpowercase.branch;
+            
             % Why only the 1st branch connecting the 2 buses:
             % On the branches we had to remove, there was only 1 branch connecting the 2 buses
-            isBranchWithCorrectBuses = branches(:,1) == busFrom & branches(:,2) == busTo;
-            branchIdx = find(isBranchWithCorrectBuses, 1);
+            busFromOfBranches = obj.Matpowercase.branch(:, 1);
+            busToOfBranches = obj.Matpowercase.branch(:, 2);
+            branchIdx = find(busFromOfBranches == busFrom...
+                           & busToOfBranches   == busTo  ,1); 
         end
         
-        function [busFrom, busTo, r,x, b, rateA, rateB, rateC,ratio,angle,status,angmin,angmax] = ...
+        function [busFrom,busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,angmin,angmax] = ...
                 getBranchInfo(obj, branchIdx)
             branchInfo = num2cell(obj.Matpowercase.branch(branchIdx,:));
             [busFrom, busTo, r,x, b, rateA, rateB, rateC,ratio,angle,status,angmin,angmax] = ...
@@ -181,17 +183,111 @@ classdef Basecase < handle
             obj.addBattery(busVTV, maxBatteryInjection4875, minBatteryInjection4875);
         end
         
-        function boolean = isBusDeleted(obj)
+        function boolean = isABusDeleted(obj)
             % TODO currently in ElectricalGrid
         end
         
-        function boolean = isBranchDeleted(obj)
+        function boolean = isABranchDeleted(obj)
            % TODO currently in ElectricalGrid 
         end
         
         function checkNoBusNorBranchDeleted(obj)
             % TODO currently in ElectricalGrid 
         end
+        
+        function handleBasecase(obj)
+            % TODO
+           % the considered situation integrates zone VG and zone VTV, thus 
+           % they both should be included in the studied basecase
+           % If not, then the basecase should integrate it
+        end
+        
+        
+        function checkPresenceZoneVG(obj)
+           txtBus10000 = obj.isBusAbsentCharArray(10000); 
+           txtGenAt10000 = obj.isGenAtBusAbsentCharArray(10000);
+           txtGenAt2076 = obj.isGenAtBusAbsentCharArray(2076);
+           txtGenAt2745 = obj.isGenAtBusAbsentCharArray(2745);
+           txtGenAt4720 = obj.isGenAtBusAbsentCharArray(4720);
+           txtBattAt10000 = obj.isBattAtBusPresentCharArray(10000);
+           % branch from 2745 to 2076 should be remove, thus should not exist!
+           txtBranch2745To2076Absent = obj.isBranchPresentCharArray(2745, 2076);
+           txtBranch2745To10000Present = obj.isBranchAbsentCharArray(2745, 10000);
+           txtBranch2076To10000Present = obj.isBranchAbsentCharArray(2076, 10000);
+           
+           txtTotal = [txtBus10000 txtGenAt10000 txtGenAt2076 txtGenAt2745 txtGenAt4720 ...
+                        txtBattAt10000 txtBranch2745To2076Absent ...
+                        txtBranch2745To10000Present txtBranch2076To10000Present];
+           if isempty(txtTotal)
+               txtTotal = 'All elements of Zone VG are present in the basecase';
+           end
+           disp(txtTotal)
+        end
+        
+        
+        function boolean = isBusPresent(obj, busId)
+            busIdx = find(obj.Matpowercase.bus(:,1) == busId, 1);
+            boolean = ~isempty(busIdx);
+        end
+        
+        function char = isBusAbsentCharArray(obj, busId)
+            char = '';
+            if ~obj.isBusPresent(busId)
+                char = ['Bus ' num2str(busId) ' absent' newline];
+            end   
+        end
+        
+        function boolean = isBranchPresent(obj, busFrom, busTo)
+            branchIdx = obj.findFirstBranch(busFrom, busTo);
+            boolean = ~isempty(branchIdx);
+        end
+        
+        function char = isBranchPresentCharArray(obj, busFrom, busTo)
+            char = '';
+            if obj.isBranchPresent(busFrom, busTo)
+                char = ['Branch from ' num2str(busFrom) ' to ' num2str(busTo) ' present' newline];
+            end
+        end
+        
+        function char = isBranchAbsentCharArray(obj, busFrom, busTo)
+           char = '';
+           if ~obj.isBranchPresent(busFrom, busTo)
+              char = ['Branch from ' num2str(busFrom) ' to ' num2str(busTo) ' absent' newline];
+           end
+        end
+        
+        function boolean = isGenAtBusPresent(obj, busId)
+           busesOfGenAndBatt =  obj.Matpowercase.gen(:,1);
+           minRealPowerOutput = obj.Matpowercase.gen(:,10);
+           isItAGen = minRealPowerOutput >= 0;
+           genIdx = find(busesOfGenAndBatt == busId & isItAGen, 1);
+           boolean = ~isempty(genIdx);
+        end
+        
+        function char = isGenAtBusAbsentCharArray(obj, busId)
+            char = '';
+            if ~obj.isGenAtBusPresent(busId)
+                char = ['Gen at bus ' num2str(busId) ' absent' newline];
+            end
+        end
+        
+        function boolean = isBattAtBusPresent(obj, busId)
+            busesOfGenAndBatt =  obj.Matpowercase.gen(:,1);
+           minRealPowerOutput = obj.Matpowercase.gen(:,10);
+           % a battery has a negative min power output, as opposed to a generator
+           isItABatt = minRealPowerOutput < 0;
+           battIdx = find(busesOfGenAndBatt == busId & isItABatt, 1);
+           boolean = ~isempty(battIdx);
+        end
+        
+         function char = isBattAtBusPresentCharArray(obj, busId)
+            char = '';
+            if ~obj.isBattAtBusPresent(busId)
+                char = ['Batt at bus ' num2str(busId) ' absent' newline];
+            end
+        end
+        
+        
         
     end
     
