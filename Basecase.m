@@ -11,11 +11,10 @@ classdef Basecase < handle
         end
         
         function addBus(obj, id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm)
-            % add a bus to the existing Matpowercase at the bottom of the 'bus' field
+            % Add a bus to the existing Matpowercase at the bottom of the 'bus' field
             %% Input
-            % All the needed values describing a branch according to MATPOWER
-            % manual, see section Bus Data Format of CASEFORMAT, type "help
-            % caseformat", or see arguments block in the source code
+            % All the needed values describing a branch according to MATPOWER manual: see Table B-1 Bus Data.
+            % Alternatively, see section Bus Data Format of CASEFORMAT, type "help caseformat"
             arguments
                 obj
                 id (1,1) double {mustBeInteger, mustBePositive}
@@ -36,23 +35,23 @@ classdef Basecase < handle
                 [id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm];
         end
         
-        function addGenerator(obj, bus_id, Pg_max, Pg_min, num, startup, shutdown, c3, c2, c1, c0)
-            % add a generator or a battery to the existing Matpowercase at the bottom of the 'gen' field.
-            % A battery is a generator with Pg_min < 0
-            % The method is equivalent to Matpower's function 'addgen2mpc', but with default values.
+        function addGenerator(obj, busId, maxPowerGeneration, minPowerGeneration, num, startup, shutdown, c3, c2, c1, c0)
+            % Add a generator or a battery to the existing Matpowercase at the bottom of the 'gen' field.
+            % A battery is a generator with minPowerGeneration < 0
+            % The method is equivalent to Matpower's function 'addgen2mpc', but with default values for gencost.
             
             % CAUTIOUS! nr = number of rows in mpc.gen. gencost can either have nr rows or
             % 2*nr, see Generator Cost Data Format. This function only treats the case with 'nr' rows
             %% Input
-            % All the needed values describing a branch according to MATPOWER manual:
-            % or a subset not including the data for gencost
-            % see section Generator Data Format and Generator Cost Data of CASEFORMAT, type "help caseformat"
-            % or Matpower manual: Table B-2 Generator Data and Table B-4 Generator Cost data.
+            % All the needed values describing a generator and a generator cost according to
+            % MATPOWER manual: see Table B-2 Generator Data and Table B-4 Generator Cost data.
+            % Alternatively, see section Generator Data Format and Generator Cost Data of CASEFORMAT, type "help caseformat"
+            % or Matpower manual: 
             arguments
                 obj
-                bus_id (1,1) double {mustBeInteger, mustBePositive}
-                Pg_max (1,1) double {mustBeNonnegative}
-                Pg_min (1,1) double = 0
+                busId (1,1) double {mustBeInteger, mustBePositive}
+                maxPowerGeneration (1,1) double {mustBeNonnegative}
+                minPowerGeneration (1,1) double = 0
                 num (1,1) double = 2
                 startup (1,1) double = 0
                 shutdown (1,1) double = 0
@@ -62,17 +61,23 @@ classdef Basecase < handle
                 c0 (1,1) double = 0
             end
             obj.Matpowercase.gencost(end+1,:) = [num startup shutdown c3 c2 c1 c0];
-            obj.Matpowercase.gen(end+1,:) = [bus_id 0 0 300 -300 1.025 100 1 Pg_max Pg_min zeros(1,11)];
+            obj.Matpowercase.gen(end+1,:) = [busId 0 0 300 -300 1.025 100 1 maxPowerGeneration minPowerGeneration zeros(1,11)];
         end
         
-        function addBattery(obj, bus_id, Pg_max, Pg_min)
-            % add a battery to the existing Matpowercase at the bottom of the 'gen' field.
-            % A battery is a generator with Pg_min < 0
-            obj.addGenerator(bus_id, Pg_max, Pg_min);
+        function addBattery(obj, busId, maxPowerGeneration, minPowerGeneration)
+            % Add a battery to the existing Matpowercase at the bottom of the 'gen' field.
+            % A battery is a generator with minPowerGeneration < 0
+            obj.addGenerator(busId, maxPowerGeneration, minPowerGeneration);
         end
         
         function addBranch(obj, busFrom, busTo, r, x, b, rateA, rateB, rateC, ratio, angle,...
                 status, angmin, angmax)
+            % Add a branch to the existing Matpowercase at the bottom of
+            % the 'branch' field.
+            %% Input
+            % All the values describing a branch according to Matpower
+            % manual: see Table B-3 Branch Data.
+            % Alternatively, see section Branch Data Format of CASEFORMAT, type "help caseformat"
             obj.Matpowercase.branch(end+1,:) = [busFrom, busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
         end
         
@@ -90,10 +95,16 @@ classdef Basecase < handle
                            & busToOfBranches   == busTo  ,1); 
         end
         
-        function [busFrom,busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,angmin,angmax] = ...
+        function [busFrom,busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 getBranchInfo(obj, branchIdx)
+            % Get the information of the branch, providing its index in the
+            % 'branch' field. 
+            %% Output
+            % All the values describing a branch according to Matpower
+            % manual: see Table B-3 Branch Data.
+            % Alternatively, see section Branch Data Format of CASEFORMAT, type "help caseformat"           
             branchInfo = num2cell(obj.Matpowercase.branch(branchIdx,:));
-            [busFrom, busTo, r,x, b, rateA, rateB, rateC,ratio,angle,status,angmin,angmax] = ...
+            [busFrom, busTo, r,x, b, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 branchInfo{:};
         end
         
@@ -151,19 +162,23 @@ classdef Basecase < handle
             busGR = 2076;
             
             branchIdx = obj.findFirstBranch(busMC, busGR);
-            [~, ~, r,x, b, rateA, rateB, rateC,ratio,angle,status,angmin,angmax] = ...
+            [~, ~, r,x, b, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 obj.getBranchInfo(branchIdx);
             
             obj.removeBranch(branchIdx);
             
-            obj.addBranch(busMC, busVG, r/2,x/2, b/2, rateA, rateB, rateC,ratio,angle,status,angmin,angmax);
-            obj.addBranch(busGR, busVG, r/2,x/2, b/2, rateA, rateB, rateC,ratio,angle,status,angmin,angmax);
+            obj.addBranch(busMC, busVG, r/2,x/2, b/2, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle);
+            obj.addBranch(busGR, busVG, r/2,x/2, b/2, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle);
         end
         
         function addZoneVTV(obj)
+            % nothing is modified on the 3 following buses of the zone with
+            % regards to the original basecase 'case6468_rte'
             busLAZ = 2506;
             busSIS = 4169;
             busSPC = 4546;
+            
+            % There are changes in the following buses:
             busTRE = 4710;
             busVTV = 4875;
             busVEY = 4915;
