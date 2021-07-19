@@ -199,6 +199,9 @@ classdef Basecase < handle
         end
         
         function boolean = isABusDeleted(obj)
+            % isABusDeleted
+            % isABusDeletedByMatpowerConversion
+            % doesMatpowerConversionRemoveBus
             % TODO currently in ElectricalGrid
         end
         
@@ -219,16 +222,16 @@ classdef Basecase < handle
         
         
         function checkPresenceZoneVG(obj)
-           txtBus10000 = obj.isBusAbsentCharArray(10000); 
-           txtGenAt10000 = obj.isGenAtBusAbsentCharArray(10000);
-           txtGenAt2076 = obj.isGenAtBusAbsentCharArray(2076);
-           txtGenAt2745 = obj.isGenAtBusAbsentCharArray(2745);
-           txtGenAt4720 = obj.isGenAtBusAbsentCharArray(4720);
-           txtBattAt10000 = obj.isBattAtBusPresentCharArray(10000);
+           txtBus10000 = obj.isBusAbsentText(10000); 
+           txtGenAt10000 = obj.isGenAtBusAbsentText(10000);
+           txtGenAt2076 = obj.isGenAtBusAbsentText(2076);
+           txtGenAt2745 = obj.isGenAtBusAbsentText(2745);
+           txtGenAt4720 = obj.isGenAtBusAbsentText(4720);
+           txtBattAt10000 = obj.isBattAtBusPresentText(10000);
            % branch from 2745 to 2076 should be remove, thus should not exist!
-           txtBranch2745To2076Absent = obj.isBranchPresentCharArray(2745, 2076);
-           txtBranch2745To10000Present = obj.isBranchAbsentCharArray(2745, 10000);
-           txtBranch2076To10000Present = obj.isBranchAbsentCharArray(2076, 10000);
+           txtBranch2745To2076Absent = obj.isBranchPresentText(2745, 2076);
+           txtBranch2745To10000Present = obj.isBranchAbsentText(2745, 10000);
+           txtBranch2076To10000Present = obj.isBranchAbsentText(2076, 10000);
            
            txtTotal = [txtBus10000 txtGenAt10000 txtGenAt2076 txtGenAt2745 txtGenAt4720 ...
                         txtBattAt10000 txtBranch2745To2076Absent ...
@@ -245,10 +248,10 @@ classdef Basecase < handle
             boolean = ~isempty(busIdx);
         end
         
-        function char = isBusAbsentCharArray(obj, busId)
-            char = '';
+        function charArray = isBusAbsentText(obj, busId)
+            charArray = '';
             if ~obj.isBusPresent(busId)
-                char = ['Bus ' num2str(busId) ' absent' newline];
+                charArray = ['Bus ' num2str(busId) ' absent' newline];
             end   
         end
         
@@ -257,17 +260,19 @@ classdef Basecase < handle
             boolean = ~isempty(branchIdx);
         end
         
-        function char = isBranchPresentCharArray(obj, busFrom, busTo)
-            char = '';
+        function charArray = isBranchPresentText(obj, busFrom, busTo)
             if obj.isBranchPresent(busFrom, busTo)
-                char = ['Branch from ' num2str(busFrom) ' to ' num2str(busTo) ' present' newline];
+                charArray = ['Branch from ' num2str(busFrom) ' to ' num2str(busTo) ' present' newline];
+            else
+                charArray = '';
             end
         end
         
-        function char = isBranchAbsentCharArray(obj, busFrom, busTo)
-           char = '';
+        function charArray = isBranchAbsentText(obj, busFrom, busTo)
            if ~obj.isBranchPresent(busFrom, busTo)
-              char = ['Branch from ' num2str(busFrom) ' to ' num2str(busTo) ' absent' newline];
+               charArray = ['Branch from ' num2str(busFrom) ' to ' num2str(busTo) ' absent' newline];
+           else
+               charArray = '';
            end
         end
         
@@ -279,10 +284,11 @@ classdef Basecase < handle
            boolean = ~isempty(genIdx);
         end
         
-        function char = isGenAtBusAbsentCharArray(obj, busId)
-            char = '';
+        function charArray = isGenAtBusAbsentText(obj, busId)
             if ~obj.isGenAtBusPresent(busId)
-                char = ['Gen at bus ' num2str(busId) ' absent' newline];
+                charArray = ['Gen at bus ' num2str(busId) ' absent' newline];
+            else
+                charArray = '';
             end
         end
         
@@ -295,10 +301,11 @@ classdef Basecase < handle
            boolean = ~isempty(battIdx);
         end
         
-         function char = isBattAtBusPresentCharArray(obj, busId)
-            char = '';
+         function charArray = isBattAtBusPresentText(obj, busId)
             if ~obj.isBattAtBusPresent(busId)
-                char = ['Batt at bus ' num2str(busId) ' absent' newline];
+                charArray = ['Batt at bus ' num2str(busId) ' absent' newline];
+            else
+                charArray = '';
             end
         end
         
