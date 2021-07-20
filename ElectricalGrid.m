@@ -36,22 +36,20 @@ classdef ElectricalGrid < handle
             
         end
         
-        function [branch_zone_idx, branch_border_idx] = getInnerAndBorderBranchIdx(obj, busId)
+        function [branchZoneIdx, branchBorderIdx] = getInnerAndBorderBranchIdx(obj, busId)
             % Given a zone with its buses id, return the branch indices
             % from the matpowercase of: the branches within the zone (both end buses in zone)
             % and the branches at the border of zone ( 1 end bus in the zone), respectively
             
-            buses_of_branch = obj.Matpowercase.branch(:,[1 2]);
+            busesOfBranch = obj.Matpowercase.branch(:,[1 2]);
             % determine what end buses are from the zone or outside, as boolean
-            is_fbus_tbus_of_branch_in_zone = ismember(buses_of_branch, busId);
-            % sum booleans per branch :fbusIn + tBusIn, i.e. over the columns, to get the number of end buses of the branch within the zone  
-            nb_of_buses_of_branch_in_zone = sum(is_fbus_tbus_of_branch_in_zone,2); 
-            S = sparse(nb_of_buses_of_branch_in_zone);
+            areEndBusesOfBranchInZone = ismember(busesOfBranch, busId);
+            % sum booleans per branch :fromBus + toBus, i.e. over the columns, to get the number of end buses of the branch within the zone  
+            numberOfBusesPerBranchInZone = sum(areEndBusesOfBranchInZone,2); 
             % the branch is within the zone as it is connecting 2 inner buses
-            branch_zone_idx = find(S==2); 
+            branchZoneIdx = find(numberOfBusesPerBranchInZone == 2); 
             % the branch connects a inner bus with an outer bus
-            branch_border_idx = find(S==1);
-            
+            branchBorderIdx = find(numberOfBusesPerBranchInZone == 1);
         end
         
         function busBorderId = getBusBorderId(obj, busId, branchBorderIdx)
@@ -64,19 +62,19 @@ classdef ElectricalGrid < handle
             toBus = obj.Matpowercase.branch(branchBorderIdx,2);
             
             % look for the end buses of each branch at the border, i.e. not in the zone. As boolean column vectors
-            is_fromBus_in_border = ~ismember(fromBus, busId);
-            is_toBus_in_border = ~ismember(toBus, busId);
-            if any(is_fromBus_in_border + is_toBus_in_border ~= 1)
+            isfromBusInBorder = ~ismember(fromBus, busId);
+            istoBusInBorder = ~ismember(toBus, busId);
+            if any(isfromBusInBorder + istoBusInBorder ~= 1)
                 % error if a branch does not have exactly 1 end bus inside the zone
                 error(['A branch does not have exactly 1 end bus inside the zone.'...
                         newline ' Check input branchBorderIdx is correct, i.e. all branches are at the border of the zone'...
                         ' which should be BranchBorderIdx'])
             end
             % Get the buses id of the end buses at the border
-            fromBus_border_id = fromBus(is_fromBus_in_border);
-            toBus_border_id = toBus(is_toBus_in_border);
+            fromBusBorderId = fromBus(isfromBusInBorder);
+            toBusBorderId = toBus(istoBusInBorder);
             % the buses at the border are the union set, i.e. no repetition, in sorted order, as a column vector
-            busBorderId = union(fromBus_border_id, toBus_border_id, 'rows', 'sorted');
+            busBorderId = union(fromBusBorderId, toBusBorderId, 'rows', 'sorted');
         end
         
         function [genOnIdx, battOnIdx] = getGenAndBattOnIdx(obj, busId)
