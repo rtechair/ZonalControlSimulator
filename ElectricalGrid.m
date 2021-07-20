@@ -25,8 +25,6 @@ classdef ElectricalGrid < handle
             obj.Matpowercase = loadcase(filenameBasecase);
             
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);
-            
-            obj.checkNoBusNorBranchDeleted();
 
             obj.setMapBus_id_e2i();
             obj.setMapBus_id_i2e();
@@ -173,16 +171,15 @@ classdef ElectricalGrid < handle
             end
         end
         
-        %TODO see 'getPowerBranchFlow' method, it is the same
         function powerTransit = getPowerTransitBusFrom(obj, branchIdx)
+            % it is the same as 'getPowerBranchFlow' method, simply a
+            % change of name to be more understandable
             powerTransit = obj.ResultPowerFlow.branch(branchIdx, 14);
         end
         
         function powerTransit = getPowerTransitBusTo(obj, branchIdx)
             powerTransit = obj.ResultPowerFlow.branch(branchIdx, 16);
         end
-        
-        
 
     end
     
@@ -194,27 +191,7 @@ classdef ElectricalGrid < handle
             obj.MatpowerOption = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
             'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
             'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
-        end
-        
-        
-        function boolean = isBusDeleted(obj)
-        % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
-            numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
-            boolean = numberOfDeletedBuses ~= 0;
-        end
-
-        function boolean = isBranchDeleted(obj)
-        % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
-            numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
-            boolean = numberOfDeletedBranches ~= 0;
-        end
-        
-        function checkNoBusNorBranchDeleted(obj)
-            if obj.isBusDeleted() || obj.isBranchDeleted()
-                error(['A bus or a branch has been deleted in the internal matpowercase.'...
-                    'The code can not handle this case. Take a different matpowercase or modify it'])
-            end
-        end       
+        end    
         
         function setMapBus_id_e2i(obj)
             obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
