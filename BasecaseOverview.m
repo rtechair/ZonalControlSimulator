@@ -44,17 +44,12 @@ classdef BasecaseOverview < handle
             % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
             numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
             boolean = numberOfDeletedBuses ~= 0;
-            
-            % TODO: choice of name? isABusDeletedByMatpowerConversion
-            % doesMatpowerConversionRemoveBus
-            % TODO currently in ElectricalGrid
         end
         
         function boolean = isABranchDeleted(obj)
             % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
             numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
             boolean = numberOfDeletedBranches ~= 0;
-           % TODO currently in ElectricalGrid 
         end
         
         function boolean = doExternalAndInternalBusOrdersMatch(obj)
@@ -66,7 +61,6 @@ classdef BasecaseOverview < handle
         end
         
         function checkNoBusNorBranchDeleted(obj)
-            % TODO currently in ElectricalGrid 
             if obj.isABusDeleted() || obj.isABranchDeleted()
                 error(['A bus or a branch has been deleted in the internal matpowercase.'...
                     'The code can not handle this case. Take a different matpowercase or modify it'])
