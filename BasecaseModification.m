@@ -107,21 +107,21 @@ classdef BasecaseModification < BasecaseOverview
             % The function runpf of matpower should function for the simulation.
             
             % maximum power output for the production groups and the batteries, in MW
-            maxGeneration10000 = 78;
-            maxGeneration2076 = 66;
-            maxGeneration2745 = 54;
-            maxGeneration4720 = 10;
-            maxBatteryInjection10000 = 10; 
+            maxGenerationAt10000 = 78;
+            maxGenerationAt2076 = 66;
+            maxGenerationAt2745 = 54;
+            maxGenerationAt4720 = 10;
+            maxBatteryInjectionAt10000 = 10; 
             
             busVG = 10000;
             obj.addBus(busVG, 2, 0, 0, 0, 0, 1, 1.03864259, -11.9454015, 63, 1, 1.07937, 0.952381);
-            obj.addGenerator(busVG, maxGeneration10000);
-            obj.addGenerator(2076, maxGeneration2076);
-            obj.addGenerator(2745, maxGeneration2745);
-            obj.addGenerator(4720, maxGeneration4720);
+            obj.addGenerator(busVG, maxGenerationAt10000);
+            obj.addGenerator(2076, maxGenerationAt2076);
+            obj.addGenerator(2745, maxGenerationAt2745);
+            obj.addGenerator(4720, maxGenerationAt4720);
             
-            minBatteryInjection10000 = - maxBatteryInjection10000;
-            obj.addBattery(busVG, maxBatteryInjection10000, minBatteryInjection10000);
+            minBatteryInjectionAt10000 = - maxBatteryInjectionAt10000;
+            obj.addBattery(busVG, maxBatteryInjectionAt10000, minBatteryInjectionAt10000);
             
             busMC = 2745;
             busGR = 2076;
@@ -139,6 +139,7 @@ classdef BasecaseModification < BasecaseOverview
         function addZoneVTV(obj)
             % nothing is modified on the 3 following buses of the zone with
             % regards to the original basecase 'case6468_rte'
+            % TODO: thus, maybe delete them? as they are unused
             busLAZ = 2506;
             busSIS = 4169;
             busSPC = 4546;
@@ -148,19 +149,21 @@ classdef BasecaseModification < BasecaseOverview
             busVTV = 4875;
             busVEY = 4915;
             
-            maxGeneration4710 = 64.7;
-            maxGeneration4875 = 53.07;
-            maxBatteryInjection4875 = 10;
-            minBatteryInjection4875 = - maxBatteryInjection4875;
-            maxGeneration4915 = 35.5;
+            maxGenerationAt4710 = 64.7;
+            maxGenerationAt4875 = 53.07;
+            maxGenerationAt4915 = 35.5;
+            
+            maxBatteryInjectionAt4875 = 10;
+            minBatteryInjectionAt4875 = - maxBatteryInjectionAt4875;
+            
             % max generation of other generators are unchanged compared to
             % the basecase
             
-            obj.addGenerator(busTRE, maxGeneration4710);
-            obj.addGenerator(busVTV, maxGeneration4875);
-            obj.addGenerator(busVEY, maxGeneration4915);
+            obj.addGenerator(busTRE, maxGenerationAt4710);
+            obj.addGenerator(busVTV, maxGenerationAt4875);
+            obj.addGenerator(busVEY, maxGenerationAt4915);
             
-            obj.addBattery(busVTV, maxBatteryInjection4875, minBatteryInjection4875);
+            obj.addBattery(busVTV, maxBatteryInjectionAt4875, minBatteryInjectionAt4875);
         end
         
         function handleBasecase(obj)
