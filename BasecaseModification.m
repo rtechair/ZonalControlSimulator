@@ -50,7 +50,7 @@ classdef BasecaseModification < BasecaseOverview
             % CAUTIOUS! nr = number of rows in mpc.gen. gencost can either have nr rows or
             % 2*nr, see Generator Cost Data Format. This function only treats the case with 'nr' rows
             %% Input
-            % All the needed values describing a generator and a generator cost according to
+            % All the values describing a generator and a generator cost according to
             % MATPOWER manual: see Table B-2 Generator Data and Table B-4 Generator Cost data.
             % Alternatively, see section Generator Data Format and Generator Cost Data of CASEFORMAT, type "help caseformat"
             % or Matpower manual: 

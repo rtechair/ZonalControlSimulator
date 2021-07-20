@@ -13,7 +13,12 @@ classdef BasecaseOverview < handle
             obj.Matpowercase = loadcase(filenameBasecase);
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);       
         end
-                
+              
+        function displayCaseInfo(obj)
+            % Use Matpower function 'case_info' to display informations about the basecase 
+            case_info(obj.Matpowercase)
+        end
+        
         function branchIdx = findFirstBranch(obj, busFrom, busTo)
             % find the index of the first branch going from busFrom to
             % busTo, does not find a branch if it is from busTo to busFrom,
@@ -29,11 +34,9 @@ classdef BasecaseOverview < handle
         
         function [busFrom,busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 getBranchInfo(obj, branchIdx)
-            % Get the information of the branch, providing its index in the
-            % 'branch' field. 
+            % Get the information of the branch, providing its index in the 'branch' field. 
             %% Output
-            % All the values describing a branch according to Matpower
-            % manual: see Table B-3 Branch Data.
+            % All the values describing a branch according to Matpower manual: see Table B-3 Branch Data.
             % Alternatively, see section Branch Data Format of CASEFORMAT, type "help caseformat"           
             branchInfo = num2cell(obj.Matpowercase.branch(branchIdx,:));
             [busFrom, busTo, r,x, b, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle] = ...
