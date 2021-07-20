@@ -1,13 +1,18 @@
 classdef Basecase < handle
    
     properties
+        Filename
         Matpowercase
+        InternalMatpowercase
     end
     
     methods
         
         function obj = Basecase(filenameBasecase)
+            obj.Filename = filenameBasecase;
             obj.Matpowercase = loadcase(filenameBasecase);
+            obj.InternalMatpowercase = ext2int(obj.Matpowercase);
+            
         end
         
         function addBus(obj, id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm)
@@ -112,7 +117,7 @@ classdef Basecase < handle
             obj.Matpowercase.branch(branchIdx,:) = [];
         end
         
-        function save(obj, newFilename)
+        function saveBasecase(obj, newFilename)
             savecase(newFilename, obj);
         end
             
@@ -199,6 +204,8 @@ classdef Basecase < handle
         end
         
         function boolean = isABusDeleted(obj)
+            numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
+            boolean = numberOfDeletedBuses ~= 0;
             % isABusDeleted
             % isABusDeletedByMatpowerConversion
             % doesMatpowerConversionRemoveBus
@@ -206,11 +213,29 @@ classdef Basecase < handle
         end
         
         function boolean = isABranchDeleted(obj)
+            numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
+            boolean = numberOfDeletedBranches ~= 0;
            % TODO currently in ElectricalGrid 
         end
         
+        function boolean = doExternalAndInternalBusOrdersMatch(obj)
+            numberOfExtBuses = size(obj.Matpowercase.bus,1);
+            lastExtBusIdx = obj.Matpowercase.bus(numberOfExtBuses,1);
+            % e2i is a sparse matrix, thus to obtain a dense 1x1 matrix,
+            % 'full' is necessary
+            lastIntBusIdx = full(obj.InternalMatpowercase.order.bus.e2i(lastExtBusIdx));
+            boolean = lastIntBusIdx == lastExtBusIdx;
+        end
+        
+        
         function checkNoBusNorBranchDeleted(obj)
             % TODO currently in ElectricalGrid 
+            if obj.isABusDeleted() || obj.isABranchDeleted()
+                error(['A bus or a branch has been deleted in the internal matpowercase.'...
+                    'The code can not handle this case. Take a different matpowercase or modify it'])
+            else
+                disp('No bus and no branch is deleted during matpower internal conversion. Fine.')
+            end
         end
         
         function handleBasecase(obj)
@@ -293,7 +318,7 @@ classdef Basecase < handle
         end
         
         function boolean = isBattAtBusPresent(obj, busId)
-            busesOfGenAndBatt =  obj.Matpowercase.gen(:,1);
+            busesOfGenAndBatt = obj.Matpowercase.gen(:,1);
            minRealPowerOutput = obj.Matpowercase.gen(:,10);
            % a battery has a negative min power output, as opposed to a generator
            isItABatt = minRealPowerOutput < 0;
