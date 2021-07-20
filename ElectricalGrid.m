@@ -4,10 +4,9 @@ classdef ElectricalGrid < handle
         Matpowercase
         InternalMatpowercase % used by matpower 'runpf' function
         
-        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
+        % The internal id of a bus is the external index of this bus.
+        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id. The internal 
         MapBus_id_i2e % dense column vector, convert internal bus id -> external bus id
-        MapBus_id2idx % sparse column vector, converts identity -> index of buses in Matpowercase.bus
-        MapBus_idx2id % dense column vector, convert index -> identity of buses in Matpowercase.bus
         
         MapGenOn_idx_e2i % sparse column vector, converts exterior -> interior online generator or battery index
         MapGenOn_idx_i2e % dense column vector,, converts interior -> exterior online generator or battery index
@@ -28,9 +27,7 @@ classdef ElectricalGrid < handle
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);
             
             obj.checkNoBusNorBranchDeleted();
-            
-            obj.setMapBus_id2idx();
-            obj.setMapBus_idx2id();
+
             obj.setMapBus_id_e2i();
             obj.setMapBus_id_i2e();
             
@@ -217,19 +214,7 @@ classdef ElectricalGrid < handle
                 error(['A bus or a branch has been deleted in the internal matpowercase.'...
                     'The code can not handle this case. Take a different matpowercase or modify it'])
             end
-        end
-        
-        function setMapBus_id2idx(obj)
-            numberOfBuses = size(obj.Matpowercase.bus, 1);
-            bus_id = obj.Matpowercase.bus(:,1);
-            bus_idx = 1:numberOfBuses;
-            columnOfOnes = ones(numberOfBuses,1);
-            obj.MapBus_id2idx = sparse(bus_id, columnOfOnes, bus_idx);
-        end
-        
-        function setMapBus_idx2id(obj)
-            obj.MapBus_idx2id = obj.Matpowercase.bus(:,1);
-        end
+        end       
         
         function setMapBus_id_e2i(obj)
             obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
