@@ -76,12 +76,17 @@ classdef BasecaseOverview < handle
         end
         
         function checkPresenceZoneVG(obj)
+            % Check if specific elements of Zone VG are present in the
+            % basecase. However, it does not check if all elements of the zone is present,
+            % it is assumed 'case6468rte' is the baseline and basic elements of the zone 
+            % from the case are already present.
+            
            txtBus10000 = obj.isBusAbsentText(10000); 
            txtGenAt10000 = obj.isGenAtBusAbsentText(10000);
            txtGenAt2076 = obj.isGenAtBusAbsentText(2076);
            txtGenAt2745 = obj.isGenAtBusAbsentText(2745);
            txtGenAt4720 = obj.isGenAtBusAbsentText(4720);
-           txtBattAt10000 = obj.isBattAtBusPresentText(10000);
+           txtBattAt10000 = obj.isBattAtBusAbsentText(10000);
            % branch from 2745 to 2076 should be remove, thus should not exist!
            txtBranch2745To2076Absent = obj.isBranchPresentText(2745, 2076);
            txtBranch2745To10000Present = obj.isBranchAbsentText(2745, 10000);
@@ -94,6 +99,24 @@ classdef BasecaseOverview < handle
                txtTotal = 'All elements of Zone VG are present in the basecase';
            end
            disp(txtTotal)
+        end
+        
+        function checkPresenceZoneVTV(obj)
+            % Check if specific elements of Zone VTV are present in the
+            % basecase. However, it does not check if all elements of the zone is present,
+            % it is assumed 'case6468rte' is the baseline and basic elements of the zone 
+            % from the case are already present.
+            txtGenAt4710 = obj.isGenAtBusAbsentText(4710);
+            txtGenAt4875 = obj.isGenAtBusAbsentText(4875);
+            txtGenAt4915 = obj.isGenAtBusAbsentText(4915);
+            
+            txtBattAt4875 = obj.isBattAtBusAbsentText(4875);
+            
+            txtTotal = [txtGenAt4710 txtGenAt4875 txtGenAt4915 txtBattAt4875];
+            if isempty(txtTotal)
+                txtTotal = 'All elements of Zone VTV are present in the basecase';
+            end
+            disp(txtTotal)           
         end
         
         
@@ -155,7 +178,7 @@ classdef BasecaseOverview < handle
            boolean = ~isempty(battIdx);
         end
         
-         function charArray = isBattAtBusPresentText(obj, busId)
+         function charArray = isBattAtBusAbsentText(obj, busId)
             if ~obj.isBattAtBusPresent(busId)
                 charArray = ['Batt at bus ' num2str(busId) ' absent' newline];
             else
