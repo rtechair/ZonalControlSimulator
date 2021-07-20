@@ -1,4 +1,4 @@
-classdef Basecase < handle
+classdef BasecaseOverview < handle
    
     properties
         Filename
@@ -8,7 +8,7 @@ classdef Basecase < handle
     
     methods
         
-        function obj = Basecase(filenameBasecase)
+        function obj = BasecaseOverview(filenameBasecase)
             obj.Filename = filenameBasecase;
             obj.Matpowercase = loadcase(filenameBasecase);
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);
@@ -117,7 +117,7 @@ classdef Basecase < handle
             obj.Matpowercase.branch(branchIdx,:) = [];
         end
         
-        function saveBasecase(obj, newFilename)
+        function saveMatpowercase(obj, newFilename)
             savecase(newFilename, obj);
         end
             
@@ -204,15 +204,17 @@ classdef Basecase < handle
         end
         
         function boolean = isABusDeleted(obj)
+            % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
             numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
             boolean = numberOfDeletedBuses ~= 0;
-            % isABusDeleted
-            % isABusDeletedByMatpowerConversion
+            
+            % TODO: choice of name? isABusDeletedByMatpowerConversion
             % doesMatpowerConversionRemoveBus
             % TODO currently in ElectricalGrid
         end
         
         function boolean = isABranchDeleted(obj)
+            % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
             numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
             boolean = numberOfDeletedBranches ~= 0;
            % TODO currently in ElectricalGrid 
