@@ -30,7 +30,7 @@ DISPLAY RESULTS
 
 %}
 
-filenameBasecase = 'case6468rte_zone1and2';
+filenameBasecase = 'case6468rte_zoneVGandVTV';
 
 
 durationSimulation = 600;

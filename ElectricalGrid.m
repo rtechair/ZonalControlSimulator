@@ -21,7 +21,7 @@ classdef ElectricalGrid < handle
         
         function obj = ElectricalGrid(filenameBasecase)
             
-            obj.checkItIsCase6468rte_zone1and2(filenameBasecase)
+            checkItIsCase6468rte_zoneVGandVTV(filenameBasecase)
             
             obj.Matpowercase = loadcase(filenameBasecase);
             
@@ -199,11 +199,6 @@ classdef ElectricalGrid < handle
             'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
         end
         
-        function checkItIsCase6468rte_zone1and2(obj, filenameBasecase)
-            if ~strcmp(filenameBasecase, 'case6468rte_zone1and2')
-                error('filenameBasecase is not case6468rte_zone1and2, abort execution')
-            end
-        end
         
         function boolean = isBusDeleted(obj)
         % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
@@ -257,3 +252,9 @@ classdef ElectricalGrid < handle
   
     end
 end
+
+function checkItIsCase6468rte_zoneVGandVTV(filenameBasecase)
+            if ~strcmp(filenameBasecase, 'case6468rte_zoneVGandVTV')
+                error('filenameBasecase is not case6468rte_zoneVGandVTV, abort execution')
+            end
+        end
