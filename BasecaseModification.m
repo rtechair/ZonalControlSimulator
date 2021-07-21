@@ -165,6 +165,15 @@ classdef BasecaseModification < BasecaseOverview
             busVTV = 4875;
             busVEY = 4915;
             
+            bus4710Idx = obj.getBusIdx(busTRE);
+            bus4875Idx = obj.getBusIdx(busVTV);
+            bus4915Idx = obj.getBusIdx(busVEY);
+            busesOfGenIdx = [bus4710Idx bus4875Idx bus4915Idx];
+            
+            % there is no real and no reactive power demand on the buses with generators
+            obj.setRealPowerDemand(busesOfGenIdx, 0);
+            obj.setReactivePowerDemand(busesOfGenIdx, 0);
+            
             maxGenerationAt4710 = 64.7;
             maxGenerationAt4875 = 53.07;
             maxGenerationAt4915 = 35.5;
@@ -172,8 +181,7 @@ classdef BasecaseModification < BasecaseOverview
             maxBatteryInjectionAt4875 = 10;
             minBatteryInjectionAt4875 = - maxBatteryInjectionAt4875;
             
-            % max generation of other generators are unchanged compared to
-            % the basecase
+            % max generation of other generators are unchanged compared to the basecase
             
             obj.addGenerator(busTRE, maxGenerationAt4710);
             obj.addGenerator(busVTV, maxGenerationAt4875);
