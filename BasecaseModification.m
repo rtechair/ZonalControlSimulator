@@ -31,11 +31,11 @@ classdef BasecaseModification < BasecaseOverview
                 [id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm];
         end
         
-        function setRealPowerDemandAtBus(obj, busIdx, Pd)
+        function setRealPowerDemand(obj, busIdx, Pd)
             obj.Matpowercase.bus(busIdx, 3) = Pd;
         end
         
-        function setReactivePowerDemandAtBus(obj, busIdx, Qd)
+        function setReactivePowerDemand(obj, busIdx, Qd)
             obj.Matpowercase.bus(busIdx, 4) = Qd;
         end
         
@@ -115,14 +115,31 @@ classdef BasecaseModification < BasecaseOverview
             % The function runpf of matpower should function for the simulation.
             
             % maximum power output for the production groups and the batteries, in MW
+            
+            busGR = 2076;
+            busMC = 2745;
+            busVG = 10000;
+            
+            % Creation of bus 10000, no real nor reactive power consumption
+            obj.addBus(busVG, 2, 0, 0, 0, 0, 1, 1.03864259, -11.9454015, 63, 1, 1.07937, 0.952381);
+            
+            % On nodes with generators, there is no real nor reactive power consumption
+            bus2076Idx = obj.getBusIdx(2076);
+            bus2745Idx = obj.getBusIdx(2745);
+            bus4720Idx = obj.getBusIdx(4720);
+            bus10000Idx = obj.getBusIdx(10000); % useless in fact, but to emphatize 10_000 is a gen
+            
+            busesOfGenIdx = [bus2076Idx bus2745Idx bus4720Idx bus10000Idx]';
+            
+            obj.setRealPowerDemand(busesOfGenIdx, 0);
+            obj.setReactivePowerDemand(busesOfGenIdx, 0);
+            
             maxGenerationAt10000 = 78;
             maxGenerationAt2076 = 66;
             maxGenerationAt2745 = 54;
             maxGenerationAt4720 = 10;
             maxBatteryInjectionAt10000 = 10; 
-            
-            busVG = 10000;
-            obj.addBus(busVG, 2, 0, 0, 0, 0, 1, 1.03864259, -11.9454015, 63, 1, 1.07937, 0.952381);
+
             obj.addGenerator(busVG, maxGenerationAt10000);
             obj.addGenerator(2076, maxGenerationAt2076);
             obj.addGenerator(2745, maxGenerationAt2745);
@@ -130,11 +147,9 @@ classdef BasecaseModification < BasecaseOverview
             
             minBatteryInjectionAt10000 = - maxBatteryInjectionAt10000;
             obj.addBattery(busVG, maxBatteryInjectionAt10000, minBatteryInjectionAt10000);
+
             
-            busMC = 2745;
-            busGR = 2076;
-            
-            branchIdx = obj.findFirstBranch(busMC, busGR);
+            branchIdx = obj.getFirstBranchIdx(busMC, busGR);
             [~, ~, r,x, b, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 obj.getBranchInfo(branchIdx);
             
