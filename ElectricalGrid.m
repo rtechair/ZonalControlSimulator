@@ -42,13 +42,12 @@ classdef ElectricalGrid < handle
             % and the branches at the border of zone ( 1 end bus in the zone), respectively
             
             busesOfBranch = obj.Matpowercase.branch(:,[1 2]);
-            % determine what end buses are from the zone or outside, as boolean
             areEndBusesOfBranchInZone = ismember(busesOfBranch, busId);
+            
             % sum booleans per branch :fromBus + toBus, i.e. over the columns, to get the number of end buses of the branch within the zone  
-            numberOfBusesPerBranchInZone = sum(areEndBusesOfBranchInZone,2); 
-            % the branch is within the zone as it is connecting 2 inner buses
+            numberOfBusesPerBranchInZone = sum(areEndBusesOfBranchInZone,2);
+            
             branchZoneIdx = find(numberOfBusesPerBranchInZone == 2); 
-            % the branch connects a inner bus with an outer bus
             branchBorderIdx = find(numberOfBusesPerBranchInZone == 1);
         end
         
@@ -57,49 +56,27 @@ classdef ElectricalGrid < handle
             % zone and a basecase,
             % return the column vector of the buses at the border of the zone   
 
-            % from the basecase, extract the branches' "from" bus and "to" bus info, for each branch (row)
+            % a branch has a 'from' bus and 'to' bus
             fromBus = obj.Matpowercase.branch(branchBorderIdx,1);
             toBus = obj.Matpowercase.branch(branchBorderIdx,2);
             
-            % look for the end buses of each branch at the border, i.e. not in the zone. As boolean column vectors
             isfromBusInBorder = ~ismember(fromBus, busId);
             istoBusInBorder = ~ismember(toBus, busId);
+            
             if any(isfromBusInBorder + istoBusInBorder ~= 1)
                 % error if a branch does not have exactly 1 end bus inside the zone
                 error(['A branch does not have exactly 1 end bus inside the zone.'...
                         newline ' Check input branchBorderIdx is correct, i.e. all branches are at the border of the zone'...
                         ' which should be BranchBorderIdx'])
             end
+            
             % Get the buses id of the end buses at the border
             fromBusBorderId = fromBus(isfromBusInBorder);
             toBusBorderId = toBus(istoBusInBorder);
+            
             % the buses at the border are the union set, i.e. no repetition, in sorted order, as a column vector
             busBorderId = union(fromBusBorderId, toBusBorderId, 'rows', 'sorted');
         end
-        
-        %{
-        function [genOnIdx, battOnIdx] = getGenAndBattOnIdx(obj, busId)
-            % Given a zone based on its buses id and a basecase, 
-            % return the column vectors of the indices, from the basecase, of the generators and
-            % batteries online and in the zone
-            
-            
-            % 1st condition: gen and batt are in the zone, i.e. in one of the zone's buses
-            busOfGen = obj.Matpowercase.gen(:,1);
-            isBusInZone = ismember(busOfGen, busId);
-            
-            % 2nd condition: gen and batt are online
-            isGenAndBattOn = obj.Matpowercase.gen(:,8) > 0;
-            
-            intersection = isBusInZone .* isGenAndBattOn;
-            genAndBattOnInZone = find(intersection);
-            
-            % separate gen and batt,a battery is a generator with possible negative injection
-            Pg_min = obj.Matpowercase.gen(:,10);
-            battOnIdx = find(intersection .* Pg_min < 0);
-            genOnIdx = setdiff(genAndBattOnInZone, battOnIdx);  
-        end
-        %}
         
         function genOnIdx = getGenOnIdx(obj, busId)
             % Given a zone based on its buses id, return the
@@ -129,7 +106,7 @@ classdef ElectricalGrid < handle
             minPowerGeneration = obj.Matpowercase.gen(:,10);
             isItAGen = minPowerGeneration >= 0;
             isItOff = obj.Matpowercase.gen(:,8) <= 0;
-            
+
             busesOfAllGen = obj.Matpowercase.gen(:,1);
             isBusOfGenInZone = ismember(busesOfAllGen, busId);
             
