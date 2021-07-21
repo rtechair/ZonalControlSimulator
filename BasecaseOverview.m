@@ -19,7 +19,11 @@ classdef BasecaseOverview < handle
             case_info(obj.Matpowercase)
         end
         
-        function branchIdx = findFirstBranch(obj, busFrom, busTo)
+        function busIdx = getBusIdx(obj, busId)
+           busIdx = find(obj.Matpowercase.bus(:,1) == busId,1); 
+        end
+        
+        function branchIdx = getFirstBranchIdx(obj, busFrom, busTo)
             % find the index of the first branch going from busFrom to
             % busTo, does not find a branch if it is from busTo to busFrom,
             % thus the order of the buses is important
@@ -130,7 +134,7 @@ classdef BasecaseOverview < handle
         end
         
         function boolean = isBranchPresent(obj, busFrom, busTo)
-            branchIdx = obj.findFirstBranch(busFrom, busTo);
+            branchIdx = obj.getFirstBranchIdx(busFrom, busTo);
             boolean = ~isempty(branchIdx);
         end
         
