@@ -77,6 +77,7 @@ classdef ElectricalGrid < handle
             busBorderId = union(fromBusBorderId, toBusBorderId, 'rows', 'sorted');
         end
         
+        %{
         function [genOnIdx, battOnIdx] = getGenAndBattOnIdx(obj, busId)
             % Given a zone based on its buses id and a basecase, 
             % return the column vectors of the indices, from the basecase, of the generators and
@@ -96,9 +97,88 @@ classdef ElectricalGrid < handle
             % separate gen and batt,a battery is a generator with possible negative injection
             Pg_min = obj.Matpowercase.gen(:,10);
             battOnIdx = find(intersection .* Pg_min < 0);
-            genOnIdx = setdiff(genAndBattOnInZone, battOnIdx);
-            
+            genOnIdx = setdiff(genAndBattOnInZone, battOnIdx);  
         end
+        %}
+        
+        function genOnIdx = getGenOnIdx(obj, busId)
+            % Given a zone based on its buses id, return the
+            % indices of the generators ON from the basecase  
+            % 3 conditions:
+            % It is a generator
+            % It is ON
+            % bus of gen in zone
+            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            isItAGen = minPowerGeneration >= 0;
+            isItOn = obj.Matpowercase.gen(:,8) > 0;
+            
+            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            isBusOfGenInZone = ismember(busesOfAllGen, busId);
+            
+            genOnInZone = isItAGen .* isItOn .* isBusOfGenInZone;
+            genOnIdx = find(genOnInZone);
+        end
+        
+        function genOffIdx = getGenOffIdx(obj, busId)
+            % Given a zone based on its buses id, return the
+            % indices of the generators OFF from the basecase  
+            % 3 conditions:
+            % It is a generator
+            % It is OFF
+            % bus of gen in zone
+            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            isItAGen = minPowerGeneration >= 0;
+            isItOff = obj.Matpowercase.gen(:,8) <= 0;
+            
+            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            isBusOfGenInZone = ismember(busesOfAllGen, busId);
+            
+            genOffInZone = isItAGen .* isItOff .* isBusOfGenInZone;
+            genOffIdx = find(genOffInZone);
+        end
+        
+        function battOnIdx = getBattOnIdx(obj, busId)
+            % Given a zone based on its buses id, return the
+            % indices of the batteries ON from the basecase            
+            % 3 conditions:
+            % It is a battery
+            % It is ON
+            % bus of batt in zone
+            
+            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            % A battery has negative minimum power generation,
+            % corresponding to power injected into the battery
+            isItABatt = minPowerGeneration < 0;
+            isItOn = obj.Matpowercase.gen(:,8) > 0;
+            
+            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            isBusOfBattInZone = ismember(busesOfAllGen, busId);
+            
+            battOnInZone = isItABatt .* isItOn .* isBusOfBattInZone;
+            battOnIdx = find(battOnInZone);
+        end
+        
+        function battOffIdx = getBattOffIdx(obj, busId)
+            % Given a zone based on its buses id, return the
+            % indices of the batteries OFF from the basecase            
+            % 3 conditions:
+            % It is a battery
+            % It is OFF
+            % bus of batt in zone
+            
+            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            % A battery has negative minimum power generation,
+            % corresponding to power injected into the battery
+            isItABatt = minPowerGeneration < 0;
+            isItOff = obj.Matpowercase.gen(:,8) <= 0;
+            
+            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            isBusOfBattInZone = ismember(busesOfAllGen, busId);
+            
+            battOffInZone = isItABatt .* isItOff .* isBusOfBattInZone;
+            battOffIdx = find(battOffInZone);
+        end
+              
         
         function branchFlow = getPowerBranchFlow(obj, branchIdx)
             % branchIdx and not internalBranchIdx, due to 
