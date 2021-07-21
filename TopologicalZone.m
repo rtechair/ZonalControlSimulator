@@ -32,8 +32,7 @@ classdef TopologicalZone < handle
             
             obj.setGenOnIdx(electricalGrid);
             obj.setBattOnIdx(electricalGrid);
-            %obj.setGenAndBattOnIdx(electricalGrid);
-            
+                        
             obj.setNumberOfElements();
 
         end
@@ -150,12 +149,6 @@ classdef TopologicalZone < handle
             obj.BattOnIdx = electricalGrid.getBattOnIdx(obj.BusId);
         end
         
-        %{
-        function setGenAndBattOnIdx(obj, electricalGrid)
-            [obj.GenOnIdx, obj.BattOnIdx] = electricalGrid.getGenAndBattOnIdx(...
-                obj.BusId);
-        end
-        %}
         function setNumberOfElements(obj)                     
             obj.NumberOfBuses = size(obj.BusId,1);
             obj.NumberOfBranches = size(obj.BranchIdx,1);
