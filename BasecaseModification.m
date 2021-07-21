@@ -31,6 +31,14 @@ classdef BasecaseModification < BasecaseOverview
                 [id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm];
         end
         
+        function setRealPowerDemandAtBus(obj, busIdx, Pd)
+            obj.Matpowercase.bus(busIdx, 3) = Pd;
+        end
+        
+        function setReactivePowerDemandAtBus(obj, busIdx, Qd)
+            obj.Matpowercase.bus(busIdx, 4) = Qd;
+        end
+        
         function addBranch(obj, busFrom, busTo, r, x, b, rateA, rateB, rateC, ratio, angle,...
                 status, angmin, angmax)
             % Add a branch to the existing Matpowercase at the bottom of
@@ -136,15 +144,8 @@ classdef BasecaseModification < BasecaseOverview
             obj.addBranch(busGR, busVG, r/2,x/2, b/2, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle);
         end
         
-        function addZoneVTV(obj)
-            % nothing is modified on the 3 following buses of the zone with
-            % regards to the original basecase 'case6468_rte'
-            % TODO: thus, maybe delete them? as they are unused
-            busLAZ = 2506;
-            busSIS = 4169;
-            busSPC = 4546;
-            
-            % There are changes in the following buses:
+        function addZoneVTV(obj)            
+            % Changes in these buses, with regards to the original basecase 'case6468_rte':
             busTRE = 4710;
             busVTV = 4875;
             busVEY = 4915;
@@ -168,6 +169,15 @@ classdef BasecaseModification < BasecaseOverview
         
         function handleBasecase(obj)
             % TODO
+            if isfile('case6468rte_zoneVGandVTV.m')
+                disp('case6468rte_zoneVGandVTV.m exists')
+            else
+               disp(['case6468rte_zoneVGandVTV.m does not exist.' ...
+                   ' Using case6468rte from matpower''s data, add the zones:' newline])
+               obj.Matpowercase = loadcase('case6468rte');
+               
+               
+            end
            % the considered situation integrates zone VG and zone VTV, thus 
            % they both should be included in the studied basecase
            % If not, then the basecase should integrate it

@@ -85,6 +85,7 @@ classdef ElectricalGrid < handle
             % It is a generator
             % It is ON
             % bus of gen in zone
+            
             minPowerGeneration = obj.Matpowercase.gen(:,10);
             isItAGen = minPowerGeneration >= 0;
             isItOn = obj.Matpowercase.gen(:,8) > 0;
@@ -103,6 +104,7 @@ classdef ElectricalGrid < handle
             % It is a generator
             % It is OFF
             % bus of gen in zone
+            
             minPowerGeneration = obj.Matpowercase.gen(:,10);
             isItAGen = minPowerGeneration >= 0;
             isItOff = obj.Matpowercase.gen(:,8) <= 0;
