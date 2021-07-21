@@ -13,5 +13,27 @@ Regarding future zones to analyze, one should check the associate buses, branche
 New functionalities are tested first on zone VG, correct functioning of zone VTV is not ensured
 
 
+The Current use case of the simulation is:
+- The electrical grid is based on 'case6468rte_zoneVGandVTV.m'.
+- The simulation is done on zone VG, which is defined in the 'loadInputZoneVG.m' and caracterized in the basecase.
+- A controller, here a simple limiter, determines the controls to take on the zone:
+	if the power flow on a branch within the zone is too high, the limiter orders to curtail the production on all generators within the zone
+	if the power flows of all branches are too low, the limiter orders to increase the production on all generators within the zone
+	else, no control taken
+- The time series of power available is provided by 'tauxDeChargeMTJLMA2juillet2018.txt'.
+- The telecommunication interfaces between the controller, the time series and the zone, at each iteration of the simulation, to exchande data.
+- The topology of zone VG is displayed.
+- results of controls taken, informations of generators and branch power flows are displayed.
 
+Visually, the interactions are:
 
+controller
+|
+|
+telecommunication ---------- time series
+|
+|
+simulated zone
+|
+|
+electrical grid
