@@ -31,11 +31,11 @@ classdef BasecaseModification < BasecaseOverview
                 [id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm];
         end
         
-        function setRealPowerDemand(obj, busIdx, Pd)
+        function setRealPowerLoad(obj, busIdx, Pd)
             obj.Matpowercase.bus(busIdx, 3) = Pd;
         end
         
-        function setReactivePowerDemand(obj, busIdx, Qd)
+        function setReactivePowerLoad(obj, busIdx, Qd)
             obj.Matpowercase.bus(busIdx, 4) = Qd;
         end
         
@@ -131,8 +131,8 @@ classdef BasecaseModification < BasecaseOverview
             
             busesOfGenIdx = [bus2076Idx bus2745Idx bus4720Idx bus10000Idx]';
             
-            obj.setRealPowerDemand(busesOfGenIdx, 0);
-            obj.setReactivePowerDemand(busesOfGenIdx, 0);
+            obj.setRealPowerLoad(busesOfGenIdx, 0);
+            obj.setReactivePowerLoad(busesOfGenIdx, 0);
             
             maxGenerationAt10000 = 78;
             maxGenerationAt2076 = 66;
@@ -171,8 +171,8 @@ classdef BasecaseModification < BasecaseOverview
             busesOfGenIdx = [bus4710Idx bus4875Idx bus4915Idx];
             
             % there is no real and no reactive power demand on the buses with generators
-            obj.setRealPowerDemand(busesOfGenIdx, 0);
-            obj.setReactivePowerDemand(busesOfGenIdx, 0);
+            obj.setRealPowerLoad(busesOfGenIdx, 0);
+            obj.setReactivePowerLoad(busesOfGenIdx, 0);
             
             maxGenerationAt4710 = 64.7;
             maxGenerationAt4875 = 53.07;
@@ -181,8 +181,7 @@ classdef BasecaseModification < BasecaseOverview
             maxBatteryInjectionAt4875 = 10;
             minBatteryInjectionAt4875 = - maxBatteryInjectionAt4875;
             
-            % max generation of other generators are unchanged compared to the basecase
-            
+            % max generation of other generators are unchanged compared to the basecase 
             obj.addGenerator(busTRE, maxGenerationAt4710);
             obj.addGenerator(busVTV, maxGenerationAt4875);
             obj.addGenerator(busVEY, maxGenerationAt4915);
@@ -190,16 +189,17 @@ classdef BasecaseModification < BasecaseOverview
             obj.addBattery(busVTV, maxBatteryInjectionAt4875, minBatteryInjectionAt4875);
         end
         
-        function handleBasecase(obj)
-            % TODO
+        function handleBasecaseForZoneVGandVTV(obj)
             if isfile('case6468rte_zoneVGandVTV.m')
                 disp('case6468rte_zoneVGandVTV.m exists')
             else
-               disp(['case6468rte_zoneVGandVTV.m does not exist.' ...
-                   ' Using case6468rte from matpower''s data, add the zones:' newline])
+               disp(['case6468rte_zoneVGandVTV.m does not exist.' newline ...
+                   ' Using case6468rte from matpower''s data, add the zones VG and VTV.' newline])
                obj.Matpowercase = loadcase('case6468rte');
-               
-               
+               obj.addZoneVG();
+               obj.addZoneVTV();
+               obj.saveMatpowercase('case6468rte_zoneVGandVTV.m');
+               disp('Zones VG and VTV were added. case6468rte_zoneVGandVTV.m is created.')
             end
            % the considered situation integrates zone VG and zone VTV, thus 
            % they both should be included in the studied basecase
@@ -207,7 +207,7 @@ classdef BasecaseModification < BasecaseOverview
         end
         
         function saveMatpowercase(obj, newFilename)
-            savecase(newFilename, obj);
+            savecase(newFilename, obj.Matpowercase);
         end
         
     end

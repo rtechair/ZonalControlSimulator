@@ -1,7 +1,6 @@
 classdef BasecaseOverview < handle
    
     properties
-        Filename
         Matpowercase
         InternalMatpowercase
     end
@@ -9,7 +8,6 @@ classdef BasecaseOverview < handle
     methods
         
         function obj = BasecaseOverview(filenameBasecase)
-            obj.Filename = filenameBasecase;
             obj.Matpowercase = loadcase(filenameBasecase);
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);       
         end
