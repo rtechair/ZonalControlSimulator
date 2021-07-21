@@ -30,10 +30,20 @@ classdef TopologicalZone < handle
             
             obj.setBusBorderId(electricalGrid);
             
-            obj.setGenAndBattOnIdx(electricalGrid);
+            obj.setGenOnIdx(electricalGrid);
+            obj.setBattOnIdx(electricalGrid);
+            %obj.setGenAndBattOnIdx(electricalGrid);
             
             obj.setNumberOfElements();
 
+        end
+        
+        function genOffIdx = getGenOffIdx(obj, electricalGrid)
+            genOffIdx = electricalGrid.getGenOffIdx(obj.BusId);
+        end
+         
+        function battOffIdx = getBattOffIdx(obj, electricalGrid)
+            battOffIdx = electricalGrid.getBattOffIdx(obj.BusId);
         end
         
         function G = getGraphStatic(obj, electricalGrid)
@@ -132,11 +142,20 @@ classdef TopologicalZone < handle
             obj.BusBorderId = electricalGrid.getBusBorderId(obj.BusId, obj.BranchBorderIdx);
         end
         
+        function setGenOnIdx(obj, electricalGrid)
+            obj.GenOnIdx = electricalGrid.getGenOnIdx(obj.BusId);
+        end
+        
+        function setBattOnIdx(obj, electricalGrid)
+            obj.BattOnIdx = electricalGrid.getBattOnIdx(obj.BusId);
+        end
+        
+        %{
         function setGenAndBattOnIdx(obj, electricalGrid)
             [obj.GenOnIdx, obj.BattOnIdx] = electricalGrid.getGenAndBattOnIdx(...
                 obj.BusId);
         end
-        
+        %}
         function setNumberOfElements(obj)                     
             obj.NumberOfBuses = size(obj.BusId,1);
             obj.NumberOfBranches = size(obj.BranchIdx,1);
