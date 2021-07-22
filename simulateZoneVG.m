@@ -148,6 +148,7 @@ P = topologyZoneVG.plotLabeledGraph(electricalGrid);
 figAbsFlowBranch = memoryZoneVG.plotAbsoluteFlowBranch(electricalGrid);
 figDeltaGenOn = memoryZoneVG.plotControlAndDisturbanceGen(electricalGrid);
 figStateGen = memoryZoneVG.plotStateGen(electricalGrid);
+figDisturbTransit = memoryZoneVG.plotDisturbanceTransit();
 
 
 

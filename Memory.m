@@ -2,23 +2,23 @@ classdef Memory < handle
    
     properties
         % State
-        PowerBranchFlow
-        PowerCurtailment
-        PowerBattery
-        EnergyBattery
-        PowerGeneration
-        PowerAvailable
+        PowerBranchFlow         % Fij
+        PowerCurtailment        % PC
+        PowerBattery            % PB
+        EnergyBattery           % EB
+        PowerGeneration         % PG
+        PowerAvailable          % PA
         
         % Control
-        ControlCurtailment
-        ControlBattery
+        ControlCurtailment      % DeltaPC
+        ControlBattery          % DeltaPB
         
         % Disturbance
-        DisturbanceTransit
-        DisturbanceGeneration
-        DisturbanceAvailable
+        DisturbanceTransit      % DeltaPT
+        DisturbanceGeneration   % DeltaPG
+        DisturbanceAvailable    % DeltaPA
         
-        CurrentStep
+        CurrentStep             % k
     end
     
     properties ( SetAccess = immutable)
@@ -29,7 +29,7 @@ classdef Memory < handle
         NumberOfBranches
         NumberOfGen
         NumberOfBatt
-        
+                    
         MaxPowerGeneration
         
         BusId
@@ -177,7 +177,7 @@ classdef Memory < handle
             for br = 1:obj.NumberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
-                stairs(time, obj.PowerBranchFlow(br,:));
+                stairs(time, obj.PowerBranchFlow(br,:)); % Fij
                 legend({'Branch Power Flow'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
@@ -198,7 +198,7 @@ classdef Memory < handle
             for br = 1:obj.NumberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
-                stairs(time, abs(obj.PowerBranchFlow(br,:)));
+                stairs(time, abs(obj.PowerBranchFlow(br,:)));  % abs(Fij)
                 legend({'Absolute Branch Power Flow'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
@@ -210,17 +210,16 @@ classdef Memory < handle
             end
         end
         
-        function figDisturbanceTransit = plotDisturbanceTransit(obj)
-            %TODO
+        function figDisturbTransit = plotDisturbanceTransit(obj)
            time = 1:obj.NumberOfIterations;
            xlegend = 'Number of iterations';
            numberOfRowsOfPlot = ceil(sqrt( obj.NumberOfBuses));
-           figDisturbanceTransit = figure('Name', 'Disturbance of power flow on each bus of the zone, over the period',...
+           figDisturbTransit = figure('Name', 'Disturbance of power flow on each bus of the zone, over the period',...
             'NumberTitle', 'off', 'WindowState', 'maximize');
            for bus = 1:obj.NumberOfBuses
                subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, bus);
                hold on;
-               stairs(time, obj.DisturbanceTransit(bus,:));
+               stairs(time, obj.DisturbanceTransit(bus,:)); % DeltaPT
                legend({'Disturbance transit'}, 'Location','Best')
                xlabel(xlegend)
                ylabel('Power [MW]')
@@ -230,7 +229,6 @@ classdef Memory < handle
            end
         end
             
-        
     end
     
         
