@@ -32,8 +32,9 @@ classdef Memory < handle
         
         MaxPowerGeneration
         
-        GenOnIdx
+        BusId
         BranchIdx
+        GenOnIdx
         
         DelayCurt
         DelayBatt
@@ -43,7 +44,7 @@ classdef Memory < handle
         
         function obj = Memory(durationSimulation, samplingTime, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, genOnIdx, branchIdx, delayCurt, delayBatt)
+                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt)
             obj.NumberOfIterations = floor(durationSimulation / samplingTime);
             obj.NumberOfBuses = numberOfBuses;
             obj.NumberOfBranches = numberOfBranches;
@@ -53,13 +54,15 @@ classdef Memory < handle
             obj.MaxPowerGeneration = maxPowerGeneration;
             obj.SamplingTime = samplingTime;
             
-            obj.GenOnIdx = genOnIdx;
+            obj.BusId = busId;
             obj.BranchIdx = branchIdx;
+            obj.GenOnIdx = genOnIdx;
             
             obj.DelayCurt = delayCurt;
             obj.DelayBatt = delayBatt;
             
             obj.CurrentStep = 0;
+            
             % State
             obj.PowerBranchFlow = zeros(numberOfBranches, obj.NumberOfIterations + 1);
             obj.PowerCurtailment = zeros(numberOfGenerators, obj.NumberOfIterations + 1);
@@ -72,8 +75,7 @@ classdef Memory < handle
             obj.ControlCurtailment = zeros(numberOfGenerators, obj.NumberOfIterations);
             obj.ControlBattery = zeros(numberOfBatteries, obj.NumberOfIterations);
             
-            % Disturbance
-            
+            % Disturbance 
             obj.DisturbanceTransit = zeros(numberOfBuses, obj.NumberOfIterations);
             obj.DisturbanceGeneration = zeros(numberOfGenerators, obj.NumberOfIterations);
             obj.DisturbanceAvailable = zeros(numberOfGenerators, obj.NumberOfIterations);
@@ -177,13 +179,13 @@ classdef Memory < handle
                 hold on;
                 stairs(time, obj.PowerBranchFlow(br,:));
                 legend({'Branch Power Flow'},'Location','Best')
-            xlabel(xlegend)
-            ylabel('Power [MW]')
-            branchIdx = obj.BranchIdx(br);
-            [fromBus, toBus] = electricalGrid.getEndBuses(branchIdx);
-            name = ['Branch ', int2str(branchIdx), ...
-                ' from ', int2str(fromBus), ' to ', int2str(toBus)]; 
-            title(name);
+                xlabel(xlegend)
+                ylabel('Power [MW]')
+                branchIdx = obj.BranchIdx(br);
+                [fromBus, toBus] = electricalGrid.getEndBuses(branchIdx);
+                name = ['Branch ', int2str(branchIdx), ...
+                    ' from ', int2str(fromBus), ' to ', int2str(toBus)]; 
+                title(name);
             end
         end
         
@@ -198,15 +200,34 @@ classdef Memory < handle
                 hold on;
                 stairs(time, abs(obj.PowerBranchFlow(br,:)));
                 legend({'Absolute Branch Power Flow'},'Location','Best')
-            xlabel(xlegend)
-            ylabel('Power [MW]')
-            branchIdx = obj.BranchIdx(br);
-            [fromBus, toBus] = electricalGrid.getEndBuses(branchIdx);
-            name = ['Branch ', int2str(branchIdx), ...
-                ' from ', int2str(fromBus), ' to ', int2str(toBus)]; 
-            title(name);
+                xlabel(xlegend)
+                ylabel('Power [MW]')
+                branchIdx = obj.BranchIdx(br);
+                [fromBus, toBus] = electricalGrid.getEndBuses(branchIdx);
+                name = ['Branch ', int2str(branchIdx), ...
+                    ' from ', int2str(fromBus), ' to ', int2str(toBus)]; 
+                title(name);
             end
-            
+        end
+        
+        function figDisturbanceTransit = plotDisturbanceTransit(obj)
+            %TODO
+           time = 1:obj.NumberOfIterations;
+           xlegend = 'Number of iterations';
+           numberOfRowsOfPlot = ceil(sqrt( obj.NumberOfBuses));
+           figDisturbanceTransit = figure('Name', 'Disturbance of power flow on each bus of the zone, over the period',...
+            'NumberTitle', 'off', 'WindowState', 'maximize');
+           for bus = 1:obj.NumberOfBuses
+               subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, bus);
+               hold on;
+               stairs(time, obj.DisturbanceTransit(bus,:));
+               legend({'Disturbance transit'}, 'Location','Best')
+               xlabel(xlegend)
+               ylabel('Power [MW]')
+               busId = obj.BusId(bus);
+               name = ['Bus ' int2str(busId)];
+               title(name);        
+           end
         end
             
         
