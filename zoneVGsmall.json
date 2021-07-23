@@ -1,0 +1,63 @@
+{
+    "zoneName": "VG",
+    "busId": [1445, 2076, 2135, 2745, 4720, 10000],
+    "branchFlowLimit": 45,
+    "TimeSeries":
+    {
+        "filename": "tauxDeChargeMTJLMA2juillet2018.txt",
+        "start1ForGenerators": [195, 185, 175, 160],
+        "start2ForGenerators": [150, 110, 120, 100]
+    },
+    "batteryConstantPowerReduction": 0.001,
+    "controlCycle": 5,
+    "DelayInSeconds":
+    {
+        "Curtailment": 45,
+        "Battery": 1
+    },
+    "Bus": [
+        {
+            "name": "CR",
+            "id": 1445
+        },
+        {
+            "name": "GR",
+            "id": 2076
+        },
+        {
+            "name": "GY",
+            "id": 2135
+        },
+        {
+            "name": "MC",
+            "id": 2745
+        },
+        {
+            "name": "TR",
+            "id": 4720
+        },
+        {
+            "name": "VG",
+            "id": 10000
+        }
+    ],
+
+    "maxPowerGeneration": [
+        {
+            "bus": 2076,
+            "maxPG": 66
+        },
+        {
+            "bus": 2745,
+            "maxPG": 54
+        },
+        {
+            "bus": 4720,
+            "maxPG": 10
+        },
+        {
+            "bus": 10000,
+            "maxPG": 78
+        }
+    ]
+}

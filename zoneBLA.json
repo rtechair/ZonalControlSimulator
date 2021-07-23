@@ -1,0 +1,139 @@
+{
+    "busId": [4,24,48,145,146,239,507,508,696,697,737,905,1287,1823,2882,3203,3961,4053,4190,4708,5073,5150,5392,5610],
+    "branchFlowLimit": 45,
+    "TimeSeries":
+    {
+        "filename": "tauxDeChargeMTJLMA2juillet2018.txt",
+        "start1ForGenerators": 0,
+        "start2ForGenerators": 0
+    },
+    "batteryConstantPowerReduction": 0.001,
+    "controlCycle": 5,
+    "DelayInSeconds":
+    {
+        "Curtailment": 45,
+        "Battery": 1,
+        "Telecom":
+        {
+            "timeSeries2Zone":1,
+            "controller2Zone":1,
+            "zone2controller":1
+        }
+    },
+    "Bus": [
+        {
+            "name": "ABB",
+            "id": 4
+        },
+        {
+            "name": "AIR",
+            "id": 24
+        },
+        {
+            "name": "ALL",
+            "id": 48
+        },
+        {
+            "name": "ARG",
+            "id": 145
+        },
+        {
+            "name": "AR6",
+            "id": 146
+        },
+        {
+            "name": "AUM",
+            "id": 239
+        },
+        {
+            "name": "BLO",
+            "id": 507
+        },
+        {
+            "name": "BL6",
+            "id": 508
+        },
+        {
+            "name": "BXC",
+            "id": 696
+        },
+        {
+            "name": "BX6",
+            "id": 697
+        },
+        {
+            "name": "BZB",
+            "id": 737
+        },
+        {
+            "name": "CAU",
+            "id": 905
+        },
+        {
+            "name": "CRO",
+            "id": 1287
+        },
+        {
+            "name": "FOU",
+            "id": 1823
+        },
+        {
+            "name": "MER",
+            "id": 2882
+        },
+        {
+            "name": "NEU",
+            "id": 3203
+        },
+        {
+            "name": "RUE",
+            "id": 3961
+        },
+        {
+            "name": "SAU",
+            "id": 4053
+        },
+        {
+            "name": "SOR",
+            "id": 4190
+        },
+        {
+            "name": "TRE",
+            "id": 4708
+        },
+        {
+            "name": "VMA",
+            "id": 5073
+        },
+        {
+            "name": "ZAU",
+            "id": 5150
+        },
+        {
+            "name": "ZFO",
+            "id": 5392
+        },
+        {
+            "name": "ZNE",
+            "id": 5610
+        }
+    ],
+    "Generator": [
+        {
+            "bus": 2076,
+            "maxPG": 66
+        },
+        {
+            "bus": 2745,
+            "maxPG": 54
+        },
+        {
+            "bus": 4720,
+            "maxPG": 10
+        },
+        {
+            "bus": 10000,
+            "maxPG": 78
+        }
+    ]
+}
