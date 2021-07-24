@@ -120,20 +120,70 @@
     ],
     "Generator": [
         {
-            "bus": 2076,
-            "maxPG": 66
+            "bus": 4,
+            "maxPG": 36
         },
         {
-            "bus": 2745,
-            "maxPG": 54
+            "bus": 24,
+            "maxPG": 52
         },
         {
-            "bus": 4720,
-            "maxPG": 10
+            "bus": 48,
+            "maxPG": 104
         },
         {
-            "bus": 10000,
-            "maxPG": 78
+            "bus": 145,
+            "maxPG": 53
+        },
+        {
+            "bus": 239,
+            "maxPG": 53
+        },
+        {
+            "bus": 508,
+            "maxPG": 150
+        },
+        {
+            "bus": 696,
+            "maxPG": 88,
+            "numberOfExistingGenInCase6468rte": 3
+        },
+        {
+            "bus": 737,
+            "maxPG": 100
+        },
+        {
+            "bus": 905,
+            "maxPG": 25
+        },
+        {
+            "bus": 1287,
+            "maxPG": 85
+        },
+        {
+            "bus": 3203,
+            "maxPG": 65
+        },
+        {
+            "bus": 3961,
+            "maxPG": 19
+        },
+        {
+            "bus": 4053,
+            "maxPG": 105,
+            "numberOfExistingGenInCase6468rte": 2
+        },
+        {
+            "bus": 4190,
+            "maxPG": 36
+        },
+        {
+            "bus": 4708,
+            "maxPG": 32
+        },
+        {
+            "bus": 5073,
+            "maxPG": 98
         }
     ]
 }
