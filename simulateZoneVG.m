@@ -30,15 +30,32 @@ DISPLAY RESULTS
 
 %}
 
-filenameBasecase = 'case6468rte_zoneVGandVTV';
+%filenameBasecase = 'case6468rte_zoneVGandVTV';
+
+simulationSetting = jsonDecodeFile('simulation.json');
+
+% In the following, the 'cell' data structure is used instead of 'matrix' because a matrix of char arrays
+% will merge them into a single char array, which is not the desired behavior
+
+zoneName = struct2cell(simulationSetting.Zone);
+numberOfZones = size(zoneName,1);
+
+zoneFilename = cell(numberOfZones,1);
+for k = 1:numberOfZones
+    zoneFilename{k} = ['zone' zoneName{k} '.json'];
+end
+zoneSetting = cell(numberOfZones,1);
+for k = 1:numberOfZones
+   zoneSetting{k} = jsonDecodeFile(zoneFilename{k}); 
+end
 
 
-durationSimulation = 600;
 
-electricalGrid = ElectricalGrid(filenameBasecase);
+electricalGrid = ElectricalGrid(simulationSetting.basecase);
 
 
 loadInputZoneVG;
+
 
 settingZoneVG = inputZoneVG; % inputZoneVG is from loadInputZoneVG
 
@@ -47,7 +64,7 @@ topologyZoneVG = TopologicalZone(settingZoneVG.BusId, electricalGrid);
 maxPowerGeneration = electricalGrid.getMaxPowerGeneration(topologyZoneVG.GenOnIdx);
 
 timeSeriesVG = DynamicTimeSeries(settingZoneVG.FilenameWindChargingRate, ...
-    settingZoneVG.StartTimeSeries, settingZoneVG.SamplingTime, durationSimulation, ...
+    settingZoneVG.StartTimeSeries, settingZoneVG.SamplingTime, simulationSetting.durationInSeconds, ...
     maxPowerGeneration, topologyZoneVG.NumberOfGen);
 
 
@@ -77,7 +94,7 @@ telecomZone2Controller = TelecomZone2Controller(delayTelecomZoneVG, topologyZone
     topologyZoneVG.NumberOfBatt, topologyZoneVG.NumberOfBuses, topologyZoneVG.NumberOfBranches);
 
 %% Result of simulation
-memoryZoneVG = ResultGraphic(durationSimulation, settingZoneVG.SamplingTime, ...
+memoryZoneVG = ResultGraphic(simulationSetting.durationInSeconds, settingZoneVG.SamplingTime, ...
     topologyZoneVG.NumberOfBuses, topologyZoneVG.NumberOfBranches, ...
     topologyZoneVG.NumberOfGen, topologyZoneVG.NumberOfBatt, ...
     maxPowerGeneration, topologyZoneVG.BusId, topologyZoneVG.BranchIdx, topologyZoneVG.GenOnIdx,...
@@ -86,8 +103,9 @@ memoryZoneVG = ResultGraphic(durationSimulation, settingZoneVG.SamplingTime, ...
 %% Initialization
 
 % CHEATING: set PA(0) directly, need to be later changed
-simulatedZoneVG.State.PowerAvailable = timeSeriesVG.PowerAvailableState(:,1);
-simulatedZoneVG.State.PowerGeneration = min(timeSeriesVG.PowerAvailableState(:,1), maxPowerGeneration);
+%simulatedZoneVG.State.PowerAvailable = timeSeriesVG.PowerAvailableState(:,1);
+simulatedZoneVG.State.PowerAvailable = timeSeriesVG.getInitialPowerAvailable();
+simulatedZoneVG.State.PowerGeneration = min(simulatedZoneVG.State.PowerAvailable, maxPowerGeneration);
 
 electricalGrid.updateGeneration(topologyZoneVG.GenOnIdx, simulatedZoneVG.State.PowerGeneration);
 electricalGrid.updateBattInjection(topologyZoneVG.BattOnIdx, simulatedZoneVG.State.PowerBattery);
@@ -112,7 +130,7 @@ step = settingZoneVG.SamplingTime;
 start = step;
 
 
-for k = start:step:durationSimulation
+for k = start:step:simulationSetting.durationInSeconds
     telecomTimeSeries2Zone.receiveThenSend(timeSeriesVG, simulatedZoneVG);
 
     telecomController2Zone.receiveThenSend(limiterZoneVG, simulatedZoneVG);

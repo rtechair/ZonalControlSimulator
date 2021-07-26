@@ -1,7 +1,7 @@
 {
 	"basecase":"case6468rte_zoneVGandVTV.m",
-	"duration": 600,
-	"simulationWindow":5,
+	"durationInSeconds": 600,
+	"windowInSeconds":5,
 	"Zone":
 	{
 		"1": "VG",
