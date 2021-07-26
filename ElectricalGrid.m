@@ -5,7 +5,7 @@ classdef ElectricalGrid < handle
         InternalMatpowercase % used by matpower 'runpf' function
         
         % The internal id of a bus is the external index of this bus.
-        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id. The internal 
+        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
         MapBus_id_i2e % dense column vector, convert internal bus id -> external bus id
         
         MapGenOn_idx_e2i % sparse column vector, converts exterior -> interior online generator or battery index
@@ -18,10 +18,7 @@ classdef ElectricalGrid < handle
     
     methods
         
-        function obj = ElectricalGrid(filenameBasecase)
-            
-            checkItIsCase6468rte_zoneVGandVTV(filenameBasecase)
-            
+        function obj = ElectricalGrid(filenameBasecase)            
             obj.Matpowercase = loadcase(filenameBasecase);
             
             obj.InternalMatpowercase = ext2int(obj.Matpowercase);
@@ -32,8 +29,7 @@ classdef ElectricalGrid < handle
             obj.setMapGenOn_idx_e2i();
             obj.setMapGenOn_idx_i2e();
             
-            obj.setMatpowerOption();
-            
+            obj.setMatpowerOption();       
         end
         
         function [branchZoneIdx, branchBorderIdx] = getInnerAndBorderBranchIdx(obj, busId)
@@ -271,9 +267,3 @@ classdef ElectricalGrid < handle
   
     end
 end
-
-function checkItIsCase6468rte_zoneVGandVTV(filenameBasecase)
-            if ~strcmp(filenameBasecase, 'case6468rte_zoneVGandVTV')
-                error('filenameBasecase is not case6468rte_zoneVGandVTV, abort execution')
-            end
-        end
