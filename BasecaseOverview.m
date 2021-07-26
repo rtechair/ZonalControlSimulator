@@ -3,22 +3,26 @@ classdef BasecaseOverview < handle
     properties
         Matpowercase
         InternalMatpowercase
+        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
     end
     
     methods
         
         function obj = BasecaseOverview(filenameBasecase)
             obj.Matpowercase = loadcase(filenameBasecase);
-            obj.InternalMatpowercase = ext2int(obj.Matpowercase);       
+            obj.InternalMatpowercase = ext2int(obj.Matpowercase);  
+            obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
         end
               
         function displayCaseInfo(obj)
             % Use Matpower function 'case_info' to display informations about the basecase 
             case_info(obj.Matpowercase)
         end
-        
+                
         function busIdx = getBusIdx(obj, busId)
-           busIdx = find(obj.Matpowercase.bus(:,1) == busId,1); 
+            % the mapping is sparse and returns a sparse matrix, thus make
+            % it dense with 'full'
+           busIdx = full(obj.MapBus_id_e2i(busId)); 
         end
         
         function branchIdx = getFirstBranchIdx(obj, busFrom, busTo)
