@@ -122,28 +122,36 @@ classdef BasecaseModification < BasecaseOverview
             
             % Creation of bus 10000, no real nor reactive power consumption
             obj.addBus(busVG, 2, 0, 0, 0, 0, 1, 1.03864259, -11.9454015, 63, 1, 1.07937, 0.952381);
+            obj.updateInternalMatpowercase();
             
             % On nodes with generators, there is no real nor reactive power consumption
+            %{
             bus2076Idx = obj.getBusIdx(2076);
             bus2745Idx = obj.getBusIdx(2745);
             bus4720Idx = obj.getBusIdx(4720);
             bus10000Idx = obj.getBusIdx(10000); % useless in fact, but to emphatize 10_000 is a gen
             
             busesOfGenIdx = [bus2076Idx bus2745Idx bus4720Idx bus10000Idx]';
-            
             obj.setRealPowerLoad(busesOfGenIdx, 0);
             obj.setReactivePowerLoad(busesOfGenIdx, 0);
+            %}
+            busIdOfGen = [2076 2745 4720 10000]';
+            busIdxOfGen = obj.getBusIdx(busIdOfGen);
             
-            maxGenerationAt10000 = 78;
+            
+            obj.setRealPowerLoad(busIdxOfGen, 0);
+            obj.setReactivePowerLoad(busIdxOfGen, 0);
+                        
             maxGenerationAt2076 = 66;
             maxGenerationAt2745 = 54;
             maxGenerationAt4720 = 10;
+            maxGenerationAt10000 = 78;
             maxBatteryInjectionAt10000 = 10; 
 
-            obj.addGenerator(busVG, maxGenerationAt10000);
             obj.addGenerator(2076, maxGenerationAt2076);
             obj.addGenerator(2745, maxGenerationAt2745);
             obj.addGenerator(4720, maxGenerationAt4720);
+            obj.addGenerator(busVG, maxGenerationAt10000);
             
             minBatteryInjectionAt10000 = - maxBatteryInjectionAt10000;
             obj.addBattery(busVG, maxBatteryInjectionAt10000, minBatteryInjectionAt10000);
@@ -177,16 +185,48 @@ classdef BasecaseModification < BasecaseOverview
             maxGenerationAt4710 = 64.7;
             maxGenerationAt4875 = 53.07;
             maxGenerationAt4915 = 35.5;
-            
-            maxBatteryInjectionAt4875 = 10;
-            minBatteryInjectionAt4875 = - maxBatteryInjectionAt4875;
-            
             % max generation of other generators are unchanged compared to the basecase 
             obj.addGenerator(busTRE, maxGenerationAt4710);
             obj.addGenerator(busVTV, maxGenerationAt4875);
             obj.addGenerator(busVEY, maxGenerationAt4915);
             
+            maxBatteryInjectionAt4875 = 10;
+            minBatteryInjectionAt4875 = - maxBatteryInjectionAt4875;
             obj.addBattery(busVTV, maxBatteryInjectionAt4875, minBatteryInjectionAt4875);
+        end
+        
+        function addZoneBLA(obj)
+           % This is not an accurate representation of zone BLA.
+           % Precisely, the values of maxPowerGeneration at bus 696 and
+           % 4053 are incorrect, as there are several gen on those buses
+           if ~isfile('zoneBLA.json')
+               error('zoneBLA.json is missing. It is required to add zone BLA to the basecase')
+           end
+           
+           [busIdOfGen, maxPowerGeneration] = readZoneGenerator('zoneBLA.json');
+           
+           numberOfGenToAdd = size(busIdOfGen,1);
+           for k = 1:numberOfGenToAdd
+               if busIdOfGen(k)== 696
+                   firstGenOnBus = 32.35;
+                   secondGenOnBus = 12;
+                   thirdGenOnBus = 21;
+                   obj.addGenerator(busIdOfGen(k), ...
+                       maxPowerGeneration(k) - firstGenOnBus - secondGenOnBus - thirdGenOnBus);
+               elseif busIdOfGen(k)== 4053
+                   firstGenOnBus = 30.4;
+                   secondGenOnBus = 16;
+                   obj.addGenerator(busIdOfGen(k), ...
+                       maxPowerGeneration(k) - firstGenOnBus - secondGenOnBus);
+               else
+                   obj.addGenerator(busIdOfGen(k), maxPowerGeneration(k));
+               end
+           end
+        end
+               
+        function updateInternalMatpowercase(obj)
+           obj.InternalMatpowercase = ext2int(obj.Matpowercase);  
+           obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
         end
         
         function handleBasecaseForZoneVGandVTV(obj)
