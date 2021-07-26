@@ -1,11 +1,10 @@
 {
-	"basecase":"case6468rte_zoneVGandVTV.m",
+	"basecase":"case6468rte_zone_VG_VTV.m",
 	"durationInSeconds": 600,
 	"windowInSeconds":5,
 	"Zone":
 	{
 		"1": "VG",
-		"2": "VTV",
-		"3": "BLA"
+		"2": "VTV"
 	}
 }
