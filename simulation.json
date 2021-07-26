@@ -1,0 +1,10 @@
+{
+	"basecase":"case6468rte_zoneVGandVTV.m",
+	"simulationWindow":5,
+	"Zone":
+	{
+		"1": "VG",
+		"2": "VTV",
+		"3": "BLA"
+	}
+}
