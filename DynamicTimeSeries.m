@@ -38,6 +38,10 @@ classdef DynamicTimeSeries < handle
             disturbance = obj.PowerAvailableVariation(:,obj.CurrentStep);
         end
         
+        function powerAvailable = getInitialPowerAvailable(obj)
+            powerAvailable = obj.PowerAvailableState(:,1);
+        end
+        
         function objectDisturbance = getTimeSeries(obj)
             objectDisturbance = DisturbancePowerAvailable(obj.NumberOfGen);      
             value = obj.getDisturbancePowerAvailable();
