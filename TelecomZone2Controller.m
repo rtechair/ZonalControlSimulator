@@ -7,28 +7,20 @@ classdef TelecomZone2Controller < Telecommunication
     
     methods
         function obj = TelecomZone2Controller(delayTelecom,...
-                numberOfGen, numberOfBatt, numberOfBuses, numberOfBranches)
-            
+                numberOfGen, numberOfBatt, numberOfBuses, numberOfBranches)    
             obj.DelayTelecom = delayTelecom;
+            
             blankState = StateOfZone(numberOfGen, numberOfBatt, ...
                 numberOfBranches);
-            blankDisturbanceTransit = zeros(numberOfBuses, 1);
-            
+            blankDisturbanceTransit = zeros(numberOfBuses, 1);            
             stateAndDistTransitArray(1:delayTelecom) = StateAndDisturbanceTransit(blankState, ...
                 blankDisturbanceTransit);
             
-            
-            
-            % stateAndDistTransitArray(1:delayTelecom) = StateAndDisturbanceTransit(numberOfGen, numberOfBatt); %TODO
-            % where DataFromZone corresponds to StateOfZone and
-            % disturbanceTransit
             obj.BufferQueueData = stateAndDistTransitArray;
-
-            %TODO
         end
         
         function data = receive(obj, emitter)
-            data = emitter.getStateAndDistTransit(); %TODO
+            data = emitter.getStateAndDistTransit();
         end
         
         function store(obj, newStateAndDistTransit)

@@ -11,11 +11,10 @@ classdef TelecomController2Zone < Telecommunication
             obj.DelayTelecom = delayTelecom;
             controlArray(1:delayTelecom) = ControlOfZone(numberOfGen, numberOfBatt);
             obj.BufferQueueData = controlArray;
-
         end
         
         function control = receive(obj, emitter)
-            control = emitter.getControl(); %TODO check it works
+            control = emitter.getControl();
         end
         
         function store(obj, newControl)
@@ -24,7 +23,7 @@ classdef TelecomController2Zone < Telecommunication
         
         function send(obj, receiver)
             sentControl = obj.BufferQueueData(end - obj.DelayTelecom);
-            receiver.receiveControl(sentControl) %TODO check it works
+            receiver.receiveControl(sentControl)
         end
         
         function dropOldestData(obj)

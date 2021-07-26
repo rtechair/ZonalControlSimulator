@@ -95,7 +95,6 @@ classdef TopologicalZone < handle
             % for each bus, show a text displaying: bus id, if there is a
             % generator and if there is a battery
             for bus = 1: size(obj.BusId,1)
-               %TODO
                % default texts:
                textGen = '';
                textBatt ='';
