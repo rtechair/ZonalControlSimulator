@@ -121,69 +121,69 @@
     "Generator": [
         {
             "bus": 4,
-            "maxPG": 36
+            "maxPowerGeneration": 36
         },
         {
             "bus": 24,
-            "maxPG": 52
+            "maxPowerGeneration": 52
         },
         {
             "bus": 48,
-            "maxPG": 104
+            "maxPowerGeneration": 104
         },
         {
             "bus": 145,
-            "maxPG": 53
+            "maxPowerGeneration": 53
         },
         {
             "bus": 239,
-            "maxPG": 53
+            "maxPowerGeneration": 53
         },
         {
             "bus": 508,
-            "maxPG": 150
+            "maxPowerGeneration": 150
         },
         {
             "bus": 696,
-            "maxPG": 88,
+            "maxPowerGeneration": 88,
             "numberOfExistingGenInCase6468rte": 3
         },
         {
             "bus": 737,
-            "maxPG": 100
+            "maxPowerGeneration": 100
         },
         {
             "bus": 905,
-            "maxPG": 25
+            "maxPowerGeneration": 25
         },
         {
             "bus": 1287,
-            "maxPG": 85
+            "maxPowerGeneration": 85
         },
         {
             "bus": 3203,
-            "maxPG": 65
+            "maxPowerGeneration": 65
         },
         {
             "bus": 3961,
-            "maxPG": 19
+            "maxPowerGeneration": 19
         },
         {
             "bus": 4053,
-            "maxPG": 105,
+            "maxPowerGeneration": 105,
             "numberOfExistingGenInCase6468rte": 2
         },
         {
             "bus": 4190,
-            "maxPG": 36
+            "maxPowerGeneration": 36
         },
         {
             "bus": 4708,
-            "maxPG": 32
+            "maxPowerGeneration": 32
         },
         {
             "bus": 5073,
-            "maxPG": 98
+            "maxPowerGeneration": 98
         }
     ]
 }

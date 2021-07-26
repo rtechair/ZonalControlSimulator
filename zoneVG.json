@@ -62,19 +62,19 @@
     "Generator": [
         {
             "bus": 2076,
-            "maxPG": 66
+            "maxPowerGeneration": 66
         },
         {
             "bus": 2745,
-            "maxPG": 54
+            "maxPowerGeneration": 54
         },
         {
             "bus": 4720,
-            "maxPG": 10
+            "maxPowerGeneration": 10
         },
         {
             "bus": 10000,
-            "maxPG": 78
+            "maxPowerGeneration": 78
         }
     ],
     "Battery":
