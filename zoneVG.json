@@ -1,12 +1,15 @@
 {
-    "zoneName": "VG",
     "busId": [1445, 2076, 2135, 2694, 2745, 3329, 4720, 5411, 10000],
     "branchFlowLimit": 45,
     "TimeSeries":
     {
         "filename": "tauxDeChargeMTJLMA2juillet2018.txt",
-        "start1ForGenerators": [195, 185, 175, 160],
-        "start2ForGenerators": [150, 110, 120, 100]
+        "StartPossibilityForGeneratorInSeconds":
+        {
+            "1": [195, 185, 175, 160],
+            "2": [150, 110, 120, 100]
+        },
+        "startSelected": 2
     },
     "batteryConstantPowerReduction": 0.001,
     "controlCycle": 5,
@@ -18,7 +21,7 @@
         {
             "timeSeries2Zone":1,
             "controller2Zone":1,
-            "zone2controller":1
+            "zone2Controller":1
         }
     },
     "Bus": [

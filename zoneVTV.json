@@ -4,8 +4,12 @@
     "TimeSeries":
     {
         "filename": "tauxDeChargeMTJLMA2juillet2018.txt",
-        "start1ForGenerators": 0,
-        "start2ForGenerators": 0
+        "StartPossibilityForGeneratorInSeconds":
+        {
+            "1": [65, 61, 58],
+            "2": [50, 36, 40]
+        },
+        "startSelected": 2
     },
     "batteryConstantPowerReduction": 0.001,
     "controlCycle": 15,
@@ -17,7 +21,7 @@
         {
             "timeSeries2Zone":1,
             "controller2Zone":1,
-            "zone2controller":1
+            "zone2Controller":1
         }
     },
     "Bus": [
