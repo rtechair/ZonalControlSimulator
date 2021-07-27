@@ -1,0 +1,6 @@
+{
+    "IncreaseCurtPercentEchelon": 0.1,
+    "DecreaseCurtPercentEchelon": 0.01,
+    "UpperThresholdPercent": 0.8,
+    "LowerThresholdPercent": 0.6
+}
