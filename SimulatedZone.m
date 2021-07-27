@@ -18,6 +18,11 @@ classdef SimulatedZone < handle
        NumberOfBuses
        NumberOfGen
        NumberOfBatt
+       
+       
+       DelayCurtSeconds
+       DelayBattSeconds
+       ControlCycle
        DelayCurt
        DelayBatt
        
@@ -28,13 +33,18 @@ classdef SimulatedZone < handle
     methods
        
         function obj = SimulatedZone(numberOfBuses, numberOfGenerators, numberOfBatteries, ...
-                numberOfBranches, delayCurtailment, delayBattery, maxGeneration, ...
-                battConstPowerReduc)
+                numberOfBranches, delayCurtailmentInSeconds, delayBatteryInSeconds, controlCycle, ...
+                maxGeneration, battConstPowerReduc)
             obj.NumberOfBuses = numberOfBuses;
             obj.NumberOfGen = numberOfGenerators;
             obj.NumberOfBatt = numberOfBatteries;
-            obj.DelayCurt = delayCurtailment;
-            obj.DelayBatt = delayBattery;
+            
+            obj.DelayCurtSeconds = delayCurtailmentInSeconds;
+            obj.DelayBattSeconds = delayBatteryInSeconds;
+            obj.ControlCycle = controlCycle;
+            obj.DelayCurt = ceil(delayCurtailmentInSeconds / controlCycle);
+            obj.DelayBatt = ceil(delayBatteryInSeconds / controlCycle);
+            
             obj.MaxPowerGeneration = maxGeneration;
             obj.BattConstPowerReduc = battConstPowerReduc;
             
@@ -44,8 +54,8 @@ classdef SimulatedZone < handle
             
             
             % blank buffers
-            obj.BufferQueueControlCurt = zeros(numberOfGenerators, delayCurtailment);
-            obj.BufferQueueControlBatt = zeros(numberOfBatteries, delayBattery);
+            obj.BufferQueueControlCurt = zeros(numberOfGenerators, obj.DelayCurt);
+            obj.BufferQueueControlBatt = zeros(numberOfBatteries, obj.DelayBatt);
             
             obj.BufferQueuePowerTransit = zeros(obj.NumberOfBuses,1);
             
