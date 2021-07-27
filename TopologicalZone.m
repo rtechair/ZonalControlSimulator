@@ -10,6 +10,8 @@ classdef TopologicalZone < handle
         BusBorderId
         BranchBorderIdx
         
+        MaxPowerGeneration
+        
         NumberOfBuses
         NumberOfBranches
         NumberOfGen
@@ -32,6 +34,8 @@ classdef TopologicalZone < handle
             
             obj.setGenOnIdx(electricalGrid);
             obj.setBattOnIdx(electricalGrid);
+            
+            obj.setMaxPowerGeneration(electricalGrid);
                         
             obj.setNumberOfElements();
 
@@ -146,6 +150,10 @@ classdef TopologicalZone < handle
         
         function setBattOnIdx(obj, electricalGrid)
             obj.BattOnIdx = electricalGrid.getBattOnIdx(obj.BusId);
+        end
+        
+        function setMaxPowerGeneration(obj, electricalGrid)
+           obj.MaxPowerGeneration = electricalGrid.getMaxPowerGeneration(obj.GenOnIdx); 
         end
         
         function setNumberOfElements(obj)                     
