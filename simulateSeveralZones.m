@@ -210,9 +210,7 @@ for l = 1:numberOfZones
     branchBorderIdx = topologyZone{l}.BranchBorderIdx;
     % TODO: why in the following 2 methods, one is associated to State,
     % while the other is not associate to Disturbance?
-   simulatedZone{l}.State.updatePowerBranchFlow(branchIdx, electricalGrid);
-   % TODO: why in the previous methods, 'electricalGrid' takes the 2nd
-   % attribute, while in the next method it is the 1st attribute
+   simulatedZone{l}.State.updatePowerBranchFlow(electricalGrid, branchIdx);
    
    simulatedZone{l}.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
    % do not compute disturbance transit initially, as there is not enough data 
@@ -264,7 +262,7 @@ for time = start:step:duration
         if isZoneToBeUpdated
             busId = topologyZone{l}.BusId;
             branchIdx = topologyZone{l}.BranchIdx;
-            simulatedZone{l}.State.updatePowerBranchFlow(branchIdx, electricalGrid);
+            simulatedZone{l}.State.updatePowerBranchFlow(electricalGrid, branchIdx);
             simulatedZone{l}.updatePowerTransit(electricalGrid, busId, branchIdx);
             
             % can update distrubance transit now, there is enough data

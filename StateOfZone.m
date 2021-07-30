@@ -23,7 +23,7 @@ classdef StateOfZone < handle
             obj.PowerBranchFlow = newValue;
         end
         
-        function updatePowerBranchFlow(obj, branchIdx, electricalGrid)
+        function updatePowerBranchFlow(obj, electricalGrid, branchIdx)
             obj.PowerBranchFlow = electricalGrid.getPowerBranchFlow(branchIdx);
         end
         
