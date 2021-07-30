@@ -16,15 +16,19 @@ classdef TopologicalZone < handle
         NumberOfBranches
         NumberOfGen
         NumberOfBatt
+        
+        Name
                
     end
     
     methods
-        function obj = TopologicalZone(busId, electricalGrid)
+        function obj = TopologicalZone(name, busId, electricalGrid)
             arguments
+                name
                 busId (:,1) {mustBeInteger}
                 electricalGrid
             end
+            obj.Name = name;
             obj.BusId = busId;
             
             
@@ -86,9 +90,8 @@ classdef TopologicalZone < handle
             isBusOfZoneWithGenOn = ismember(obj.BusId, busIdWithGenOn);
             isBusOfZoneWithBattOn = ismember(obj.BusId, busIdWithBattOn);
             
-            figureGraph = figure('Name', 'Graph of the zone with its border',...
-            'NumberTitle', 'off', 'WindowState', 'maximize');
-    
+            figName = ['Zone ' obj.Name ', graph of the zone with its border'];
+            figureGraph = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
             graphStatic = obj.getGraphStatic(electricalGrid);
             P = plot(graphStatic);
             P = obj.configurePlot(P);
