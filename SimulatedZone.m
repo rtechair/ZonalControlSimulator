@@ -49,8 +49,7 @@ classdef SimulatedZone < handle
             obj.BattConstPowerReduc = battConstPowerReduc;
             
             % blank state
-            obj.State = StateOfZone(numberOfGenerators, numberOfBatteries, ...
-                numberOfBranches);
+            obj.State = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries);
             
             
             % blank buffers

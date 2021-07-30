@@ -6,8 +6,7 @@ classdef TelecomController2Zone < Telecommunication
     end
     
     methods
-        function obj = TelecomController2Zone(delayTelecom, ...
-                numberOfGen, numberOfBatt)
+        function obj = TelecomController2Zone(numberOfGen, numberOfBatt, delayTelecom)
             obj.DelayTelecom = delayTelecom;
             controlArray(1:delayTelecom) = ControlOfZone(numberOfGen, numberOfBatt);
             obj.BufferQueueData = controlArray;

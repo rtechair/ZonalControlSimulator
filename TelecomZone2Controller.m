@@ -6,15 +6,15 @@ classdef TelecomZone2Controller < Telecommunication
     end
     
     methods
-        function obj = TelecomZone2Controller(delayTelecom,...
-                numberOfGen, numberOfBatt, numberOfBuses, numberOfBranches)    
+        function obj = TelecomZone2Controller(...
+                numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, delayTelecom)
+            
             obj.DelayTelecom = delayTelecom;
             
-            blankState = StateOfZone(numberOfGen, numberOfBatt, ...
-                numberOfBranches);
+            blankState = StateOfZone(numberOfBranches, numberOfGen, numberOfBatt);
             blankDisturbanceTransit = zeros(numberOfBuses, 1);            
-            stateAndDistTransitArray(1:delayTelecom) = StateAndDisturbanceTransit(blankState, ...
-                blankDisturbanceTransit);
+            stateAndDistTransitArray(1:delayTelecom) = ...
+                StateAndDisturbanceTransit(blankState, blankDisturbanceTransit);
             
             obj.BufferQueueData = stateAndDistTransitArray;
         end

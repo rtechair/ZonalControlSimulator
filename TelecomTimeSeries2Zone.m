@@ -7,7 +7,7 @@ classdef TelecomTimeSeries2Zone < Telecommunication
     
     methods
         
-        function obj = TelecomTimeSeries2Zone(delayTelecom, numberOfGen)
+        function obj = TelecomTimeSeries2Zone(numberOfGen, delayTelecom)
             obj.DelayTelecom = delayTelecom;
             disturbanceArray(1: delayTelecom) = DisturbancePowerAvailable(numberOfGen);
             obj.BufferQueueData = disturbanceArray;

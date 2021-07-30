@@ -1,16 +1,16 @@
 classdef StateOfZone < handle
    
     properties
-       PowerBranchFlow
-       PowerCurtailment
-       PowerBattery
-       EnergyBattery
-       PowerGeneration
-       PowerAvailable
+       PowerBranchFlow  % Fij
+       PowerCurtailment % PC
+       PowerBattery     % PB
+       EnergyBattery    % EB
+       PowerGeneration  % PG
+       PowerAvailable   % PA
     end        
     
     methods
-        function obj = StateOfZone(numberOfGenerators, numberOfBatteries, numberOfBranches)
+        function obj = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries)
             obj.PowerBranchFlow = zeros(numberOfBranches, 1);
             obj.PowerCurtailment = zeros(numberOfGenerators, 1);
             obj.PowerBattery = zeros(numberOfBatteries, 1);

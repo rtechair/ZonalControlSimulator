@@ -33,8 +33,6 @@ DISPLAY RESULTS
 
 simulationSetting = jsonDecodeFile('simulation.json');
 
-%TODO: put the following action into the simulation.json file
-%startSelectionPerZone{1} = 2;
 
 % In the following, the 'cell' data structure is used instead of 'matrix' because a matrix of char arrays
 % will merge them into a single char array, which is not the desired behavior
@@ -63,7 +61,6 @@ for l = 1:numberOfZones
    topologyZone{l} = TopologicalZone(zoneName{l}, zoneSetting{l}.busId, electricalGrid); 
 end
 
-%TODO put maxPowerGeneration as a topologicalZone's property
 timeSeries = cell(numberOfZones,1);
 for l = 1:numberOfZones
     filename = zoneSetting{l}.TimeSeries.filename;
@@ -142,12 +139,11 @@ for l = 1:numberOfZones
     numberOfGenOn = topologyZone{l}.NumberOfGen;
     numberOfBattOn = topologyZone{l}.NumberOfBatt; 
     
-    % TODO, change the order of attributes of the Telecom constructors
-    telecom{l}.timeSeries2Zone = TelecomTimeSeries2Zone(delayTimeSeries2Zone, numberOfGenOn);
-    telecom{l}.controller2Zone = TelecomController2Zone(delayController2Zone, numberOfGenOn, ...
-        numberOfBattOn);
-    telecom{l}.zone2Controller = TelecomZone2Controller(delayZone2Controller, numberOfGenOn, ...
-        numberOfBattOn, numberOfBuses, numberOfBranches); 
+    telecom{l}.timeSeries2Zone = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
+    telecom{l}.controller2Zone = TelecomController2Zone(...
+        numberOfGenOn, numberOfBattOn, delayController2Zone);
+    telecom{l}.zone2Controller = TelecomZone2Controller(...
+        numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, delayZone2Controller); 
 end
 
 %% Result of simulation
