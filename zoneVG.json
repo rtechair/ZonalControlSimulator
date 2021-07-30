@@ -20,7 +20,7 @@
         "Telecom":
         {
             "timeSeries2Zone":1,
-            "controller2Zone":1,
+            "controller2Zone":4,
             "zone2Controller":1
         }
     },
