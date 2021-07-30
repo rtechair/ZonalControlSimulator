@@ -1,4 +1,4 @@
-classdef TopologicalZone < handle
+classdef ZoneTopology < handle
     
     
     properties
@@ -22,14 +22,14 @@ classdef TopologicalZone < handle
     end
     
     methods
-        function obj = TopologicalZone(name, busId, electricalGrid)
+        function obj = ZoneTopology(name, zoneBusId, electricalGrid)
             arguments
                 name
-                busId (:,1) {mustBeInteger}
+                zoneBusId (:,1) {mustBeInteger}
                 electricalGrid
             end
             obj.Name = name;
-            obj.BusId = busId;
+            obj.BusId = zoneBusId;
             
             
             obj.setBranchesInZoneAndInBorder(electricalGrid);

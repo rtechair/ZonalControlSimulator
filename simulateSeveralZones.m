@@ -8,7 +8,7 @@ INITIALIZATION PRIOR TO THE SIMULATION
 - build the basecase as an 'ElectricalGrid' object, which is used during
 the simulation
 - load the zone setting 
-- define the topology of the zone as a 'TopologicalZone' object
+- define the topology of the zone as a 'ZoneTopology' object
 - define the time series used for the simulation as a 'DynamicTimeSeries' object
 - define the simulated zone which is used during the simulation
 - load the limiter setting
@@ -58,7 +58,7 @@ electricalGrid = ElectricalGrid(simulationSetting.basecase);
 %% Zone
 topologyZone = cell(numberOfZones,1);
 for l = 1:numberOfZones
-   topologyZone{l} = TopologicalZone(zoneName{l}, zoneSetting{l}.busId, electricalGrid); 
+   topologyZone{l} = ZoneTopology(zoneName{l}, zoneSetting{l}.busId, electricalGrid); 
 end
 
 timeSeries = cell(numberOfZones,1);
