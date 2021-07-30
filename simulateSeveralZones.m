@@ -89,8 +89,7 @@ for l = 1:numberOfZones
    controlCycle = zoneSetting{l}.controlCycle;
    maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;
    battConstPowerReduc = zoneSetting{l}.batteryConstantPowerReduction;
-   % TODO, change the order of attributes of simulatedZone constructor
-   simulatedZone{l} = SimulatedZone(numberOfBuses, numberOfGenOn, numberOfBattOn, numberOfBranches,...
+   simulatedZone{l} = SimulatedZone(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
        delayCurtSeconds, delayBattSeconds, controlCycle, maxPowerGeneration, battConstPowerReduc);
 end
 
@@ -208,11 +207,16 @@ for l = 1:numberOfZones
     busId = topologyZone{l}.BusId;
     branchIdx = topologyZone{l}.BranchIdx;
     branchBorderIdx = topologyZone{l}.BranchBorderIdx;
-    % TODO: why in the following 2 methods, one is associated to State,
-    % while the other is not associate to Disturbance?
-   simulatedZone{l}.State.updatePowerBranchFlow(electricalGrid, branchIdx);
-   
+    
+    %{
+    The zone sends to the controller all the information about its state,
+    but only one disturbance: the power transiting through the buses.
+    That is why the zone uses an object 'State' but not an object
+    'Disturbance' to store the Power Transit.
+    %}
+   simulatedZone{l}.State.updatePowerBranchFlow(electricalGrid, branchIdx);   
    simulatedZone{l}.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
+   
    % do not compute disturbance transit initially, as there is not enough data 
    simulatedZone{l}.dropOldestPowerTransit();
    simulatedZone{l}.saveState(resultZone{l});
