@@ -84,6 +84,10 @@ classdef Limiter < Controller
             end
         end
         
+        function saveControl(obj, memory)
+           memory.saveControl(obj.getCurtailmentControl(), obj.getBatteryInjectionControl()) 
+        end
+        
         function receiveStateAndDistTransit(obj, stateAndDistTransit)
             obj.State = stateAndDistTransit.getStateOfZone();
             obj.DistTransit = stateAndDistTransit.getDisturbanceTransit();

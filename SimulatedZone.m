@@ -100,12 +100,6 @@ classdef SimulatedZone < handle
                 obj.State.PowerAvailable);
         end
         
-        function saveControl(obj, memory)
-            lastControlCurt = obj.BufferQueueControlCurt(:,end);
-            lastControlBatt = obj.BufferQueueControlBatt(:,end);
-            memory.saveControl(lastControlCurt, lastControlBatt);
-        end
-        
         function saveDisturbance(obj, memory)
             memory.saveDisturbance(obj.DisturbanceTransit,...
                 obj.DisturbanceGeneration,...
@@ -131,8 +125,8 @@ classdef SimulatedZone < handle
         end
         
         function updateState(obj)
-            appliedControlCurt = obj.BufferQueueControlCurt(:,end - obj.DelayCurt);
-            appliedControlBatt = obj.BufferQueueControlBatt(:, end - obj.DelayBatt);
+            appliedControlCurt = obj.BufferQueueControlCurt(:,1);
+            appliedControlBatt = obj.BufferQueueControlBatt(:, 1);
             
             % EnergyBattery requires PowerBattery, thus the former must be
             % updated prior to the latter
