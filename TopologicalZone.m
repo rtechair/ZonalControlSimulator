@@ -90,7 +90,7 @@ classdef TopologicalZone < handle
             isBusOfZoneWithGenOn = ismember(obj.BusId, busIdWithGenOn);
             isBusOfZoneWithBattOn = ismember(obj.BusId, busIdWithBattOn);
             
-            figName = ['Zone ' obj.Name ', graph of the zone with its border'];
+            figName = ['Zone ' obj.Name ': red node = bus within zone, black node = bus at the border'];
             figureGraph = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
             graphStatic = obj.getGraphStatic(electricalGrid);
             P = plot(graphStatic);

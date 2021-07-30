@@ -71,7 +71,7 @@ classdef Result < handle
             obj.DelayController2Zone = delayController2Zone;
             obj.DelayZone2Controller = delayZone2Controller;
             
-            obj.CurrentStep = 0;
+            obj.CurrentStep = 0; % 0, i.e. initialization before the actual simulation
             
             % State
             obj.PowerBranchFlow = zeros(numberOfBranches, obj.NumberOfIterations + 1);

@@ -21,8 +21,10 @@ classdef ResultGraphic < Result
             numberOfRowsOfGraph = ceil(sqrt(obj.NumberOfBuses));
             %% Create the figure
             % see:  https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
-            figName = ['Zone ' obj.zoneName ...
-                ', Power Available PA, Power Curtailment PC, Power Generation PG = min(PA, MaxPG - PC), MaxPG - PC'];
+            figName = ['Zone ' obj.zoneName ': '...
+                'Power Available PA, '...
+                'Power Curtailment PC, '...
+                'Power Generation PG = min(PA, MaxPG - PC), MaxPG - PC'];
             figStateGenOn = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize'); 
             %% plot for each generator On: PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
             for gen = 1:obj.NumberOfGen
@@ -50,7 +52,8 @@ classdef ResultGraphic < Result
             xlegend = 'Number of iterations';
             
             numberOfRowsOfGraph = ceil(sqrt(obj.NumberOfBuses));
-            figName = ['Zone ' obj.zoneName ', Disturbance of Power Available DeltaPA, ' ...
+            figName = ['Zone ' obj.zoneName ': ' ...
+                'Disturbance of Power Available DeltaPA, ' ...
                 'Disturbance of Power Generation DeltaPG, '...
                 'Taken Control of Power Curtailment DeltaPC, '...
                 'Applied Control DeltaPC(step + delayCurt+ delayTelecom)'];
@@ -67,7 +70,7 @@ classdef ResultGraphic < Result
                 stairs(time, f1, '-.'); % DeltaPC: control applied on the zone
                         
                 legend({'\DeltaPA', '\DeltaPG', '\DeltaPC', ...
-                    '\DeltaPC(step+delay\_curt)'}, 'Location', 'Best');
+                    '\DeltaPC(step+delayCurt + delayTelecom)'}, 'Location', 'Best');
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 genIdx = obj.GenOnIdx(gen);
@@ -81,13 +84,13 @@ classdef ResultGraphic < Result
             time = 1: obj.NumberOfIterations+1;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt(obj.NumberOfBranches));
-            figName = ['Zone ' obj.zoneName ', branch power flow Fij'];
+            figName = ['Zone ' obj.zoneName ': branch power flow Fij'];
             figFlowBranch = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for br = 1:obj.NumberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
                 stairs(time, obj.PowerBranchFlow(br,:)); % Fij
-                legend({'Branch Power Flow'},'Location','Best')
+                legend({'Branch Power Flow Fij'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 branchIdx = obj.BranchIdx(br);
@@ -102,13 +105,13 @@ classdef ResultGraphic < Result
             time = 1: obj.NumberOfIterations+1;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt(obj.NumberOfBranches));
-            figName = ['Zone ' obj.zoneName ', absolute branch power flow |Fij|'];
+            figName = ['Zone ' obj.zoneName ': absolute branch power flow |Fij|'];
             figAbsFlowBranch = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for br = 1:obj.NumberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
                 stairs(time, abs(obj.PowerBranchFlow(br,:)));  % abs(Fij)
-                legend({'Absolute Branch Power Flow'},'Location','Best')
+                legend({'Absolute Branch Power Flow |Fij|'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 branchIdx = obj.BranchIdx(br);
@@ -123,13 +126,13 @@ classdef ResultGraphic < Result
            time = 1:obj.NumberOfIterations;
            xlegend = 'Number of iterations';
            numberOfRowsOfPlot = ceil(sqrt( obj.NumberOfBuses));
-           figName = ['Zone ' obj.zoneName ', disturbance of Power Transit DeltaPT'];
+           figName = ['Zone ' obj.zoneName ': disturbance of Power Transit DeltaPT'];
            figDisturbTransit = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
            for bus = 1:obj.NumberOfBuses
                subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, bus);
                hold on;
                stairs(time, obj.DisturbanceTransit(bus,:)); % DeltaPT
-               legend({'Disturbance transit'}, 'Location','Best')
+               legend({'Disturbance transit \DeltaPT'}, 'Location','Best')
                xlabel(xlegend)
                ylabel('Power [MW]')
                busId = obj.BusId(bus);
