@@ -27,7 +27,7 @@ electricalGrid = ElectricalGrid(simulationSetting.basecase);
 %% Zone
 topologyZone = cell(numberOfZones,1);
 for l = 1:numberOfZones
-   topologyZone{l} = TopologicalZone(zoneSetting{l}.busId, electricalGrid); 
+   topologyZone{l} = TopologicalZone(zoneName{l}, zoneSetting{l}.busId, electricalGrid); 
 end
 
 %TODO put maxPowerGeneration as a topologicalZone's property
@@ -53,6 +53,7 @@ for l = 1:numberOfZones
    numberOfGenOn = topologyZone{l}.NumberOfGen;
    numberOfBattOn = topologyZone{l}.NumberOfBatt;
    numberOfBranches = topologyZone{l}.NumberOfBranches;
+   % cautious, here the delay is in seconds
    delayCurtSeconds = zoneSetting{l}.DelayInSeconds.curtailment;
    delayBattSeconds = zoneSetting{l}.DelayInSeconds.battery;
    controlCycle = zoneSetting{l}.controlCycle;
@@ -85,6 +86,7 @@ for l = 1:numberOfZones
     lowerThreshold = limiterSetting{l}.LowerThresholdPercent;
     upperThreshold = limiterSetting{l}.UpperThresholdPercent;
     controlCycle = zoneSetting{l}.controlCycle;
+    % cautious, here the delay is in iterations!
     delayCurt = zoneSetting{l}.DelayInSeconds.curtailment / controlCycle;
     delayBatt = zoneSetting{l}.DelayInSeconds.battery / controlCycle;
     maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;
@@ -132,13 +134,18 @@ for l = 1:numberOfZones
     
     delayCurt = zoneSetting{l}.DelayInSeconds.curtailment /controlCycle;
     delayBatt = zoneSetting{l}.DelayInSeconds.battery / controlCycle;
+    telecomSetting = zoneSetting{l}.DelayInSeconds.Telecom;
+    delayTimeSeries2Zone = telecomSetting.timeSeries2Zone;
+    delayController2Zone = telecomSetting.controller2Zone;
+    delayZone2Controller = telecomSetting.zone2Controller;
     
     %TODO the results will later need info about battery to display
     %PowerBattery and EnergyBattery
     %TODO rename class into GraphicResult
-    resultZone{l} = ResultGraphic(duration, controlCycle, ...
+    resultZone{l} = ResultGraphic(zoneName{l}, duration, controlCycle, ...
         numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
-        busId, branchIdx, genOnIdx, delayCurt, delayBatt);   
+        busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+        delayTimeSeries2Zone, delayController2Zone, delayZone2Controller);   
 end
 
 %% Initialization
@@ -148,6 +155,7 @@ end
 
 for l = 1:numberOfZones
     
+   % the controls should be computed here, not at the end of the function!!!! 
     % TODO: setInitialPA for SimulatedZone class
    simulatedZone{l}.State.PowerAvailable = timeSeries{l}.getInitialPowerAvailable();
    powerAvailable = simulatedZone{l}.State.PowerAvailable;
@@ -235,10 +243,13 @@ for time = start:step:duration
 
             telecom{l}.zone2Controller.receiveThenSend(simulatedZone{l}, controller{l});
             controller{l}.computeControl();
+            controller{l}.saveControl(resultZone{l});
 
             simulatedZone{l}.saveState(resultZone{l});
-            simulatedZone{l}.saveControl(resultZone{l});
+            %simulatedZone{l}.saveControl(resultZone{l});
             simulatedZone{l}.saveDisturbance(resultZone{l});
+            
+            simulatedZone{l}.dropOldestControl();
             resultZone{l}.prepareForNextStep();
         end
     end   
