@@ -1,7 +1,7 @@
 classdef TelecomController2Zone < Telecommunication
     
     properties
-        BufferQueueData
+        BufferQueueData % 1st element is to be sent, last element is the last received
         DelayTelecom
     end
     
@@ -22,7 +22,7 @@ classdef TelecomController2Zone < Telecommunication
         end
         
         function send(obj, receiver)
-            sentControl = obj.BufferQueueData(end - obj.DelayTelecom);
+            sentControl = obj.BufferQueueData(1);
             receiver.receiveControl(sentControl)
         end
         

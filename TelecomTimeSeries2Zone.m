@@ -24,7 +24,7 @@ classdef TelecomTimeSeries2Zone < Telecommunication
         
         
         function send(obj, receiver)
-            sentDisturbance = obj.BufferQueueData(end - obj.DelayTelecom);
+            sentDisturbance = obj.BufferQueueData(1);
             receiver.receiveTimeSeries(sentDisturbance);
         end
         

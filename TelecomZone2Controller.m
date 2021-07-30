@@ -28,7 +28,7 @@ classdef TelecomZone2Controller < Telecommunication
         end
         
         function send(obj, receiver)
-            sentStateAndDisturbTransit = obj.BufferQueueData(end - obj.DelayTelecom);
+            sentStateAndDisturbTransit = obj.BufferQueueData(1);
             receiver.receiveStateAndDistTransit(sentStateAndDisturbTransit)
         end
         
