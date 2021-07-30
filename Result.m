@@ -22,6 +22,7 @@ classdef Result < handle
     end
     
     properties ( SetAccess = immutable)
+        zoneName
         SamplingTime
         NumberOfIterations
         
@@ -38,13 +39,18 @@ classdef Result < handle
         
         DelayCurt
         DelayBatt
+        DelayTimeSeries2Zone
+        DelayController2Zone
+        DelayZone2Controller
     end
     
     methods
         
-        function obj = Result(durationSimulation, samplingTime, ...
+        function obj = Result(zoneName, durationSimulation, samplingTime, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt)
+                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+                delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
+            obj.zoneName = zoneName;
             obj.NumberOfIterations = floor(durationSimulation / samplingTime);
             obj.NumberOfBuses = numberOfBuses;
             obj.NumberOfBranches = numberOfBranches;
@@ -60,6 +66,10 @@ classdef Result < handle
             
             obj.DelayCurt = delayCurt;
             obj.DelayBatt = delayBatt;
+            
+            obj.DelayTimeSeries2Zone = delayTimeSeries2Zone;
+            obj.DelayController2Zone = delayController2Zone;
+            obj.DelayZone2Controller = delayZone2Controller;
             
             obj.CurrentStep = 0;
             

@@ -2,13 +2,15 @@ classdef ResultGraphic < Result
     
     methods
        
-        function obj = ResultGraphic(durationSimulation, samplingTime, ...
+        function obj = ResultGraphic(zoneName,durationSimulation, samplingTime, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt)
+                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+                delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
             
-           obj@Result(durationSimulation, samplingTime, ...
+           obj@Result(zoneName, durationSimulation, samplingTime, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt); 
+                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+                delayTimeSeries2Zone, delayController2Zone, delayZone2Controller); 
         end
         
         function figStateGenOn = plotStateGen(obj, electricalGrid)
@@ -19,8 +21,9 @@ classdef ResultGraphic < Result
             numberOfRowsOfGraph = ceil(sqrt(obj.NumberOfBuses));
             %% Create the figure
             % see:  https://www.mathworks.com/help/matlab/ref/matlab.ui.figure-properties.html
-            figStateGenOn = figure('Name','for each generator On : PA, PC, MaxPG - PC, min(PA, MaxPG - PC)',...
-            'NumberTitle', 'off', 'WindowState', 'maximize'); 
+            figName = ['Zone ' obj.zoneName ...
+                ', Power Available PA, Power Curtailment PC, Power Generation PG = min(PA, MaxPG - PC), MaxPG - PC'];
+            figStateGenOn = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize'); 
             %% plot for each generator On: PA, PC, MaxPG - PC, min(PA, MaxPG - PC)
             for gen = 1:obj.NumberOfGen
                 % decompose the plot into a square of subplots
@@ -32,7 +35,7 @@ classdef ResultGraphic < Result
                 stairs(time, f1, '--'); % MaxPG - PC
                 stairs(time, min(obj.PowerAvailable(gen, :), f1)); % min(PA, MaxPG - PC)
                 
-                legend({'PA', 'PC', 'MaxPG - PC', 'min(PA, MaxPG-PC)'},'Location','Best')
+                legend({'PA', 'PC', 'MaxPG - PC', 'PG = min(PA, MaxPG-PC)'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 genIdx = obj.GenOnIdx(gen);
@@ -47,21 +50,24 @@ classdef ResultGraphic < Result
             xlegend = 'Number of iterations';
             
             numberOfRowsOfGraph = ceil(sqrt(obj.NumberOfBuses));
-            figDeltaGenOn = figure('Name',['for each generator On : DeltaPA,' ...
-                 'DeltaPG, DeltaPC, DeltaPC(step - delay_curt + 1)'],...
-            'NumberTitle', 'off', 'WindowState', 'maximize');
+            figName = ['Zone ' obj.zoneName ', Disturbance of Power Available DeltaPA, ' ...
+                'Disturbance of Power Generation DeltaPG, '...
+                'Taken Control of Power Curtailment DeltaPC, '...
+                'Applied Control DeltaPC(step + delayCurt+ delayTelecom)'];
+            figDeltaGenOn = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for gen = 1:obj.NumberOfGen
                 subplot(numberOfRowsOfGraph, numberOfRowsOfGraph, gen);
                 hold on;
                 stairs(time, obj.DisturbanceAvailable(gen, :), ':'); % DeltaPA
                 stairs(time, obj.DisturbanceGeneration(gen, :)); % DeltaPG
-                stairs(time, obj.ControlCurtailment(gen, :), '--'); % DeltaPC: control taken
-                f1 = [zeros(1, obj.DelayCurt +1) ...
-                    obj.ControlCurtailment(gen, 1: obj.NumberOfIterations-obj.DelayCurt-1)];
-                stairs(time, f1, '-.'); % DeltaPC: control applied
+                stairs(time, obj.ControlCurtailment(gen, :), '--'); % DeltaPC: control taken by the controller
+                delayForZone = obj.DelayCurt + obj.DelayController2Zone;
+                f1 = [zeros(1, delayForZone) ...
+                    obj.ControlCurtailment(gen, 1: obj.NumberOfIterations-delayForZone)];
+                stairs(time, f1, '-.'); % DeltaPC: control applied on the zone
                         
-                legend({'DeltaPA', 'DeltaPG', 'DeltaPC: control taken', ...
-                    'DeltaPC(step+delay\_curt+1): control applied'}, 'Location', 'Best');
+                legend({'\DeltaPA', '\DeltaPG', '\DeltaPC', ...
+                    '\DeltaPC(step+delay\_curt)'}, 'Location', 'Best');
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 genIdx = obj.GenOnIdx(gen);
@@ -75,8 +81,8 @@ classdef ResultGraphic < Result
             time = 1: obj.NumberOfIterations+1;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt(obj.NumberOfBranches));
-            figFlowBranch = figure('Name', 'power flow on each branch of the zone, over the period',...
-            'NumberTitle', 'off', 'WindowState', 'maximize');
+            figName = ['Zone ' obj.zoneName ', branch power flow Fij'];
+            figFlowBranch = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for br = 1:obj.NumberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
@@ -96,8 +102,8 @@ classdef ResultGraphic < Result
             time = 1: obj.NumberOfIterations+1;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt(obj.NumberOfBranches));
-            figAbsFlowBranch = figure('Name', 'absolute power flow on each branch of the zone, over the period',...
-            'NumberTitle', 'off', 'WindowState', 'maximize');
+            figName = ['Zone ' obj.zoneName ', absolute branch power flow |Fij|'];
+            figAbsFlowBranch = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for br = 1:obj.NumberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
@@ -117,8 +123,8 @@ classdef ResultGraphic < Result
            time = 1:obj.NumberOfIterations;
            xlegend = 'Number of iterations';
            numberOfRowsOfPlot = ceil(sqrt( obj.NumberOfBuses));
-           figDisturbTransit = figure('Name', 'Disturbance of power flow on each bus of the zone, over the period',...
-            'NumberTitle', 'off', 'WindowState', 'maximize');
+           figName = ['Zone ' obj.zoneName ', disturbance of Power Transit DeltaPT'];
+           figDisturbTransit = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
            for bus = 1:obj.NumberOfBuses
                subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, bus);
                hold on;
@@ -134,8 +140,8 @@ classdef ResultGraphic < Result
         
         function plotAllFigures(obj, electricalGrid)
             obj.plotStateGen(electricalGrid);
-            obj.plotControlAndDisturbanceGen();
-            obj.plotAbsoluteFlowBranch();
+            obj.plotControlAndDisturbanceGen(electricalGrid);
+            obj.plotAbsoluteFlowBranch(electricalGrid);
             obj.plotDisturbanceTransit();
         end
         
