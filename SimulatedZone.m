@@ -116,7 +116,7 @@ classdef SimulatedZone < handle
             f = obj.State.PowerAvailable ...
                 + obj.DisturbanceAvailable ...
                 - obj.State.PowerGeneration ...
-                + obj.BufferQueueControlCurt(:,end - obj.DelayCurt);
+                + obj.BufferQueueControlCurt(:,1);
             g = obj.MaxPowerGeneration...
                 - obj.State.PowerCurtailment...
                 - obj.State.PowerGeneration;
@@ -147,6 +147,14 @@ classdef SimulatedZone < handle
             
             % PB += DeltaPB(k - delayBatt)
             obj.State.PowerBattery = obj.State.PowerBattery - appliedControlBatt;
+        end
+        
+        function setInitialPowerAvailable(obj, timeSeries)
+           obj.State.PowerAvailable = timeSeries.getInitialPowerAvailable(); 
+        end
+        
+        function setInitialPowerGeneration(obj)
+           obj.State.PowerGeneration = min(obj.State.PowerAvailable, obj.MaxPowerGeneration); 
         end
     end
     

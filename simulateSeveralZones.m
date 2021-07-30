@@ -182,20 +182,12 @@ end
 % This should not be done likewise. Later change it
 
 for l = 1:numberOfZones
-    
-   % the controls should be computed here, not at the end of the function!!!! 
-    % TODO: setInitialPA for SimulatedZone class
-   simulatedZone{l}.State.PowerAvailable = timeSeries{l}.getInitialPowerAvailable();
-   powerAvailable = simulatedZone{l}.State.PowerAvailable;
-   maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;
-   % TODO: setInitialPG for SimulatedZone class, or is there an alternative?
-   simulatedZone{l}.State.PowerGeneration = min(powerAvailable, maxPowerGeneration);
-   
+   simulatedZone{l}.setInitialPowerAvailable(timeSeries{l});
+   simulatedZone{l}.setInitialPowerGeneration();
    genOnIdx = topologyZone{l}.GenOnIdx;
    powerGeneration = simulatedZone{l}.State.PowerGeneration;
    electricalGrid.updateGeneration(genOnIdx, powerGeneration);
-   
-   
+      
    battOnIdx = topologyZone{l}.BattOnIdx;
    powerBattery = simulatedZone{l}.State.PowerBattery;
    electricalGrid.updateBattInjection(battOnIdx, powerBattery);
