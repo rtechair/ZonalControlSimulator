@@ -190,10 +190,7 @@ for l = 1:numberOfZones
    simulatedZone{l}.dropOldestPowerTransit();
    simulatedZone{l}.saveState(resultZone{l});
    
-   telecom{l}.zone2Controller.receiveThenSend(simulatedZone{l}, controller{l});
-   
-   controller{l}.computeControl();
-   
+   telecom{l}.zone2Controller.receiveThenSend(simulatedZone{l}, controller{l});   
    resultZone{l}.prepareForNextStep();    
 end
 
@@ -210,6 +207,9 @@ for time = start:step:duration
         stepZone = zoneSetting{l}.controlCycle;
         isZoneToBeUpdated = mod(time, stepZone) == 0; 
        if isZoneToBeUpdated
+           
+           controller{l}.computeControl();
+           controller{l}.saveControl(resultZone{l});
            telecom{l}.timeSeries2Zone.receiveThenSend(timeSeries{l}, simulatedZone{l});
            telecom{l}.controller2Zone.receiveThenSend(controller{l}, simulatedZone{l});
 
@@ -237,16 +237,14 @@ for time = start:step:duration
             branchIdx = topologyZone{l}.BranchIdx;
             simulatedZone{l}.State.updatePowerBranchFlow(branchIdx, electricalGrid);
             simulatedZone{l}.updatePowerTransit(electricalGrid, busId, branchIdx);
+            
             % can update distrubance transit now, there is enough data
             simulatedZone{l}.updateDisturbanceTransit();
             simulatedZone{l}.dropOldestPowerTransit();
 
             telecom{l}.zone2Controller.receiveThenSend(simulatedZone{l}, controller{l});
-            controller{l}.computeControl();
-            controller{l}.saveControl(resultZone{l});
 
             simulatedZone{l}.saveState(resultZone{l});
-            %simulatedZone{l}.saveControl(resultZone{l});
             simulatedZone{l}.saveDisturbance(resultZone{l});
             
             simulatedZone{l}.dropOldestControl();
