@@ -32,7 +32,7 @@ classdef TelecomTimeSeries2Zone < Telecommunication
             obj.BufferQueueData = obj.BufferQueueData(2:end);
         end
         
-        function receiveThenSend(obj, emitter, receiver)
+        function transmitData(obj, emitter, receiver)
             disturbance = obj.receive(emitter);
             obj.store(disturbance);
             obj.send(receiver);

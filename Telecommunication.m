@@ -11,7 +11,7 @@ classdef (Abstract) Telecommunication < handle
         data = receive(obj, Emitter);
         store(obj, newData);
         send(obj, Receiver);
-        receiveThenSend;
+        transmitData;
     end
     
   

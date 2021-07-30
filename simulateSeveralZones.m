@@ -213,7 +213,7 @@ for l = 1:numberOfZones
    simulatedZone{l}.dropOldestPowerTransit();
    simulatedZone{l}.saveState(resultZone{l});
    
-   telecom{l}.zone2Controller.receiveThenSend(simulatedZone{l}, controller{l});   
+   telecom{l}.zone2Controller.transmitData(simulatedZone{l}, controller{l});   
    resultZone{l}.prepareForNextStep();    
 end
 
@@ -221,7 +221,7 @@ end
    
 duration = simulationSetting.durationInSeconds;
 step = simulationSetting.windowInSeconds;
-start = step; % TODO check 'start' is correct
+start = step;
 
 for time = start:step:duration 
     
@@ -233,8 +233,8 @@ for time = start:step:duration
            
            controller{l}.computeControl();
            controller{l}.saveControl(resultZone{l});
-           telecom{l}.timeSeries2Zone.receiveThenSend(timeSeries{l}, simulatedZone{l});
-           telecom{l}.controller2Zone.receiveThenSend(controller{l}, simulatedZone{l});
+           telecom{l}.timeSeries2Zone.transmitData(timeSeries{l}, simulatedZone{l});
+           telecom{l}.controller2Zone.transmitData(controller{l}, simulatedZone{l});
 
            simulatedZone{l}.computeDisturbanceGeneration();
            simulatedZone{l}.updateState();
@@ -265,7 +265,7 @@ for time = start:step:duration
             simulatedZone{l}.updateDisturbanceTransit();
             simulatedZone{l}.dropOldestPowerTransit();
 
-            telecom{l}.zone2Controller.receiveThenSend(simulatedZone{l}, controller{l});
+            telecom{l}.zone2Controller.transmitData(simulatedZone{l}, controller{l});
 
             simulatedZone{l}.saveState(resultZone{l});
             simulatedZone{l}.saveDisturbance(resultZone{l});

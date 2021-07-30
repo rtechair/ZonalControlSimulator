@@ -29,7 +29,7 @@ classdef TelecomController2Zone < Telecommunication
             obj.BufferQueueData = obj.BufferQueueData(2:end);
         end
            
-        function receiveThenSend(obj, emitter, receiver)
+        function transmitData(obj, emitter, receiver)
             control = obj.receive(emitter);
             obj.store(control);
             obj.send(receiver);
