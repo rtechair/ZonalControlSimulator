@@ -80,9 +80,10 @@ end
 simulatedZone = cell(numberOfZones,1);
 for l = 1:numberOfZones
    numberOfBuses = topologyZone{l}.NumberOfBuses;
+   numberOfBranches = topologyZone{l}.NumberOfBranches;
    numberOfGenOn = topologyZone{l}.NumberOfGen;
    numberOfBattOn = topologyZone{l}.NumberOfBatt;
-   numberOfBranches = topologyZone{l}.NumberOfBranches;
+   
    % cautious, here the delay is in seconds
    delayCurtSeconds = zoneSetting{l}.DelayInSeconds.curtailment;
    delayBattSeconds = zoneSetting{l}.DelayInSeconds.battery;
@@ -153,12 +154,13 @@ for l = 1:numberOfZones
     numberOfBuses = topologyZone{l}.NumberOfBuses;
     numberOfBranches = topologyZone{l}.NumberOfBranches;
     numberOfGenOn = topologyZone{l}.NumberOfGen;
-    numberOfBattOn = topologyZone{l}.NumberOfBuses; 
+    numberOfBattOn = topologyZone{l}.NumberOfBatt; 
     maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;
     
     busId = topologyZone{l}.BusId;
     branchIdx = topologyZone{l}.BranchIdx;
     genOnIdx = topologyZone{l}.GenOnIdx;
+    battOnIdx = topologyZone{l}.BattOnIdx;
     
     delayCurt = zoneSetting{l}.DelayInSeconds.curtailment /controlCycle;
     delayBatt = zoneSetting{l}.DelayInSeconds.battery / controlCycle;
@@ -172,7 +174,7 @@ for l = 1:numberOfZones
     %TODO rename class into GraphicResult
     resultZone{l} = ResultGraphic(zoneName{l}, duration, controlCycle, ...
         numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
-        busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+        busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
         delayTimeSeries2Zone, delayController2Zone, delayZone2Controller);   
 end
 
