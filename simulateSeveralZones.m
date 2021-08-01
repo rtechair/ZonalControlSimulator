@@ -31,7 +31,7 @@ DISPLAY RESULTS
 %}
 
 
-simulationSetting = jsonDecodeFile('simulation.json');
+simulationSetting = decodeJsonFile('simulation.json');
 
 
 % In the following, the 'cell' data structure is used instead of 'matrix' because a matrix of char arrays
@@ -48,7 +48,7 @@ end
 
 zoneSetting = cell(numberOfZones,1);
 for l = 1:numberOfZones
-   zoneSetting{l} = jsonDecodeFile(zoneFilename{l}); 
+   zoneSetting{l} = decodeJsonFile(zoneFilename{l}); 
 end
 
 % e.g. delayCurtVG = zoneSetting{1}.DelayInSeconds.curtailment
@@ -102,7 +102,7 @@ end
 
 limiterSetting = cell(numberOfZones,1);
 for l = 1:numberOfZones
-    limiterSetting{l} = jsonDecodeFile(limiterFilename{l}); 
+    limiterSetting{l} = decodeJsonFile(limiterFilename{l}); 
 end
 
 controller = cell(numberOfZones,1);
@@ -170,7 +170,7 @@ for l = 1:numberOfZones
     
     %TODO the results will later need info about battery to display
     %PowerBattery and EnergyBattery
-    %TODO rename class into GraphicResult
+    
     resultZone{l} = ResultGraphic(zoneName{l}, duration, controlCycle, ...
         numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
         busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...

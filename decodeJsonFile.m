@@ -1,4 +1,4 @@
-function struct = jsonDecodeFile(jsonFilename)
+function struct = decodeJsonFile(jsonFilename)
     arguments
        jsonFilename {mustBeFile}
     end    
