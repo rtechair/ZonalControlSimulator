@@ -36,6 +36,7 @@ classdef Result < handle
         BusId
         BranchIdx
         GenOnIdx
+        BattOnIdx
         
         DelayCurt
         DelayBatt
@@ -46,23 +47,24 @@ classdef Result < handle
     
     methods
         
-        function obj = Result(zoneName, durationSimulation, samplingTime, ...
+        function obj = Result(zoneName, durationSimulation, controlCycle, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+                maxPowerGeneration, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
             obj.zoneName = zoneName;
-            obj.NumberOfIterations = floor(durationSimulation / samplingTime);
+            obj.NumberOfIterations = floor(durationSimulation / controlCycle);
             obj.NumberOfBuses = numberOfBuses;
             obj.NumberOfBranches = numberOfBranches;
             obj.NumberOfGen = numberOfGenerators;
             obj.NumberOfBatt = numberOfBatteries;
             
             obj.MaxPowerGeneration = maxPowerGeneration;
-            obj.SamplingTime = samplingTime;
+            obj.SamplingTime = controlCycle;
             
             obj.BusId = busId;
             obj.BranchIdx = branchIdx;
             obj.GenOnIdx = genOnIdx;
+            obj.BattOnIdx = battOnIdx;
             
             obj.DelayCurt = delayCurt;
             obj.DelayBatt = delayBatt;

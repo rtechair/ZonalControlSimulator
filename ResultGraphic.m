@@ -2,14 +2,14 @@ classdef ResultGraphic < Result
     
     methods
        
-        function obj = ResultGraphic(zoneName,durationSimulation, samplingTime, ...
+        function obj = ResultGraphic(zoneName,durationSimulation, controlCycle, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+                maxPowerGeneration, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
             
-           obj@Result(zoneName, durationSimulation, samplingTime, ...
+           obj@Result(zoneName, durationSimulation, controlCycle, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, delayCurt, delayBatt, ...
+                maxPowerGeneration, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller); 
         end
         
@@ -139,6 +139,32 @@ classdef ResultGraphic < Result
                name = ['Bus ' int2str(busId)];
                title(name);        
            end
+        end
+        
+        function plotStateAndControlBattery(obj, electricalGrid)
+            timeState = 1:obj.NumberOfIterations+1;
+            xlegend = 'Number of iterations';
+            numberOfRowsOfPlot = ceil(sqrt( obj.NumberOfBatt));
+            figName = ['Zone ' obj.zoneName ': State of Energy in Battery EB, '...
+               'Control of Battery Injection DeltaPB (DeltaPB > 0 means injection in the battery'];
+            figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
+            
+            for batt = 1:obj.NumberOfBatt
+               subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, batt);
+               hold on;
+               stairs(timeState, obj.PowerBattery(batt,:),':'); % PB
+               stairs(timeState, obj.EnergyBattery(batt,:));    % EB
+               timeControl = 1:obj.NumberOfIterations;
+               stairs(timeControl, obj.ControlBattery(batt,:),'--'); % DeltaPB
+               legend({'PB, EB, DeltaPB'}, 'Location', 'Best')
+               xlabel(xlegend)
+               ylabel('Power [MW]') % TODO: define the unit for energy
+               
+               battIdx = obj.BattOnIdx(batt);
+               busIdOfBatt = electricalGrid.getBuses(battIdx);
+               name = ['Batt ', int2str(battIdx), ' at ', int2str(busIdOfBatt)];
+               title(name);
+            end
         end
         
         function plotAllFigures(obj, electricalGrid)
