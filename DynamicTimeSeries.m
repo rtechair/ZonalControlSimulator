@@ -8,7 +8,7 @@ classdef DynamicTimeSeries < handle
     end
     
     properties (SetAccess = immutable)
-        StartingIterationOfWindForGen
+        StartGenIteration
         NumberOfIterations
         maxPowerGeneration
         NumberOfGen
@@ -17,16 +17,16 @@ classdef DynamicTimeSeries < handle
     methods
         
         function obj = DynamicTimeSeries(filenameWindChargingRate, ...
-                zone_startingIterationOfWindForGen, zone_samplingTime, ...
-                durationSimulation, maxGenerationPerGen, zone_numberOfGen)
-            obj.StartingIterationOfWindForGen = zone_startingIterationOfWindForGen;
-            obj.NumberOfIterations = floor(durationSimulation / zone_samplingTime);
+                startGenInSeconds, controlCycle, ...
+                durationSimulation, maxGenerationPerGen, numberOfGen)
+            obj.StartGenIteration = floor(startGenInSeconds / controlCycle);
+            obj.NumberOfIterations = floor(durationSimulation / controlCycle);
             obj.maxPowerGeneration = maxGenerationPerGen;
-            obj.NumberOfGen = zone_numberOfGen;
+            obj.NumberOfGen = numberOfGen;
             
             obj.CurrentStep = 1;
 
-            obj.setWindChargingRate(filenameWindChargingRate, zone_samplingTime);
+            obj.setDiscretizedWindChargingRate(filenameWindChargingRate, controlCycle);
             
             obj.checkInitialIterationCorrectness()
             
@@ -55,21 +55,19 @@ classdef DynamicTimeSeries < handle
     end
     
     methods (Access = protected)
-        
-
        
-       function setWindChargingRate(obj, filenameWindChargingRate, zone_samplingTime)
+       function setDiscretizedWindChargingRate(obj, filenameWindChargingRate, controlCycle)
            % the apostrophe is to obtain a row vector, such that columns represent the time
            rateInRealTime = table2array(readtable(filenameWindChargingRate))';
            numberOfSamples = size(rateInRealTime,2);
-           discretTime = 1:  zone_samplingTime : numberOfSamples;
+           discretTime = 1:  controlCycle : numberOfSamples;
            obj.DiscretizedWindChargingRate = rateInRealTime(discretTime);           
        end
         
        function setPowerAvailableState(obj)
            obj.PowerAvailableState = zeros(obj.NumberOfGen, obj.NumberOfIterations + 1);
            for gen = 1:obj.NumberOfGen
-               start = obj.StartingIterationOfWindForGen(gen);
+               start = obj.StartGenIteration(gen);
                range = start : start + obj.NumberOfIterations;
                windRate = obj.DiscretizedWindChargingRate(1,range);
                maxGen = obj.maxPowerGeneration(gen,1);
@@ -88,7 +86,7 @@ classdef DynamicTimeSeries < handle
        function checkInitialIterationCorrectness(obj)
            numberOfSamples = size(obj.DiscretizedWindChargingRate,2);
           maxStartingIterationPossible = numberOfSamples - obj.NumberOfIterations;
-          if any(obj.StartingIterationOfWindForGen > maxStartingIterationPossible)
+          if any(obj.StartGenIteration > maxStartingIterationPossible)
               obj.errorStartingIterationExceedsMax(maxStartingIterationPossible)
           end
        end
@@ -98,9 +96,7 @@ classdef DynamicTimeSeries < handle
             'the max discrete range, check that startingIterationOfWindForGen is < ' ...
             num2str(upperBound) ', in the load data zone script'];
         error(message)
-       end
-
-        
+       end        
        
     end
     
