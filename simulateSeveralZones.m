@@ -9,7 +9,7 @@ INITIALIZATION PRIOR TO THE SIMULATION
 the simulation
 - load the zone setting 
 - define the topology of the zone as a 'ZoneTopology' object
-- define the time series used for the simulation as a 'DynamicTimeSeries' object
+- define the time series used for the simulation as a 'TimeSeries' object
 - define the simulated zone which is used during the simulation
 - load the limiter setting
 - define the limiter as a 'Limiter' object
@@ -73,7 +73,7 @@ for l = 1:numberOfZones
     duration = simulationSetting.durationInSeconds;
     maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;
     numberOfGenOn = topologyZone{l}.NumberOfGen;
-    timeSeries{l} = DynamicTimeSeries(filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
+    timeSeries{l} = TimeSeries(filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
 end
 
 simulatedZone = cell(numberOfZones,1);

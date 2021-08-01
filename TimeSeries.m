@@ -1,4 +1,4 @@
-classdef DynamicTimeSeries < handle
+classdef TimeSeries < handle
    
     properties (SetAccess = protected)
         PowerAvailableState
@@ -16,7 +16,7 @@ classdef DynamicTimeSeries < handle
     
     methods
         
-        function obj = DynamicTimeSeries(filenameWindChargingRate, ...
+        function obj = TimeSeries(filenameWindChargingRate, ...
                 startGenInSeconds, controlCycle, ...
                 durationSimulation, maxGenerationPerGen, numberOfGen)
             obj.StartGenIteration = floor(startGenInSeconds / controlCycle);
