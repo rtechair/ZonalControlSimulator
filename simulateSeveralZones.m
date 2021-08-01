@@ -168,9 +168,6 @@ for l = 1:numberOfZones
     delayController2Zone = telecomSetting.controller2Zone;
     delayZone2Controller = telecomSetting.zone2Controller;
     
-    %TODO the results will later need info about battery to display
-    %PowerBattery and EnergyBattery
-    
     resultZone{l} = ResultGraphic(zoneName{l}, duration, controlCycle, ...
         numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
         busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
@@ -178,9 +175,6 @@ for l = 1:numberOfZones
 end
 
 %% Initialization
-
-% TODO: cheating, here, the properties of objects are directly accessed and set.
-% This should not be done likewise. Later change it
 
 for l = 1:numberOfZones
    simulatedZone{l}.setInitialPowerAvailable(timeSeries{l});
@@ -280,14 +274,10 @@ end
     
 %% Graphic Representation
 
-%TODO, check that in the names of the graphics, there is the name of the
-%zone
-
 %figTopologyGraph = cell(numberOfZones,1);
 for l = 1:numberOfZones
    topologyZone{l}.plotLabeledGraph(electricalGrid); 
 end
-
 
 %figAbsFlowBranch = cell(numberOfZones,1);
 for l = 1:numberOfZones

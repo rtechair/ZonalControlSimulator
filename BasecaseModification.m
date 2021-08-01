@@ -88,6 +88,10 @@ classdef BasecaseModification < BasecaseOverview
         function removeBranch(obj, branchIdx)
             obj.Matpowercase.branch(branchIdx,:) = [];
         end 
+        
+        function switchOffGen(obj, genOnIdx)
+           obj.Matpowercase.gen(genOnIdx,8) = 0; 
+        end
             
         function addZoneVG(obj)
             %%Alessio's comment:
@@ -204,23 +208,16 @@ classdef BasecaseModification < BasecaseOverview
            end
            
            [busIdOfGen, maxPowerGeneration] = readZoneGenerator('zoneBLA.json');
-           
+           % switch off generators ON alrealdy present in the basecase
+           genOnAt696 = obj.getGenAtBus(696);
+           % TODO switchOFF
+           obj.switchOffGen(genOnAt696);
+           genOnAt4053 = obj.getGenAtBus(4053);
+           obj.switchOffGen(genOnAt4053);
+           % Add the generators
            numberOfGenToAdd = size(busIdOfGen,1);
            for k = 1:numberOfGenToAdd
-               if busIdOfGen(k)== 696
-                   firstGenOnBus = 32.35;
-                   secondGenOnBus = 12;
-                   thirdGenOnBus = 21;
-                   obj.addGenerator(busIdOfGen(k), ...
-                       maxPowerGeneration(k) - firstGenOnBus - secondGenOnBus - thirdGenOnBus);
-               elseif busIdOfGen(k)== 4053
-                   firstGenOnBus = 30.4;
-                   secondGenOnBus = 16;
-                   obj.addGenerator(busIdOfGen(k), ...
-                       maxPowerGeneration(k) - firstGenOnBus - secondGenOnBus);
-               else
-                   obj.addGenerator(busIdOfGen(k), maxPowerGeneration(k));
-               end
+               obj.addGenerator(busIdOfGen(k), maxPowerGeneration(k));
            end
         end
                

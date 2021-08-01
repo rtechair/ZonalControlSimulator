@@ -2,6 +2,8 @@ classdef ZoneTopology < handle
     
     
     properties
+        Name
+        
         BusId
         BranchIdx
         GenOnIdx % offline generators within the zone are not considered
@@ -16,9 +18,6 @@ classdef ZoneTopology < handle
         NumberOfBranches
         NumberOfGen
         NumberOfBatt
-        
-        Name
-               
     end
     
     methods
@@ -31,9 +30,7 @@ classdef ZoneTopology < handle
             obj.Name = name;
             obj.BusId = zoneBusId;
             
-            
             obj.setBranchesInZoneAndInBorder(electricalGrid);
-            
             obj.setBusBorderId(electricalGrid);
             
             obj.setGenOnIdx(electricalGrid);
@@ -42,7 +39,6 @@ classdef ZoneTopology < handle
             obj.setMaxPowerGeneration(electricalGrid);
                         
             obj.setNumberOfElements();
-
         end
         
         function genOffIdx = getGenOffIdx(obj, electricalGrid)
@@ -91,7 +87,7 @@ classdef ZoneTopology < handle
             isBusOfZoneWithBattOn = ismember(obj.BusId, busIdWithBattOn);
             
             figName = ['Zone ' obj.Name ': red node = bus within zone, black node = bus at the border'];
-            figureGraph = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
+            figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
             graphStatic = obj.getGraphStatic(electricalGrid);
             P = plot(graphStatic);
             P = obj.configurePlot(P);

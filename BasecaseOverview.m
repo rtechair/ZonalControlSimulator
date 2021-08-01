@@ -38,6 +38,17 @@ classdef BasecaseOverview < handle
                            & busToOfBranches   == busTo  ,1); 
         end
         
+        function genIdx = getGenAtBus(obj, busId)
+           allBusesOfGen = obj.Matpowercase.gen(:,1);
+           genIdx = find(allBusesOfGen == busId);
+        end
+        
+        function genOnIdx = getGenOnAtBus(obj, busId)
+           allBusesOfGen = obj.Matpowercase.gen(:,1);
+           isGenOn = obj.Matpowercase.gen(:,8) > 0;
+           genOnIdx = find(allBusesOfGen == busId & isGenOn == 1);
+        end
+        
         function [busFrom,busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 getBranchInfo(obj, branchIdx)
             % Get the information of the branch, providing its index in the 'branch' field. 

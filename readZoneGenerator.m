@@ -1,5 +1,5 @@
 function [busId, maxPowerGeneration] = readZoneGenerator(jsonFilename)
-    zone = jsonDecodeFile(jsonFilename);
+    zone = decodeJsonFile(jsonFilename);
     generator = zone.Generator;
     numberOfRows = size(generator,1);
     
