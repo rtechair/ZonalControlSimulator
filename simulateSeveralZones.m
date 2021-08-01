@@ -69,7 +69,6 @@ for l = 1:numberOfZones
     startPossibility = struct2cell(timeSeriesSetting.StartPossibilityForGeneratorInSeconds);
     startSelected = timeSeriesSetting.startSelected;
     start = startPossibility{startSelected};
-    %start = zoneSetting{l}.TimeSeries.StartGeneratorInSeconds.x1; % TODO: in the json file, this is in iterations not seconds
     controlCycle = zoneSetting{l}.controlCycle;
     duration = simulationSetting.durationInSeconds;
     maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;

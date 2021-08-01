@@ -6,8 +6,8 @@
         "filename": "tauxDeChargeMTJLMA2juillet2018.txt",
         "StartPossibilityForGeneratorInSeconds":
         {
-            "1": [65, 61, 58],
-            "2": [50, 36, 40]
+            "1": [975, 925, 875],
+            "2": [750, 550, 600]
         },
         "startSelected": 2
     },
