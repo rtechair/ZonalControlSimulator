@@ -5,5 +5,5 @@ transmission.setZoneName();
 transmission.setNumberOfZones();
 
 transmission.setZoneFileName();
-
+transmission.setZoneSetting();
 % simulateZoneVTV;
