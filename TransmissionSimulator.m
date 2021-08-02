@@ -60,10 +60,14 @@ classdef TransmissionSimulator < handle
         function setTopology(obj)
            obj.Topology = cell(obj.NumberOfZones, 1);
            for zoneNumber = 1:obj.NumberOfZones
-               name = obj.ZoneName{zoneNumber};
-               busId = obj.ZoneSetting{zoneNumber}.busId;
-              obj.Topology{zoneNumber} = ZoneTopology(name, busId, obj.Grid); 
+               obj.setOneTopology(zoneNumber);
            end
+        end
+        
+        function setOneTopology(obj, zoneNumber)
+            name = obj.ZoneName(zoneNumber);
+            busId = obj.ZoneSetting{zoneNumber}.busId;
+            obj.Topology{zoneNumber} = ZoneTopology(name, busId, obj.Grid);
         end
             
     end
