@@ -226,21 +226,20 @@ classdef BasecaseModification < BasecaseOverview
            obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
         end
         
-        function handleBasecaseForZoneVGandVTV(obj)
-            if isfile('case6468rte_zoneVGandVTV.m')
-                disp('case6468rte_zoneVGandVTV.m exists')
+        function handleBasecaseForZone_VG_VTV_BLA(obj)
+            if isfile('case6468rte_zone_VG_VTV_BLA.m')
+                disp('case6468rte_zone_VG_VTV_BLA.m exists')
             else
-               disp(['case6468rte_zoneVGandVTV.m does not exist.' newline ...
-                   ' Using case6468rte from matpower''s data, add the zones VG and VTV.' newline])
+               disp(['case6468rte_zone_VG_VTV_BLA.m does not exist.' newline ...
+                   ' Using case6468rte from matpower''s data, add the zones VG, VTV and BLA.' newline])
                obj.Matpowercase = loadcase('case6468rte');
                obj.addZoneVG();
                obj.addZoneVTV();
-               obj.saveMatpowercase('case6468rte_zoneVGandVTV.m');
-               disp('Zones VG and VTV were added. case6468rte_zoneVGandVTV.m is created.')
+               obj.addZoneBLA();
+               obj.saveMatpowercase('case6468rte_zone_VG_VTV_BLA.m');
+               disp(['Zones VG, VTV and BLA were added.' newline ...
+                   'case6468rte_zone_VG_VTV_BLA.m is created.'])
             end
-           % the considered situation integrates zone VG and zone VTV, thus 
-           % they both should be included in the studied basecase
-           % If not, then the basecase should integrate it
         end
         
         function saveMatpowercase(obj, newFilename)
