@@ -271,15 +271,12 @@ for time = start:step:duration
     end   
 
 end
-    
 %% Graphic Representation
 
-%figTopologyGraph = cell(numberOfZones,1);
 for l = 1:numberOfZones
    topologyZone{l}.plotLabeledGraph(electricalGrid); 
 end
 
-%figAbsFlowBranch = cell(numberOfZones,1);
 for l = 1:numberOfZones
    resultZone{l}.plotAbsoluteFlowBranch(electricalGrid); 
 end
@@ -295,4 +292,3 @@ end
 for l = 1:numberOfZones
    resultZone{l}.plotDisturbanceTransit();
 end
-
