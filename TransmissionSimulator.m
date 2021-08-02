@@ -6,10 +6,10 @@ classdef TransmissionSimulator < handle
         NumberOfZones % number
         ZoneSetting % cell
         
-        ElectricalGrid
-        ZoneTopology
+        Grid
+        Topology
         TimeSeries
-        ZoneSimulation
+        Zone
     end
     
     
@@ -20,6 +20,8 @@ classdef TransmissionSimulator < handle
             obj.setZoneName();
             obj.setNumberOfZones();
             obj.setZoneSetting();
+            
+            obj.setGrid();
         end
         
         
@@ -44,6 +46,10 @@ classdef TransmissionSimulator < handle
                 filename = obj.getZoneFilename(zoneNumber);
                obj.ZoneSetting{zoneNumber} = decodeJsonFile(filename);
             end
+        end
+        
+        function setGrid(obj)
+           obj.Grid = ElectricalGrid(obj.SimulationSetting.basecase);
         end
             
     end
