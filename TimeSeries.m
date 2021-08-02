@@ -42,6 +42,7 @@ classdef TimeSeries < handle
             powerAvailable = obj.PowerAvailableState(:,1);
         end
         
+        % TODO: unclear name, plus a difficult behavior to grasp: get the value, then create an object encapsulating the value
         function objectDisturbance = getTimeSeries(obj)
             objectDisturbance = DisturbancePowerAvailable(obj.NumberOfGen);      
             value = obj.getDisturbancePowerAvailable();
