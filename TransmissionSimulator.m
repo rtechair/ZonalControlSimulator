@@ -3,6 +3,7 @@ classdef TransmissionSimulator < handle
     properties
         SimulationSetting
         ZoneName
+        NumberOfZones
     end
     
     
@@ -14,6 +15,10 @@ classdef TransmissionSimulator < handle
         
         function setZoneName(obj)
            obj.ZoneName = struct2cell(obj.SimulationSetting.Zone); 
+        end
+        
+        function setNumberOfZones(obj)
+            obj.NumberOfZones = size(obj.ZoneName,1);
         end
     end
 end
