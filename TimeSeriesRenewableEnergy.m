@@ -1,4 +1,4 @@
-classdef TimeSeries < handle
+classdef TimeSeriesRenewableEnergy < handle
    
     properties (SetAccess = protected)
         PowerAvailableState
@@ -16,7 +16,7 @@ classdef TimeSeries < handle
     
     methods
         
-        function obj = TimeSeries(filenameWindChargingRate, ...
+        function obj = TimeSeriesRenewableEnergy(filenameWindChargingRate, ...
                 startGenInSeconds, controlCycle, ...
                 durationSimulation, maxGenerationPerGen, numberOfGen)
             obj.StartGenIteration = floor(startGenInSeconds / controlCycle);

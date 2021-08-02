@@ -73,7 +73,7 @@ for l = 1:numberOfZones
     duration = simulationSetting.durationInSeconds;
     maxPowerGeneration = topologyZone{l}.MaxPowerGeneration;
     numberOfGenOn = topologyZone{l}.NumberOfGen;
-    timeSeries{l} = TimeSeries(filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
+    timeSeries{l} = TimeSeriesRenewableEnergy(filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
 end
 
 simulatedZone = cell(numberOfZones,1);
