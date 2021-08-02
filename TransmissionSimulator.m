@@ -26,11 +26,15 @@ classdef TransmissionSimulator < handle
             obj.NumberOfZones = size(obj.ZoneName,1);
         end
         
-        function setZoneFileName(obj)
+        function setZoneFilename(obj)
            obj.ZoneFilename = cell(obj.NumberOfZones,1);
-           for l = 1:obj.NumberOfZones
-               obj.ZoneFilename{l} = ['zone' obj.ZoneName{l} '.json'];
+           for zoneNumber = 1:obj.NumberOfZones
+               obj.setOneZoneFilename(zoneNumber);
            end
+        end
+        
+        function setOneZoneFilename(obj, zoneNumber)
+            obj.ZoneFilename{zoneNumber} = ['zone' obj.ZoneName{zoneNumber} '.json'];
         end
         
         function setZoneSetting(obj)
