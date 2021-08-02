@@ -22,6 +22,7 @@ classdef TransmissionSimulator < handle
             obj.setZoneSetting();
             
             obj.setGrid();
+            obj.setTopology();
         end
         
         
@@ -50,6 +51,15 @@ classdef TransmissionSimulator < handle
         
         function setGrid(obj)
            obj.Grid = ElectricalGrid(obj.SimulationSetting.basecase);
+        end
+        
+        function setTopology(obj)
+           obj.Topology = cell(obj.NumberOfZones, 1);
+           for zoneNumber = 1:obj.NumberOfZones
+               name = obj.ZoneName{zoneNumber};
+               busId = obj.ZoneSetting{zoneNumber}.busId;
+              obj.Topology{zoneNumber} = ZoneTopology(name, busId, obj.Grid); 
+           end
         end
             
     end
