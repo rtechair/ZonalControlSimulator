@@ -4,4 +4,6 @@ transmission = TransmissionSimulator('simulation.json');
 transmission.setZoneName();
 transmission.setNumberOfZones();
 
+transmission.setZoneFileName();
+
 % simulateZoneVTV;
