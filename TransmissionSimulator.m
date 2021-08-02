@@ -5,12 +5,21 @@ classdef TransmissionSimulator < handle
         ZoneName % cell
         NumberOfZones % number
         ZoneSetting % cell
+        
+        ElectricalGrid
+        ZoneTopology
+        TimeSeries
+        ZoneSimulation
     end
     
     
     methods
         function obj = TransmissionSimulator(filenameSimulation)
             obj.SimulationSetting = decodeJsonFile(filenameSimulation);
+            
+            obj.setZoneName();
+            obj.setNumberOfZones();
+            obj.setZoneSetting();
         end
         
         
