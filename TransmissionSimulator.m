@@ -44,9 +44,13 @@ classdef TransmissionSimulator < handle
         function setZoneSetting(obj)
             obj.ZoneSetting = cell(obj.NumberOfZones,1);
             for zoneNumber = 1:obj.NumberOfZones
-                filename = obj.getZoneFilename(zoneNumber);
-               obj.ZoneSetting{zoneNumber} = decodeJsonFile(filename);
+                obj.setOneZoneSetting(zoneNumber);
             end
+        end
+        
+        function setOneZoneSetting(obj, zoneNumber)
+            filename = obj.getZoneFilename(zoneNumber);
+            obj.ZoneSetting{zoneNumber} = decodeJsonFile(filename);
         end
         
         function setGrid(obj)
