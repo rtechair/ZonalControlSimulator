@@ -4,7 +4,6 @@ classdef TransmissionSimulator < handle
         SimulationSetting % struct
         ZoneName % cell
         NumberOfZones % number
-        ZoneFilename % cell
         ZoneSetting % cell
     end
     
@@ -26,19 +25,8 @@ classdef TransmissionSimulator < handle
             obj.NumberOfZones = size(obj.ZoneName,1);
         end
         
-        function setZoneFilename(obj)
-           obj.ZoneFilename = cell(obj.NumberOfZones,1);
-           for zoneNumber = 1:obj.NumberOfZones
-               obj.setOneZoneFilename(zoneNumber);
-           end
-        end
-        
         function zoneFilename = getZoneFilename(obj, zoneNumber)
             zoneFilename = ['zone' obj.ZoneName{zoneNumber} '.json'];
-        end
-        
-        function setOneZoneFilename(obj, zoneNumber)
-            obj.ZoneFilename{zoneNumber} = ['zone' obj.ZoneName{zoneNumber} '.json'];
         end
         
         function setZoneSetting(obj)
