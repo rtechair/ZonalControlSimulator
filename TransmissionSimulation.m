@@ -12,6 +12,8 @@ classdef TransmissionSimulation < handle
         function obj = TransmissionSimulation(filenameSimulation)
             obj.simulationSetting = decodeJsonFile(filenameSimulation);
             obj.setZoneName();
+            obj.setNumberOfZones();
+            obj.setZone();
         end
         
         function setZoneName(obj)
@@ -23,6 +25,14 @@ classdef TransmissionSimulation < handle
         
         function setNumberOfZones(obj)
             obj.numberOfZones = size(obj.zoneName,1);
+        end
+        
+        function setZone(obj)
+            obj.zone = cell(obj.numberOfZones,1);
+            for k = 1:obj.numberOfZones
+                name = obj.zoneName{k};
+                obj.zone{k} = Zone(name);
+            end
         end
     end
 end
