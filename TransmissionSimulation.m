@@ -13,8 +13,8 @@ classdef TransmissionSimulation < handle
             obj.simulationSetting = decodeJsonFile(filenameSimulation);
             obj.setZoneName();
             obj.setNumberOfZones();
-            obj.setZone();
             obj.setGrid();
+            obj.setZone();
         end
         
         function setZoneName(obj)
@@ -28,16 +28,17 @@ classdef TransmissionSimulation < handle
             obj.numberOfZones = size(obj.zoneName,1);
         end
         
+        function setGrid(obj)
+            obj.grid = ElectricalGrid(obj.simulationSetting.basecase);
+        end
+        
         function setZone(obj)
             obj.zone = cell(obj.numberOfZones,1);
             for k = 1:obj.numberOfZones
                 name = obj.zoneName{k};
-                obj.zone{k} = Zone(name);
+                obj.zone{k} = Zone(name, obj.grid);
             end
         end
         
-        function setGrid(obj)
-            obj.grid = ElectricalGrid(obj.simulationSetting.basecase);
-        end
     end
 end
