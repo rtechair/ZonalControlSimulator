@@ -23,6 +23,7 @@ classdef TransmissionSimulator < handle
             
             obj.setGrid();
             obj.setTopology();
+            obj.setTimeSeries();
         end
         
         
@@ -68,6 +69,28 @@ classdef TransmissionSimulator < handle
             name = obj.ZoneName(zoneNumber);
             busId = obj.ZoneSetting{zoneNumber}.busId;
             obj.Topology{zoneNumber} = ZoneTopology(name, busId, obj.Grid);
+        end
+        
+        function setTimeSeries(obj)
+            obj.TimeSeries = cell(obj.NumberOfZones,1);
+            for zoneNumber = 1: obj.NumberOfZones
+                obj.setOneTimeSeries(zoneNumber);
+            end
+        end
+        
+        function setOneTimeSeries(obj, zoneNumber)
+            filename = obj.ZoneSetting{zoneNumber}.TimeSeries.filename;
+            timeSeriesSetting = obj.ZoneSetting{zoneNumber}.TimeSeries;
+
+            startPossibility = struct2cell(timeSeriesSetting.StartPossibilityForGeneratorInSeconds);
+            startSelected = timeSeriesSetting.startSelected;
+            start = startPossibility{startSelected};
+            controlCycle = obj.ZoneSetting{zoneNumber}.controlCycle;
+            duration = obj.SimulationSetting.durationInSeconds;
+            maxPowerGeneration = obj.Topology{zoneNumber}.MaxPowerGeneration;
+            numberOfGenOn = obj.Topology{zoneNumber}.NumberOfGen;
+            obj.TimeSeries{zoneNumber} = TimeSeriesRenewableEnergy(filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
+                        
         end
             
     end
