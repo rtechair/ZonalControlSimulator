@@ -21,6 +21,7 @@ classdef Zone < handle
             obj.setTopology(electricalGrid);
             obj.setTimeSeries(duration);
             obj.setZoneEvolution();
+            obj.setTelecom();
         end
         
         function setSetting(obj)
@@ -67,6 +68,24 @@ classdef Zone < handle
 
             obj.zoneEvolution = SimulatedZone(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
                 delayCurtSeconds, delayBattSeconds, controlCycle, maxPowerGeneration, battConstPowerReduc);
+        end
+        
+        function setTelecom(obj)
+            telecomSetting = obj.setting.DelayInSeconds.Telecom;
+            delayTimeSeries2Zone = telecomSetting.timeSeries2Zone;
+            delayController2Zone = telecomSetting.controller2Zone;
+            delayZone2Controller = telecomSetting.zone2Controller;
+
+            numberOfBuses = obj.topology.NumberOfBuses;
+            numberOfBranches = obj.topology.NumberOfBranches;
+            numberOfGenOn = obj.topology.NumberOfGen;
+            numberOfBattOn = obj.topology.NumberOfBatt;
+            
+            obj.telecomTimeSeries2Zone = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
+            obj.telecomController2Zone = TelecomController2Zone(...
+                numberOfGenOn, numberOfBattOn, delayController2Zone);
+            obj.telecomZone2Controller = TelecomZone2Controller(...
+                numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, delayZone2Controller);
         end
     end
 end
