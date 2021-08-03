@@ -1,8 +1,8 @@
 classdef TransmissionGrid < handle
    
     properties
-       Grid
-       ZoneName
-       Zone
+       grid
+       zoneName
+       zone
     end
 end
