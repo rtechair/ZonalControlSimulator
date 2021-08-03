@@ -1,6 +1,7 @@
 classdef Zone < handle
    
     properties
+       name
        setting
        topology
        zoneEvolution
@@ -13,4 +14,9 @@ classdef Zone < handle
        timeSeries
     end
     
+    methods
+        function obj = Zone(name)
+            obj.name = name;
+        end
+    end
 end
