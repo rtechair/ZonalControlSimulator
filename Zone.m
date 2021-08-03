@@ -15,9 +15,10 @@ classdef Zone < handle
     end
     
     methods
-        function obj = Zone(name)
+        function obj = Zone(name, electricalGrid)
             obj.name = name;
             obj.setSetting();
+            obj.setTopology(electricalGrid);
         end
         
         function setSetting(obj)
@@ -27,6 +28,11 @@ classdef Zone < handle
         
         function zoneFilename = getFilename(obj)
             zoneFilename = ['zone' obj.name '.json'];
+        end
+        
+        function setTopology(obj, electricalGrid)
+           busId = obj.setting.busId;
+           obj.topology = ZoneTopology(obj.name, busId, electricalGrid);
         end
     end
 end
