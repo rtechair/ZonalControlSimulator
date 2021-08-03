@@ -20,6 +20,7 @@ classdef Zone < handle
             obj.setSetting();
             obj.setTopology(electricalGrid);
             obj.setTimeSeries(duration);
+            obj.setZoneEvolution();
         end
         
         function setSetting(obj)
@@ -49,6 +50,23 @@ classdef Zone < handle
             numberOfGenOn = obj.topology.NumberOfGen;
             obj.timeSeries = TimeSeriesRenewableEnergy(...
                 filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
+        end
+        
+        function setZoneEvolution(obj)
+            numberOfBuses = obj.topology.NumberOfBuses;
+            numberOfBranches = obj.topology.NumberOfBranches;
+            numberOfGenOn = obj.topology.NumberOfGen;
+            numberOfBattOn = obj.topology.NumberOfBatt;
+
+            % cautious, here the delay is in seconds
+            delayCurtSeconds = obj.setting.DelayInSeconds.curtailment;
+            delayBattSeconds = obj.setting.DelayInSeconds.battery;
+            controlCycle = obj.setting.controlCycle;
+            maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            battConstPowerReduc = obj.setting.batteryConstantPowerReduction;
+
+            obj.zoneEvolution = SimulatedZone(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
+                delayCurtSeconds, delayBattSeconds, controlCycle, maxPowerGeneration, battConstPowerReduc);
         end
     end
 end
