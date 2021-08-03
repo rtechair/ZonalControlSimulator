@@ -18,5 +18,14 @@ classdef Zone < handle
         function obj = Zone(name)
             obj.name = name;
         end
+        
+        function setSetting(obj)
+            filename = obj.getFilename();
+            obj.setting = decodeJsonFile(filename);
+        end
+        
+        function zoneFilename = getFilename(obj)
+            zoneFilename = ['zone' obj.name '.json'];
+        end
     end
 end
