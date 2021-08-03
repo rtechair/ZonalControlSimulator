@@ -1,1 +1,1 @@
-transmission = TransmissionSimulator('simulation.json');
+transmission = TransmissionSimulation('simulation.json');
