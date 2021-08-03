@@ -1,4 +1,4 @@
-classdef TransmissionGrid < handle
+classdef TransmissionSimulation < handle
    
     properties
        grid
