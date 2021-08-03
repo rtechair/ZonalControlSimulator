@@ -2,12 +2,15 @@ classdef Zone < handle
    
     properties
        setting
-       transmissionSimulator
        topology
+       zoneEvolution
+       
        telecomZone2Controller
        telecomController2Zone
-       controller        
+       telecomTimeSeries2Zone
+       
+       controller
+       timeSeries
     end
-    
     
 end
