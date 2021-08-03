@@ -14,6 +14,7 @@ classdef TransmissionSimulation < handle
             obj.setZoneName();
             obj.setNumberOfZones();
             obj.setZone();
+            obj.setGrid();
         end
         
         function setZoneName(obj)
@@ -33,6 +34,10 @@ classdef TransmissionSimulation < handle
                 name = obj.zoneName{k};
                 obj.zone{k} = Zone(name);
             end
+        end
+        
+        function setGrid(obj)
+            obj.grid = ElectricalGrid(obj.simulationSetting.basecase);
         end
     end
 end
