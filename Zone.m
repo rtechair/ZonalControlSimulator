@@ -17,6 +17,7 @@ classdef Zone < handle
     methods
         function obj = Zone(name)
             obj.name = name;
+            obj.setSetting();
         end
         
         function setSetting(obj)
