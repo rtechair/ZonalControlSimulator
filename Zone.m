@@ -12,6 +12,8 @@ classdef Zone < handle
        
        controller
        timeSeries
+       
+       result
     end
     
     methods
@@ -22,6 +24,7 @@ classdef Zone < handle
             obj.setTimeSeries(duration);
             obj.setZoneEvolution();
             obj.setTelecom();
+            obj.setResult(duration);
         end
         
         function setSetting(obj)
@@ -87,5 +90,34 @@ classdef Zone < handle
             obj.telecomZone2Controller = TelecomZone2Controller(...
                 numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, delayZone2Controller);
         end
+        
+        function setResult(obj, duration)
+            controlCycle = obj.setting.controlCycle;
+            numberOfBuses = obj.topology.NumberOfBuses;
+            numberOfBranches = obj.topology.NumberOfBranches;
+            numberOfGenOn = obj.topology.NumberOfGen;
+            numberOfBattOn = obj.topology.NumberOfBatt;
+            maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            
+            busId = obj.topology.BusId;
+            branchIdx = obj.topology.BranchIdx;
+            genOnIdx = obj.topology.GenOnIdx;
+            battOnIdx = obj.topology.BattOnIdx;
+            
+            % The delays here are in number of iterations, not in seconds
+            delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
+            delayBatt = obj.setting.DelayInSeconds.battery / controlCycle;
+            % TODO: cautious here, what is the unit of the telecom delays?
+            telecomSetting = obj.setting.DelayInSeconds.Telecom;
+            delayTimeSeries2Zone = telecomSetting.timeSeries2Zone;
+            delayController2Zone = telecomSetting.controller2Zone;
+            delayZone2Controller = telecomSetting.zone2Controller;
+            
+            obj.result = ResultGraphic(obj.name, duration, controlCycle,...
+                numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
+                busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
+                delayTimeSeries2Zone, delayController2Zone, delayZone2Controller);
+        end
+
     end
 end
