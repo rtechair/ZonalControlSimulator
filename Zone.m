@@ -166,7 +166,7 @@ classdef Zone < handle
         end
         
         function powerGeneration = getPowerGeneration(obj)
-           powerGeneration = obj.zoneEvolution.State.powerGeneration;
+           powerGeneration = obj.zoneEvolution.State.PowerGeneration;
         end
     end
 end
