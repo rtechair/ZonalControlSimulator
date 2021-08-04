@@ -152,5 +152,10 @@ classdef Zone < handle
                 increasingEchelon, decreasingEchelon, lowerThreshold, upperThreshold, ...
                 delayCurt, maxPowerGeneration);
         end
+        
+        function initializeZoneEvolution(obj)
+            obj.zoneEvolution.setInitialPowerAvailable(obj.timeSeries);
+            obj.zoneEvolution.setInitialPowerGeneration();
+        end
     end
 end
