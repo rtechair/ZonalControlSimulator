@@ -153,9 +153,20 @@ classdef Zone < handle
                 delayCurt, maxPowerGeneration);
         end
         
-        function initializeZoneEvolution(obj)
+        function initializePowerAvailable(obj)
             obj.zoneEvolution.setInitialPowerAvailable(obj.timeSeries);
-            obj.zoneEvolution.setInitialPowerGeneration();
+        end
+        
+        function initializePowerGeneration(obj)
+           obj.zoneEvolution.setInitialPowerGeneration();
+        end
+        
+        function genOnIdx = getGenOnIdx(obj)
+            genOnIdx = obj.topology.GenOnIdx;
+        end
+        
+        function powerGeneration = getPowerGeneration(obj)
+           powerGeneration = obj.zoneEvolution.State.powerGeneration;
         end
     end
 end
