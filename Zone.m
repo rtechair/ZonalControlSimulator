@@ -27,6 +27,7 @@ classdef Zone < handle
             obj.setTelecom();
             obj.setResult(duration);
             obj.setControllerSetting();
+            obj.setController();
         end
         
         function setSetting(obj)
@@ -131,6 +132,25 @@ classdef Zone < handle
         function setControllerSetting(obj)
            obj.controllerSetting = decodeJsonFile(obj.getLimiterFilename());
         end
-
+        
+        % WARNING: actually this function sets a limiter as the controller
+        function setController(obj)
+            branchFlowLimit = obj.setting.branchFlowLimit;
+            numberOfGenOn = obj.topology.NumberOfGen;
+            numberOfBattOn = obj.topology.NumberOfBatt;
+            increasingEchelon = obj.controllerSetting.IncreaseCurtPercentEchelon;
+            decreasingEchelon = obj.controllerSetting.DecreaseCurtPercentEchelon;
+            lowerThreshold = obj.controllerSetting.LowerThresholdPercent;
+            upperThreshold = obj.controllerSetting.UpperThresholdPercent;
+            controlCycle = obj.setting.controlCycle;
+            % cautious, here the delay is in iterations!
+            delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
+            delayBatt = obj.setting.DelayInSeconds.battery / controlCycle; % unused
+            maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            
+            obj.controller = Limiter(branchFlowLimit, numberOfGenOn, numberOfBattOn, ...
+                increasingEchelon, decreasingEchelon, lowerThreshold, upperThreshold, ...
+                delayCurt, maxPowerGeneration);
+        end
     end
 end
