@@ -168,5 +168,13 @@ classdef Zone < handle
         function powerGeneration = getPowerGeneration(obj)
            powerGeneration = obj.zoneEvolution.State.PowerGeneration;
         end
+        
+        function battOnIdx = getBattOnIdx(obj)
+            battOnIdx = obj.topology.BattOnIdx;
+        end
+        
+        function powerBattery = getPowerBattery(obj)
+            powerBattery = obj.zoneEvolution.State.PowerBattery;
+        end
     end
 end
