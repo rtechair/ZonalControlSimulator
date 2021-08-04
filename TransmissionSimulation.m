@@ -50,6 +50,10 @@ classdef TransmissionSimulation < handle
                genOnIdx = obj.zone{z}.getGenOnIdx();
                powerGeneration = obj.zone{z}.getPowerGeneration();
                obj.grid.updateGeneration(genOnIdx, powerGeneration);
+               
+               battOnIdx = obj.zone{z}.getBattOnIdx;
+               powerBattery = obj.zone{z}.getPowerBattery;
+               obj.grid.updateBattInjection(battOnIdx, powerBattery);
             end
         end
         
