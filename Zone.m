@@ -10,6 +10,7 @@ classdef Zone < handle
        telecomController2Zone
        telecomTimeSeries2Zone
        
+       controllerSetting
        controller
        timeSeries
        
@@ -25,6 +26,7 @@ classdef Zone < handle
             obj.setZoneEvolution();
             obj.setTelecom();
             obj.setResult(duration);
+            obj.setControllerSetting();
         end
         
         function setSetting(obj)
@@ -117,6 +119,17 @@ classdef Zone < handle
                 numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
                 busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller);
+        end
+        
+        % WARNING: the following function is for the limiter,
+        % it can not be used for other types of controllers.
+        % Hence, it will be later modified TODO
+        function limiterFilename = getLimiterFilename(obj)
+            limiterFilename = ['limiter' obj.name '.json'];
+        end
+        
+        function setControllerSetting(obj)
+           obj.controllerSetting = decodeJsonFile(obj.getLimiterFilename());
         end
 
     end
