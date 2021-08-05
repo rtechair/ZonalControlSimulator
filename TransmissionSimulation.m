@@ -66,8 +66,7 @@ classdef TransmissionSimulation < handle
             obj.zone = cell(obj.numberOfZones,1);
             for k = 1:obj.numberOfZones
                 name = obj.zoneName{k};
-                duration = obj.simulationSetting.durationInSeconds;
-                obj.zone{k} = Zone(name, obj.grid, duration);
+                obj.zone{k} = Zone(name, obj.grid, obj.duration);
             end
         end
         
