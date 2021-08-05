@@ -178,6 +178,9 @@ classdef Zone < handle
             obj.zoneEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
         end
         
+        function dropOldestPowerTransit(obj)
+            obj.zoneEvolution.dropOldestPowerTransit();
+        end
         
         
         

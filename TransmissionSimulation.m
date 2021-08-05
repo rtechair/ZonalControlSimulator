@@ -25,6 +25,8 @@ classdef TransmissionSimulation < handle
             obj.updateGridPowerFlow();
             
             obj.updateZonePowerFlow();
+            obj.updateZonePowerTransit();
+            obj.dropZoneOldestPowerTransit();
         end
         
         function setZoneName(obj)
@@ -95,6 +97,18 @@ classdef TransmissionSimulation < handle
            for zoneNumber = 1:obj.numberOfZones
                obj.zone{zoneNumber}.updatePowerFlow(obj.grid);
            end
+        end
+        
+        function updateZonePowerTransit(obj)
+            for zoneNumber = 1:obj.numberOfZones
+                obj.zone{zoneNumber}.updatePowerTransit(obj.grid);
+            end
+        end
+        
+        function dropZoneOldestPowerTransit(obj)
+            for zoneNumber = 1:obj.numberOfZones
+                obj.zone{zoneNumber}.dropOldestPowerTransit();
+            end
         end
     end
 end
