@@ -26,7 +26,11 @@ classdef TransmissionSimulation < handle
             
             obj.updateZonePowerFlow();
             obj.updateZonePowerTransit();
+            
+            % do not compute disturbance transit initially, as there is not enough data
             obj.dropZoneOldestPowerTransit();
+            obj.saveZoneState();
+            obj.transmitDataZone2Controller();
         end
         
         function setZoneName(obj)
@@ -108,6 +112,20 @@ classdef TransmissionSimulation < handle
         function dropZoneOldestPowerTransit(obj)
             for zoneNumber = 1:obj.numberOfZones
                 obj.zone{zoneNumber}.dropOldestPowerTransit();
+            end
+        end
+        
+        function saveZoneState(obj)
+            for zoneNumber = 1:obj.numberOfZones
+                obj.zone{zoneNumber}.saveState();
+            end
+        end
+        
+        function transmitDataZone2Controller(obj)
+            % Warning, this method transmits data for all zones, regardless
+            % of their control cycles. Thus, be cautious
+            for zoneNumber = 1:obj.numberOfZones
+                obj.zone{zoneNumber}.transmitDataZone2Controller();
             end
         end
     end

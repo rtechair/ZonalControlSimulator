@@ -182,7 +182,13 @@ classdef Zone < handle
             obj.zoneEvolution.dropOldestPowerTransit();
         end
         
+        function saveState(obj)
+            obj.zoneEvolution.saveState(obj.result);
+        end
         
+        function transmitDataZone2Controller(obj)
+            obj.telecomZone2Controller.transmitData(obj.zoneEvolution, obj.controller);
+        end
         
         
         %% GETTER
