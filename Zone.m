@@ -161,6 +161,23 @@ classdef Zone < handle
            obj.zoneEvolution.setInitialPowerGeneration();
         end
         
+        %{
+        The zone sends to the controller all the information about its state,
+        but only one disturbance: the power transiting through the buses.
+        That is why the zone uses an object 'State' but not an object
+        'Disturbance' to store the Power Transit.
+        %}
+        function updatePowerFlow(obj, electricalGrid)
+            branchIdx = obj.topology.BranchIdx;
+            obj.zoneEvolution.State.updatePowerBranchFlow(electricalGrid, branchIdx);
+        end
+        
+        function updatePowerTransit(obj, electricalGrid)
+            busId = obj.topology.BusId;
+            branchBorderIdx = obj.topology.BranchBorderIdx;
+            obj.zoneEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
+        end
+        
         
         
         
