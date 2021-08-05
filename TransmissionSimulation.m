@@ -21,6 +21,8 @@ classdef TransmissionSimulation < handle
             
             obj.updateGridGeneration();
             obj.updateGridBatteryInjection();
+            
+            obj.updateGridPowerFlow();
         end
         
         function setZoneName(obj)
@@ -83,5 +85,8 @@ classdef TransmissionSimulation < handle
            end
         end
         
+        function updateGridPowerFlow(obj)
+           obj.grid.runPowerFlow();
+        end
     end
 end
