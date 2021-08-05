@@ -31,6 +31,7 @@ classdef TransmissionSimulation < handle
             obj.dropZoneOldestPowerTransit();
             obj.saveZoneState();
             obj.transmitDataZone2Controller();
+            obj.prepareZoneForNextStep();
         end
         
         function setZoneName(obj)
@@ -126,6 +127,12 @@ classdef TransmissionSimulation < handle
             % of their control cycles. Thus, be cautious
             for zoneNumber = 1:obj.numberOfZones
                 obj.zone{zoneNumber}.transmitDataZone2Controller();
+            end
+        end
+        
+        function prepareZoneForNextStep(obj)
+            for zoneNumber = 1:obj.numberOfZones
+                obj.zone{zoneNumber}.prepareForNextStep();
             end
         end
     end

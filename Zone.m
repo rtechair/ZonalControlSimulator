@@ -190,7 +190,9 @@ classdef Zone < handle
             obj.telecomZone2Controller.transmitData(obj.zoneEvolution, obj.controller);
         end
         
-        
+        function prepareForNextStep(obj)
+            obj.result.prepareForNextStep();
+        end
         %% GETTER
         
         function busId = getBusId(obj)
