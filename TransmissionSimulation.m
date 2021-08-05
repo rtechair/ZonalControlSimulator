@@ -15,7 +15,10 @@ classdef TransmissionSimulation < handle
             obj.setNumberOfZones();
             obj.setGrid();
             obj.setZone();
-            obj.initializeSimulation();
+            
+            obj.initializeZonePowerAvailable();
+            obj.initializeZonePowerGeneration();
+            
             obj.updateGridGeneration();
             obj.updateGridBatteryInjection();
         end
@@ -44,11 +47,16 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function initializeSimulation(obj)
-            for z = 1:obj.numberOfZones
-               obj.zone{z}.initializePowerAvailable();
-               obj.zone{z}.initializePowerGeneration();
+        function initializeZonePowerAvailable(obj)
+            for zoneNumber = 1:obj.numberOfZones
+               obj.zone{zoneNumber}.initializePowerAvailable();
             end
+        end
+        
+        function initializeZonePowerGeneration(obj)
+           for zoneNumber = 1:obj.numberOfZones
+              obj.zone{zoneNumber}.initializePowerGeneration();
+           end
         end
         
         function updateGridGenerationForOneZone(obj, zoneNumber)
@@ -65,8 +73,8 @@ classdef TransmissionSimulation < handle
         
         function updateGridBatteryInjectionForOneZone(obj, zoneNumber)
             battOnIdx = obj.zone{zoneNumber}.getBattOnIdx;
-               powerBattery = obj.zone{zoneNumber}.getPowerBattery;
-               obj.grid.updateBattInjection(battOnIdx, powerBattery);
+            powerBattery = obj.zone{zoneNumber}.getPowerBattery;
+            obj.grid.updateBattInjection(battOnIdx, powerBattery);
         end
         
         function updateGridBatteryInjection(obj)
