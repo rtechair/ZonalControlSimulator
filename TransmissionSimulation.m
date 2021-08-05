@@ -6,16 +6,29 @@ classdef TransmissionSimulation < handle
        zoneName
        numberOfZones
        zone
+       
+       duration
+       start
+       step
+       currentTime
     end
    
     methods
         function obj = TransmissionSimulation(filenameSimulation)
             obj.simulationSetting = decodeJsonFile(filenameSimulation);
+            obj.duration = obj.simulationSetting.durationInSeconds;
+            obj.step = obj.simulationSetting.windowInSeconds;
+            obj.start = obj.step;
+            
             obj.setZoneName();
             obj.setNumberOfZones();
             obj.setGrid();
             obj.setZone();
             
+            obj.initialize();
+        end
+        
+        function initialize(obj)
             obj.initializeZonePowerAvailable();
             obj.initializeZonePowerGeneration();
             
@@ -131,6 +144,8 @@ classdef TransmissionSimulation < handle
         end
         
         function prepareZoneForNextStep(obj)
+            % Warning, this method transmits data for all zones, regardless
+            % of their control cycles. Thus, be cautious
             for zoneNumber = 1:obj.numberOfZones
                 obj.zone{zoneNumber}.prepareForNextStep();
             end
