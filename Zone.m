@@ -161,16 +161,34 @@ classdef Zone < handle
            obj.zoneEvolution.setInitialPowerGeneration();
         end
         
+        
+        
+        
+        
+        %% GETTER
+        
+        function busId = getBusId(obj)
+            busId = obj.topology.BusId;
+        end
+        
+        function branchIdx = getBranchIdx(obj)
+            branchIdx = obj.topology.BranchIdx;
+        end
+        
+        function branchBorderIdx = getBranchBorderIdx(obj)
+            branchBorderIdx = obj.topology.BranchBorderIdx;
+        end
+        
         function genOnIdx = getGenOnIdx(obj)
             genOnIdx = obj.topology.GenOnIdx;
         end
         
-        function powerGeneration = getPowerGeneration(obj)
-           powerGeneration = obj.zoneEvolution.State.PowerGeneration;
-        end
-        
         function battOnIdx = getBattOnIdx(obj)
             battOnIdx = obj.topology.BattOnIdx;
+        end
+        
+        function powerGeneration = getPowerGeneration(obj)
+           powerGeneration = obj.zoneEvolution.State.PowerGeneration;
         end
         
         function powerBattery = getPowerBattery(obj)
