@@ -15,6 +15,7 @@ classdef TransmissionSimulation < handle
    
     methods
         function obj = TransmissionSimulation(filenameSimulation)
+            %% set elements
             obj.simulationSetting = decodeJsonFile(filenameSimulation);
             obj.duration = obj.simulationSetting.durationInSeconds;
             obj.step = obj.simulationSetting.windowInSeconds;
@@ -26,6 +27,29 @@ classdef TransmissionSimulation < handle
             obj.setZone();
             
             obj.initialize();
+            
+            obj.runSimulation();
+        end
+        
+        function runSimulation(obj)
+            for time = obj.start:obj.step:obj.duration
+                for zoneNumber = 1:obj.numberOfZones
+                    if obj.zone{zoneNumber}.isToBeSimulated(time)
+                        obj.zone{zoneNumber}.simulate(); %TODO
+                        obj.grid.updateBasecase(); %TODO
+                    end
+                end
+                
+                obj.grid.runPowerFlow()
+                
+                for zoneNumber = 1:obj.numberOfZones
+                    if obj.zone{zoneNumber}.isToBeSimulated(time)
+                        obj.zone{zoneNumber}.updatePowerFlow(); %TODO
+                        obj.zone{zoneNumber}.saveResult(); %TODO
+                        obj.zone{zoneNumber}.prepareForNextStep()
+                    end
+                end
+            end
         end
         
         function initialize(obj)

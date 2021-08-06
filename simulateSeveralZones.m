@@ -218,12 +218,12 @@ duration = simulationSetting.durationInSeconds;
 step = simulationSetting.windowInSeconds;
 start = step;
 
-for time = start:step:duration 
+for time = start:step:duration
     
     for l = 1:numberOfZones
         
         stepZone = zoneSetting{l}.controlCycle;
-        isZoneToBeUpdated = mod(time, stepZone) == 0; 
+        isZoneToBeUpdated = mod(time, stepZone) == 0;
        if isZoneToBeUpdated
            
            controller{l}.computeControl();
