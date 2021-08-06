@@ -193,6 +193,10 @@ classdef Zone < handle
         function prepareForNextStep(obj)
             obj.result.prepareForNextStep();
         end
+        
+        function boolean = isToBeSimulated(obj, currentTime)
+            boolean = mod(currentTime, obj.setting.controlCycle) == 0;
+        end
         %% GETTER
         
         function busId = getBusId(obj)
