@@ -184,6 +184,12 @@ classdef Zone < handle
             electricalGrid.updateGeneration(genOnIdx, powerGeneration);
         end
         
+        function updateGridBattInjection(obj, electricalGrid)
+            battOnIdx = oj.topology.BattOnIdx;
+            powerBattery = obj.zoneEvolution.State.PowerBattery;
+            electricalGrid.updateBattInjection(battOnIdx, powerBattery);
+        end
+        
         function dropOldestPowerTransit(obj)
             obj.zoneEvolution.dropOldestPowerTransit();
         end
