@@ -70,7 +70,6 @@ classdef TransmissionSimulation < handle
             obj.transmitDataZone2Controller();
             obj.saveZonesState();
             
-            
             obj.dropZonesOldestPowerTransit();
             obj.prepareZonesForNextStep();
         end
@@ -80,7 +79,7 @@ classdef TransmissionSimulation < handle
                 for i = 1:obj.numberOfZones
                     if obj.zones{i}.isToBeSimulated(time)
                         obj.zones{i}.simulate(); %TODO
-                        obj.grid.updateBasecase(); %TODO
+                        obj.grid.update(obj.zones{i}); %TODO
                     end
                 end
                 
@@ -108,15 +107,9 @@ classdef TransmissionSimulation < handle
            end
         end
         
-        function updateGridGenerationForOneZone(obj, zoneNumber)
-            genOnIdx = obj.zones{zoneNumber}.getGenOnIdx();
-            powerGeneration = obj.zones{zoneNumber}.getPowerGeneration();
-            obj.grid.updateGeneration(genOnIdx, powerGeneration);
-        end
-        
         function updateGridGeneration(obj)
             for i = 1:obj.numberOfZones
-               obj.updateGridGenerationForOneZone(i); 
+               obj.zones{i}.updateGridGeneration(obj.grid);
             end
         end
         
