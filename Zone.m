@@ -178,6 +178,11 @@ classdef Zone < handle
             obj.zoneEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
         end
         
+        function updateGrid(obj,electricalGrid)
+            obj.updateGridGeneration(electricalGrid);
+            obj.updateGridBattInjection(electricalGrid);
+        end
+        
         function updateGridGeneration(obj, electricalGrid)
             genOnIdx = obj.topology.GenOnIdx;
             powerGeneration = obj.zoneEvolution.getPowerGeneration();
