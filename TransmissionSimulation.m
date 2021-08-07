@@ -33,20 +33,20 @@ classdef TransmissionSimulation < handle
         
         function runSimulation(obj)
             for time = obj.start:obj.step:obj.duration
-                for zoneNumber = 1:obj.numberOfZones
-                    if obj.zone{zoneNumber}.isToBeSimulated(time)
-                        obj.zone{zoneNumber}.simulate(); %TODO
+                for i = 1:obj.numberOfZones
+                    if obj.zone{i}.isToBeSimulated(time)
+                        obj.zone{i}.simulate(); %TODO
                         obj.grid.updateBasecase(); %TODO
                     end
                 end
                 
                 obj.grid.runPowerFlow()
                 
-                for zoneNumber = 1:obj.numberOfZones
-                    if obj.zone{zoneNumber}.isToBeSimulated(time)
-                        obj.zone{zoneNumber}.updatePowerFlow(); %TODO
-                        obj.zone{zoneNumber}.saveResult(); %TODO
-                        obj.zone{zoneNumber}.prepareForNextStep()
+                for i = 1:obj.numberOfZones
+                    if obj.zone{i}.isToBeSimulated(time)
+                        obj.zone{i}.updatePowerFlow(); %TODO
+                        obj.zone{i}.saveResult(); %TODO
+                        obj.zone{i}.prepareForNextStep()
                     end
                 end
             end
@@ -88,21 +88,21 @@ classdef TransmissionSimulation < handle
         
         function setZone(obj)
             obj.zone = cell(obj.numberOfZones,1);
-            for k = 1:obj.numberOfZones
-                name = obj.zoneName{k};
-                obj.zone{k} = Zone(name, obj.grid, obj.duration);
+            for i = 1:obj.numberOfZones
+                name = obj.zoneName{i};
+                obj.zone{i} = Zone(name, obj.grid, obj.duration);
             end
         end
         
         function initializeZonePowerAvailable(obj)
-            for zoneNumber = 1:obj.numberOfZones
-               obj.zone{zoneNumber}.initializePowerAvailable();
+            for i = 1:obj.numberOfZones
+               obj.zone{i}.initializePowerAvailable();
             end
         end
         
         function initializeZonePowerGeneration(obj)
-           for zoneNumber = 1:obj.numberOfZones
-              obj.zone{zoneNumber}.initializePowerGeneration();
+           for i = 1:obj.numberOfZones
+              obj.zone{i}.initializePowerGeneration();
            end
         end
         
@@ -113,8 +113,8 @@ classdef TransmissionSimulation < handle
         end
         
         function updateGridGeneration(obj)
-            for zoneNumber = 1:obj.numberOfZones
-               obj.updateGridGenerationForOneZone(zoneNumber); 
+            for i = 1:obj.numberOfZones
+               obj.updateGridGenerationForOneZone(i); 
             end
         end
         
@@ -125,8 +125,8 @@ classdef TransmissionSimulation < handle
         end
         
         function updateGridBatteryInjection(obj)
-           for zoneNumber = 1:obj.numberOfZones
-              obj.updateGridBatteryInjectionForOneZone(zoneNumber);
+           for i = 1:obj.numberOfZones
+              obj.updateGridBatteryInjectionForOneZone(i);
            end
         end
         
@@ -135,42 +135,42 @@ classdef TransmissionSimulation < handle
         end
         
         function updateZonePowerFlow(obj)
-           for zoneNumber = 1:obj.numberOfZones
-               obj.zone{zoneNumber}.updatePowerFlow(obj.grid);
+           for i = 1:obj.numberOfZones
+               obj.zone{i}.updatePowerFlow(obj.grid);
            end
         end
         
         function updateZonePowerTransit(obj)
-            for zoneNumber = 1:obj.numberOfZones
-                obj.zone{zoneNumber}.updatePowerTransit(obj.grid);
+            for i = 1:obj.numberOfZones
+                obj.zone{i}.updatePowerTransit(obj.grid);
             end
         end
         
         function dropZoneOldestPowerTransit(obj)
-            for zoneNumber = 1:obj.numberOfZones
-                obj.zone{zoneNumber}.dropOldestPowerTransit();
+            for i = 1:obj.numberOfZones
+                obj.zone{i}.dropOldestPowerTransit();
             end
         end
         
         function saveZoneState(obj)
-            for zoneNumber = 1:obj.numberOfZones
-                obj.zone{zoneNumber}.saveState();
+            for i = 1:obj.numberOfZones
+                obj.zone{i}.saveState();
             end
         end
         
         function transmitDataZone2Controller(obj)
             % Warning, this method transmits data for all zones, regardless
             % of their control cycles. Thus, be cautious
-            for zoneNumber = 1:obj.numberOfZones
-                obj.zone{zoneNumber}.transmitDataZone2Controller();
+            for i = 1:obj.numberOfZones
+                obj.zone{i}.transmitDataZone2Controller();
             end
         end
         
         function prepareZoneForNextStep(obj)
             % Warning, this method transmits data for all zones, regardless
             % of their control cycles. Thus, be cautious
-            for zoneNumber = 1:obj.numberOfZones
-                obj.zone{zoneNumber}.prepareForNextStep();
+            for i = 1:obj.numberOfZones
+                obj.zone{i}.prepareForNextStep();
             end
         end
     end
