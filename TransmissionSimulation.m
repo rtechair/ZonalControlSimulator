@@ -24,11 +24,55 @@ classdef TransmissionSimulation < handle
             obj.setZoneName();
             obj.setNumberOfZones();
             obj.setGrid();
-            obj.setZone();
+            obj.setZones();
             
             obj.initialize();
             
             obj.runSimulation();
+        end
+        
+        function setZoneName(obj)
+            % the 'cell' data structure is used instead of 'matrix'.
+            % A matrix merges char arrays into a single char array, which
+            % would concatenate the zone names, which is not the desired behavior.
+           obj.zoneName = struct2cell(obj.simulationSetting.Zone);
+        end
+        
+        function setNumberOfZones(obj)
+            obj.numberOfZones = size(obj.zoneName,1);
+        end
+        
+        function setGrid(obj)
+            obj.grid = ElectricalGrid(obj.simulationSetting.basecase);
+        end
+        
+        function setZones(obj)
+            obj.zones = cell(obj.numberOfZones,1);
+            for i = 1:obj.numberOfZones
+                name = obj.zoneName{i};
+                obj.zones{i} = Zone(name, obj.grid, obj.duration);
+            end
+        end
+        
+        function initialize(obj)
+            obj.initializeZonePowerAvailable();
+            obj.initializeZonePowerGeneration();
+            
+            obj.updateGridGeneration();
+            obj.updateGridBatteryInjection();
+            
+            obj.updateGridPowerFlow();
+            
+            obj.updateZonePowerFlow();
+            obj.updateZonePowerTransit();
+            
+            % do not compute disturbance transit initially, as there is not enough data
+            
+            obj.saveZoneState();
+            obj.transmitDataZone2Controller();
+            
+            obj.dropZoneOldestPowerTransit();
+            obj.prepareZoneForNextStep();
         end
         
         function runSimulation(obj)
@@ -49,48 +93,6 @@ classdef TransmissionSimulation < handle
                         obj.zones{i}.prepareForNextStep()
                     end
                 end
-            end
-        end
-        
-        function initialize(obj)
-            obj.initializeZonePowerAvailable();
-            obj.initializeZonePowerGeneration();
-            
-            obj.updateGridGeneration();
-            obj.updateGridBatteryInjection();
-            
-            obj.updateGridPowerFlow();
-            
-            obj.updateZonePowerFlow();
-            obj.updateZonePowerTransit();
-            
-            % do not compute disturbance transit initially, as there is not enough data
-            obj.dropZoneOldestPowerTransit();
-            obj.saveZoneState();
-            obj.transmitDataZone2Controller();
-            obj.prepareZoneForNextStep();
-        end
-        
-        function setZoneName(obj)
-            % the 'cell' data structure is used instead of 'matrix'.
-            % A matrix merges char arrays into a single char array, which
-            % would concatenate the zone names, which is not the desired behavior.
-           obj.zoneName = struct2cell(obj.simulationSetting.Zone);
-        end
-        
-        function setNumberOfZones(obj)
-            obj.numberOfZones = size(obj.zoneName,1);
-        end
-        
-        function setGrid(obj)
-            obj.grid = ElectricalGrid(obj.simulationSetting.basecase);
-        end
-        
-        function setZone(obj)
-            obj.zones = cell(obj.numberOfZones,1);
-            for i = 1:obj.numberOfZones
-                name = obj.zoneName{i};
-                obj.zones{i} = Zone(name, obj.grid, obj.duration);
             end
         end
         
