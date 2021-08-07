@@ -79,7 +79,7 @@ classdef TransmissionSimulation < handle
                 for i = 1:obj.numberOfZones
                     if obj.zones{i}.isToBeSimulated(time)
                         obj.zones{i}.simulate(); %TODO
-                        obj.grid.update(obj.zones{i}); %TODO
+                        obj.zones{i}.updateGrid(obj.grid);
                     end
                 end
                 
