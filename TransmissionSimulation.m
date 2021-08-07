@@ -113,15 +113,9 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function updateGridBatteryInjectionForOneZone(obj, zoneNumber)
-            battOnIdx = obj.zones{zoneNumber}.getBattOnIdx;
-            powerBattery = obj.zones{zoneNumber}.getPowerBattery;
-            obj.grid.updateBattInjection(battOnIdx, powerBattery);
-        end
-        
         function updateGridBatteryInjection(obj)
            for i = 1:obj.numberOfZones
-              obj.updateGridBatteryInjectionForOneZone(i);
+              obj.zones{i}.updateGridBattInjection(obj.grid);
            end
         end
         
