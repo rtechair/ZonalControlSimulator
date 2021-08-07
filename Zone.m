@@ -178,6 +178,12 @@ classdef Zone < handle
             obj.zoneEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
         end
         
+        function updateGridGeneration(obj, electricalGrid)
+            genOnIdx = obj.topology.GenOnIdx;
+            powerGeneration = obj.zoneEvolution.getPowerGeneration();
+            electricalGrid.updateGeneration(genOnIdx, powerGeneration);
+        end
+        
         function dropOldestPowerTransit(obj)
             obj.zoneEvolution.dropOldestPowerTransit();
         end
@@ -196,6 +202,14 @@ classdef Zone < handle
         
         function boolean = isToBeSimulated(obj, currentTime)
             boolean = mod(currentTime, obj.setting.controlCycle) == 0;
+        end
+        
+        function simulate(obj)
+            obj.controller.computeControl();
+            obj.controller.saveControl();
+            obj.transmitDataZone2Controller();
+            obj.zoneEvolution.computeDisturbanceGeneration();
+            obj.zoneEvolution.updateState();
         end
         %% GETTER
         
