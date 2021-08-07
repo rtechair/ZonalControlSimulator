@@ -55,24 +55,24 @@ classdef TransmissionSimulation < handle
         end
         
         function initialize(obj)
-            obj.initializeZonePowerAvailable();
-            obj.initializeZonePowerGeneration();
+            obj.initializeZonesPowerAvailable();
+            obj.initializeZonesPowerGeneration();
             
             obj.updateGridGeneration();
             obj.updateGridBatteryInjection();
             
-            obj.updateGridPowerFlow();
+            obj.grid.runPowerFlow();
             
-            obj.updateZonePowerFlow();
-            obj.updateZonePowerTransit();
+            obj.updateZonesPowerFlow();
+            obj.updateZonesPowerTransit();
             
             % do not compute disturbance transit initially, as there is not enough data
-            
-            obj.saveZoneState();
             obj.transmitDataZone2Controller();
+            obj.saveZonesState();
             
-            obj.dropZoneOldestPowerTransit();
-            obj.prepareZoneForNextStep();
+            
+            obj.dropZonesOldestPowerTransit();
+            obj.prepareZonesForNextStep();
         end
         
         function runSimulation(obj)
@@ -96,13 +96,13 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function initializeZonePowerAvailable(obj)
+        function initializeZonesPowerAvailable(obj)
             for i = 1:obj.numberOfZones
                obj.zones{i}.initializePowerAvailable();
             end
         end
         
-        function initializeZonePowerGeneration(obj)
+        function initializeZonesPowerGeneration(obj)
            for i = 1:obj.numberOfZones
               obj.zones{i}.initializePowerGeneration();
            end
@@ -132,29 +132,25 @@ classdef TransmissionSimulation < handle
            end
         end
         
-        function updateGridPowerFlow(obj)
-           obj.grid.runPowerFlow();
-        end
-        
-        function updateZonePowerFlow(obj)
+        function updateZonesPowerFlow(obj)
            for i = 1:obj.numberOfZones
                obj.zones{i}.updatePowerFlow(obj.grid);
            end
         end
         
-        function updateZonePowerTransit(obj)
+        function updateZonesPowerTransit(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.updatePowerTransit(obj.grid);
             end
         end
         
-        function dropZoneOldestPowerTransit(obj)
+        function dropZonesOldestPowerTransit(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.dropOldestPowerTransit();
             end
         end
         
-        function saveZoneState(obj)
+        function saveZonesState(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.saveState();
             end
@@ -168,7 +164,7 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function prepareZoneForNextStep(obj)
+        function prepareZonesForNextStep(obj)
             % Warning, this method transmits data for all zones, regardless
             % of their control cycles. Thus, be cautious
             for i = 1:obj.numberOfZones
