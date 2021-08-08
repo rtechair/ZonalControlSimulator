@@ -185,12 +185,12 @@ classdef Zone < handle
         
         function updateGridGeneration(obj, electricalGrid)
             genOnIdx = obj.topology.GenOnIdx;
-            powerGeneration = obj.zoneEvolution.getPowerGeneration();
+            powerGeneration = obj.getPowerGeneration();
             electricalGrid.updateGeneration(genOnIdx, powerGeneration);
         end
         
         function updateGridBattInjection(obj, electricalGrid)
-            battOnIdx = oj.topology.BattOnIdx;
+            battOnIdx = obj.topology.BattOnIdx;
             powerBattery = obj.zoneEvolution.State.PowerBattery;
             electricalGrid.updateBattInjection(battOnIdx, powerBattery);
         end
@@ -201,6 +201,14 @@ classdef Zone < handle
         
         function saveState(obj)
             obj.zoneEvolution.saveState(obj.result);
+        end
+        
+        function transmitDataController2Zone(obj)
+            obj.telecomController2Zone.transmitData(obj.controller, obj.zoneEvolution);
+        end
+        
+        function transmitDataTimeSeries2Zone(obj)
+            obj.telecomTimeSeries2Zone.transmitData(obj.timeSeries, obj.zoneEvolution);
         end
         
         function transmitDataZone2Controller(obj)
@@ -217,10 +225,22 @@ classdef Zone < handle
         
         function simulate(obj)
             obj.controller.computeControl();
-            obj.controller.saveControl();
-            obj.transmitDataZone2Controller();
+            obj.controller.saveControl(obj.result);
+            obj.transmitDataController2Zone()
+            obj.transmitDataTimeSeries2Zone();
             obj.zoneEvolution.computeDisturbanceGeneration();
             obj.zoneEvolution.updateState();
+        end
+        
+        function update(obj, electricalGrid)
+            obj.updatePowerFlow(electricalGrid);
+            obj.updatePowerTransit(electricalGrid);
+            obj.zoneEvolution.updateDisturbanceTransit();
+            obj.zoneEvolution.dropOldestPowerTransit();
+            obj.zoneEvolution.saveState(obj.result);
+            obj.zoneEvolution.saveDisturbance(obj.result);
+            obj.transmitDataZone2Controller();
+            obj.zoneEvolution.dropOldestControl();
         end
         %% GETTER
         
