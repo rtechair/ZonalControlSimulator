@@ -237,10 +237,13 @@ classdef Zone < handle
             obj.updatePowerTransit(electricalGrid);
             obj.zoneEvolution.updateDisturbanceTransit();
             obj.zoneEvolution.dropOldestPowerTransit();
-            obj.zoneEvolution.saveState(obj.result);
-            obj.zoneEvolution.saveDisturbance(obj.result);
             obj.transmitDataZone2Controller();
             obj.zoneEvolution.dropOldestControl();
+        end
+        
+        function saveResult(obj)
+            obj.zoneEvolution.saveState(obj.result);
+            obj.zoneEvolution.saveDisturbance(obj.result);
         end
         %% GETTER
         

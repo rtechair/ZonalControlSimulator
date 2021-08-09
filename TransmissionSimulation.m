@@ -78,7 +78,7 @@ classdef TransmissionSimulation < handle
             for time = obj.start:obj.step:obj.duration
                 for i = 1:obj.numberOfZones
                     if obj.zones{i}.isToBeSimulated(time)
-                        obj.zones{i}.simulate(); %TODO
+                        obj.zones{i}.simulate();
                         obj.zones{i}.updateGrid(obj.grid);
                     end
                 end
@@ -87,8 +87,8 @@ classdef TransmissionSimulation < handle
                 
                 for i = 1:obj.numberOfZones
                     if obj.zones{i}.isToBeSimulated(time)
-                        obj.zones{i}.updatePowerFlow(); %TODO
-                        obj.zones{i}.saveResult(); %TODO
+                        obj.zones{i}.update(obj.grid);
+                        obj.zones{i}.saveResult();
                         obj.zones{i}.prepareForNextStep()
                     end
                 end
