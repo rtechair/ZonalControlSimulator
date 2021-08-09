@@ -4,12 +4,12 @@ classdef ResultGraphic < Result
        
         function obj = ResultGraphic(zoneName,durationSimulation, controlCycle, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
+                maxPowerGeneration, branchFlowLimit, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
             
            obj@Result(zoneName, durationSimulation, controlCycle, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
+                maxPowerGeneration, branchFlowLimit, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller); 
         end
         
@@ -111,7 +111,11 @@ classdef ResultGraphic < Result
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
                 stairs(time, abs(obj.PowerBranchFlow(br,:)));  % abs(Fij)
-                legend({'Absolute Branch Power Flow |Fij|'},'Location','Best')
+                
+                branchLimitOverTime = ones(1, obj.NumberOfIterations+1)*obj.BranchFlowLimit;
+                stairs(time, branchLimitOverTime);
+                
+                legend({'Absolute Branch Power Flow |Fij|','branch flow limit'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 branchIdx = obj.BranchIdx(br);

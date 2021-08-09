@@ -101,6 +101,7 @@ classdef Zone < handle
             numberOfGenOn = obj.topology.NumberOfGen;
             numberOfBattOn = obj.topology.NumberOfBatt;
             maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            branchFlowLimit = obj.setting.branchFlowLimit;
             
             busId = obj.topology.BusId;
             branchIdx = obj.topology.BranchIdx;
@@ -117,7 +118,8 @@ classdef Zone < handle
             delayZone2Controller = telecomSetting.zone2Controller;
             
             obj.result = ResultGraphic(obj.name, duration, controlCycle,...
-                numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, maxPowerGeneration, ...
+                numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
+                maxPowerGeneration, branchFlowLimit, ...
                 busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller);
         end

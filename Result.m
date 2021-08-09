@@ -19,6 +19,8 @@ classdef Result < handle
         DisturbanceAvailable    % DeltaPA
         
         CurrentStep             % k
+        
+        BranchFlowLimit
     end
     
     properties ( SetAccess = immutable)
@@ -49,7 +51,7 @@ classdef Result < handle
         
         function obj = Result(zoneName, durationSimulation, controlCycle, ...
                 numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
-                maxPowerGeneration, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
+                maxPowerGeneration, branchFlowLimit, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
             obj.zoneName = zoneName;
             obj.NumberOfIterations = floor(durationSimulation / controlCycle);
@@ -59,6 +61,7 @@ classdef Result < handle
             obj.NumberOfBatt = numberOfBatteries;
             
             obj.MaxPowerGeneration = maxPowerGeneration;
+            obj.BranchFlowLimit = branchFlowLimit;
             obj.SamplingTime = controlCycle;
             
             obj.BusId = busId;
