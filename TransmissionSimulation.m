@@ -29,6 +29,8 @@ classdef TransmissionSimulation < handle
             obj.initialize();
             
             obj.runSimulation();
+            
+            obj.plotZonesResult();
         end
         
         function setZoneName(obj)
@@ -156,6 +158,12 @@ classdef TransmissionSimulation < handle
             % of their control cycles. Thus, be cautious
             for i = 1:obj.numberOfZones
                 obj.zones{i}.prepareForNextStep();
+            end
+        end
+        
+        function plotZonesResult(obj)
+            for i = 1 : obj.numberOfZones
+                obj.zones{i}.plotResult(obj.grid);
             end
         end
     end
