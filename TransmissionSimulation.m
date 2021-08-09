@@ -30,6 +30,7 @@ classdef TransmissionSimulation < handle
             
             obj.runSimulation();
             
+            obj.plotZonesTopology();
             obj.plotZonesResult();
         end
         
@@ -158,6 +159,12 @@ classdef TransmissionSimulation < handle
             % of their control cycles. Thus, be cautious
             for i = 1:obj.numberOfZones
                 obj.zones{i}.prepareForNextStep();
+            end
+        end
+        
+        function plotZonesTopology(obj)
+            for i = 1:obj.numberOfZones
+                obj.zones{i}.plotTopology(obj.grid);
             end
         end
         
