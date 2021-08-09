@@ -245,6 +245,17 @@ classdef Zone < handle
             obj.zoneEvolution.saveState(obj.result);
             obj.zoneEvolution.saveDisturbance(obj.result);
         end
+        
+        function plotTopology(obj, electricalGrid)
+            obj.topology.plotLabeledGraph(electricalGrid);
+        end
+        
+        function plotResult(obj, electricalGrid)
+            obj.result.plotAbsoluteFlowBranch(electricalGrid);
+            obj.result.plotControlAndDisturbanceGen(electricalGrid);
+            obj.result.plotStateGen(electricalGrid);
+            obj.result.plotDisturbanceTransit();
+        end
         %% GETTER
         
         function busId = getBusId(obj)
