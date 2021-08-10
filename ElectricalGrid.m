@@ -1,27 +1,27 @@
 classdef ElectricalGrid < handle
    
     properties
-        Matpowercase
-        InternalMatpowercase % used by matpower 'runpf' function
+        matpowercase
+        internalMatpowercase % used by matpower 'runpf' function
         
         % The internal id of a bus is the external index of this bus.
-        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
-        MapBus_id_i2e % dense column vector, convert internal bus id -> external bus id
+        mapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
+        mapBus_id_i2e % dense column vector, convert internal bus id -> external bus id
         
-        MapGenOn_idx_e2i % sparse column vector, converts exterior -> interior online generator or battery index
-        MapGenOn_idx_i2e % dense column vector,, converts interior -> exterior online generator or battery index
+        mapGenOn_idx_e2i % sparse column vector, converts exterior -> interior online generator or battery index
+        mapGenOn_idx_i2e % dense column vector,, converts interior -> exterior online generator or battery index
         
-        MatpowerOption % option for matpower 'runpf' function 
+        matpowerOption % option for matpower 'runpf' function 
         
-        ResultPowerFlow
+        resultPowerFlow
     end
     
     methods
         
         function obj = ElectricalGrid(filenameBasecase)            
-            obj.Matpowercase = loadcase(filenameBasecase);
+            obj.matpowercase = loadcase(filenameBasecase);
             
-            obj.InternalMatpowercase = ext2int(obj.Matpowercase);
+            obj.internalMatpowercase = ext2int(obj.matpowercase);
 
             obj.setMapBus_id_e2i();
             obj.setMapBus_id_i2e();
@@ -37,7 +37,7 @@ classdef ElectricalGrid < handle
             % from the matpowercase of: the branches within the zone (both end buses in zone)
             % and the branches at the border of zone ( 1 end bus in the zone), respectively
             
-            busesOfBranch = obj.Matpowercase.branch(:,[1 2]);
+            busesOfBranch = obj.matpowercase.branch(:,[1 2]);
             areEndBusesOfBranchInZone = ismember(busesOfBranch, busId);
             
             % sum booleans per branch :fromBus + toBus, i.e. over the columns, to get the number of end buses of the branch within the zone  
@@ -53,8 +53,8 @@ classdef ElectricalGrid < handle
             % return the column vector of the buses at the border of the zone   
 
             % a branch has a 'from' bus and 'to' bus
-            fromBus = obj.Matpowercase.branch(branchBorderIdx,1);
-            toBus = obj.Matpowercase.branch(branchBorderIdx,2);
+            fromBus = obj.matpowercase.branch(branchBorderIdx,1);
+            toBus = obj.matpowercase.branch(branchBorderIdx,2);
             
             isfromBusInBorder = ~ismember(fromBus, busId);
             istoBusInBorder = ~ismember(toBus, busId);
@@ -82,11 +82,11 @@ classdef ElectricalGrid < handle
             % It is ON
             % bus of gen in zone
             
-            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            minPowerGeneration = obj.matpowercase.gen(:,10);
             isItAGen = minPowerGeneration >= 0;
-            isItOn = obj.Matpowercase.gen(:,8) > 0;
+            isItOn = obj.matpowercase.gen(:,8) > 0;
             
-            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            busesOfAllGen = obj.matpowercase.gen(:,1);
             isBusOfGenInZone = ismember(busesOfAllGen, busId);
             
             genOnInZone = isItAGen .* isItOn .* isBusOfGenInZone;
@@ -101,11 +101,11 @@ classdef ElectricalGrid < handle
             % It is OFF
             % bus of gen in zone
             
-            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            minPowerGeneration = obj.matpowercase.gen(:,10);
             isItAGen = minPowerGeneration >= 0;
-            isItOff = obj.Matpowercase.gen(:,8) <= 0;
+            isItOff = obj.matpowercase.gen(:,8) <= 0;
 
-            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            busesOfAllGen = obj.matpowercase.gen(:,1);
             isBusOfGenInZone = ismember(busesOfAllGen, busId);
             
             genOffInZone = isItAGen .* isItOff .* isBusOfGenInZone;
@@ -120,13 +120,13 @@ classdef ElectricalGrid < handle
             % It is ON
             % bus of batt in zone
             
-            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            minPowerGeneration = obj.matpowercase.gen(:,10);
             % A battery has negative minimum power generation,
             % corresponding to power injected into the battery
             isItABatt = minPowerGeneration < 0;
-            isItOn = obj.Matpowercase.gen(:,8) > 0;
+            isItOn = obj.matpowercase.gen(:,8) > 0;
             
-            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            busesOfAllGen = obj.matpowercase.gen(:,1);
             isBusOfBattInZone = ismember(busesOfAllGen, busId);
             
             battOnInZone = isItABatt .* isItOn .* isBusOfBattInZone;
@@ -141,13 +141,13 @@ classdef ElectricalGrid < handle
             % It is OFF
             % bus of batt in zone
             
-            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            minPowerGeneration = obj.matpowercase.gen(:,10);
             % A battery has negative minimum power generation,
             % corresponding to power injected into the battery
             isItABatt = minPowerGeneration < 0;
-            isItOff = obj.Matpowercase.gen(:,8) <= 0;
+            isItOff = obj.matpowercase.gen(:,8) <= 0;
             
-            busesOfAllGen = obj.Matpowercase.gen(:,1);
+            busesOfAllGen = obj.matpowercase.gen(:,1);
             isBusOfBattInZone = ismember(busesOfAllGen, busId);
             
             battOffInZone = isItABatt .* isItOff .* isBusOfBattInZone;
@@ -158,46 +158,46 @@ classdef ElectricalGrid < handle
         function branchFlow = getPowerBranchFlow(obj, branchIdx)
             % branchIdx and not internalBranchIdx, due to 
             % 'result' struct is an external matpowercase, not internal
-            branchFlow = obj.ResultPowerFlow.branch(branchIdx, 14); 
+            branchFlow = obj.resultPowerFlow.branch(branchIdx, 14); 
         end
         
         function runPowerFlow(obj)
-            obj.ResultPowerFlow = runpf(obj.InternalMatpowercase, obj.MatpowerOption);
+            obj.resultPowerFlow = runpf(obj.internalMatpowercase, obj.matpowerOption);
         end
         
         function updateGeneration(obj, externalGenIdx, newGeneration)
-            internalGenIdx = obj.MapGenOn_idx_e2i(externalGenIdx);
-            obj.InternalMatpowercase.gen(internalGenIdx, 2) = newGeneration;
+            internalGenIdx = obj.mapGenOn_idx_e2i(externalGenIdx);
+            obj.internalMatpowercase.gen(internalGenIdx, 2) = newGeneration;
         end
         
         function updateBattInjection(obj, externalBattIdx, newBattInjection)
-           internalBattIdx = obj.MapGenOn_idx_e2i(externalBattIdx);
-           obj.InternalMatpowercase.gen(internalBattIdx, 2) = newBattInjection;
+           internalBattIdx = obj.mapGenOn_idx_e2i(externalBattIdx);
+           obj.internalMatpowercase.gen(internalBattIdx, 2) = newBattInjection;
         end
         
         function [fromBus, toBus] = getEndBuses(obj, branchIdx)
-           fromBus = obj.Matpowercase.branch(branchIdx, 1); 
-           toBus = obj.Matpowercase.branch(branchIdx, 2);
+           fromBus = obj.matpowercase.branch(branchIdx, 1); 
+           toBus = obj.matpowercase.branch(branchIdx, 2);
         end
         
         function busId = getBuses(obj, genOrBattIdx)
             % unique to remove redundancy as several generators can be on a same bus
-            busId = unique(obj.Matpowercase.gen(genOrBattIdx,1));
+            busId = unique(obj.matpowercase.gen(genOrBattIdx,1));
         end
         
         function maxGen = getMaxPowerGeneration(obj, genIdx)
-            maxGen = obj.Matpowercase.gen(genIdx, 9);
+            maxGen = obj.matpowercase.gen(genIdx, 9);
         end
         
         function [numberOfBuses, numberOfBranches, ...
                   numberOfGenNotBatt, numberOfBatt] = getMatpowerCaseDimensions(obj)
-            numberOfBuses = size(obj.Matpowercase.bus,1);
-            numberOfBranches = size(obj.Matpowercase.branch, 1);
+            numberOfBuses = size(obj.matpowercase.bus,1);
+            numberOfBranches = size(obj.matpowercase.branch, 1);
 
-            minPowerGeneration = obj.Matpowercase.gen(:,10);
+            minPowerGeneration = obj.matpowercase.gen(:,10);
             isGenABatt = minPowerGeneration < 0;
             numberOfBatt = sum(isGenABatt);
-            numberOfGenPlusNumberOfBatt = size(obj.Matpowercase.gen,1);
+            numberOfGenPlusNumberOfBatt = size(obj.matpowercase.gen,1);
             numberOfGenNotBatt = numberOfGenPlusNumberOfBatt - numberOfBatt;
         end
         
@@ -207,7 +207,7 @@ classdef ElectricalGrid < handle
             numberOfBranchesAtBorder = size(branchBorderIdx,1);
             for br = 1:numberOfBranchesAtBorder
                branch = branchBorderIdx(br,1);
-               fromBus = obj.ResultPowerFlow.branch(branch,1);
+               fromBus = obj.resultPowerFlow.branch(branch,1);
                isFromBusInsideZone = ismember(fromBus, zoneBuses);
                if isFromBusInsideZone
                   powerTransiting = obj.getPowerTransitBusFrom(branch);
@@ -216,7 +216,7 @@ classdef ElectricalGrid < handle
                   sumPowerTransit(busIdx) = sumPowerTransit(busIdx) + powerTransiting;
                else
                    powerTransiting = obj.getPowerTransitBusTo(branch);
-                   toBus = obj.ResultPowerFlow.branch(branch, 2);
+                   toBus = obj.resultPowerFlow.branch(branch, 2);
                    busIdx = find(toBus == zoneBuses);
                    % PT += powerInjection
                    sumPowerTransit(busIdx) = sumPowerTransit(busIdx) + powerTransiting;
@@ -227,11 +227,11 @@ classdef ElectricalGrid < handle
         function powerTransit = getPowerTransitBusFrom(obj, branchIdx)
             % it is the same as 'getPowerBranchFlow' method, simply a
             % change of name to be more understandable
-            powerTransit = obj.ResultPowerFlow.branch(branchIdx, 14);
+            powerTransit = obj.resultPowerFlow.branch(branchIdx, 14);
         end
         
         function powerTransit = getPowerTransitBusTo(obj, branchIdx)
-            powerTransit = obj.ResultPowerFlow.branch(branchIdx, 16);
+            powerTransit = obj.resultPowerFlow.branch(branchIdx, 16);
         end
 
     end
@@ -241,28 +241,28 @@ classdef ElectricalGrid < handle
         function setMatpowerOption(obj)
             % mpoption is a configuration for Matpower's 'runpf' function
             
-            obj.MatpowerOption = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
+            obj.matpowerOption = mpoption('model', 'AC', ... default = 'AC', select 'AC' or 'DC'
             'verbose', 0, ...  default = 1, select 0, 1, 2, 3. Select 0 to hide text
             'out.all', 0); % default = -1, select -1, 0, 1. Select 0 to hide text
         end    
         
         function setMapBus_id_e2i(obj)
-            obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
+            obj.mapBus_id_e2i = obj.internalMatpowercase.order.bus.e2i;
         end
         
         function setMapBus_id_i2e(obj)
-            obj.MapBus_id_i2e = obj.InternalMatpowercase.order.bus.i2e;
+            obj.mapBus_id_i2e = obj.internalMatpowercase.order.bus.i2e;
         end
         
         function setMapGenOn_idx_e2i(obj)
-            genOn_idx_ext = obj.InternalMatpowercase.order.gen.status.on;
+            genOn_idx_ext = obj.internalMatpowercase.order.gen.status.on;
             numberOfGenOn = size(genOn_idx_ext,1);
             columnOfOnes = ones(numberOfGenOn,1);
-            obj.MapGenOn_idx_e2i = sparse(genOn_idx_ext, columnOfOnes, 1:numberOfGenOn);
+            obj.mapGenOn_idx_e2i = sparse(genOn_idx_ext, columnOfOnes, 1:numberOfGenOn);
         end
         
         function setMapGenOn_idx_i2e(obj)
-            obj.MapGenOn_idx_i2e = obj.InternalMatpowercase.order.gen.status.on;
+            obj.mapGenOn_idx_i2e = obj.internalMatpowercase.order.gen.status.on;
         end
   
     end

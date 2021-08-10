@@ -1,16 +1,16 @@
 classdef TelecomTimeSeries2Zone < Telecommunication
     
     properties
-        BufferQueueData
-        DelayTelecom
+        bufferQueueData
+        delayTelecom
     end
     
     methods
         
         function obj = TelecomTimeSeries2Zone(numberOfGen, delayTelecom)
-            obj.DelayTelecom = delayTelecom;
+            obj.delayTelecom = delayTelecom;
             disturbanceArray(1: delayTelecom) = DisturbancePowerAvailable(numberOfGen);
-            obj.BufferQueueData = disturbanceArray;
+            obj.bufferQueueData = disturbanceArray;
         end
         
         function disturbance = receive(obj, emitter)
@@ -19,17 +19,17 @@ classdef TelecomTimeSeries2Zone < Telecommunication
         
         
         function store(obj, newDisturbance)
-            obj.BufferQueueData(end+1) = newDisturbance;
+            obj.bufferQueueData(end+1) = newDisturbance;
         end
         
         
         function send(obj, receiver)
-            sentDisturbance = obj.BufferQueueData(1);
+            sentDisturbance = obj.bufferQueueData(1);
             receiver.receiveTimeSeries(sentDisturbance);
         end
         
         function dropOldestData(obj)
-            obj.BufferQueueData = obj.BufferQueueData(2:end);
+            obj.bufferQueueData = obj.bufferQueueData(2:end);
         end
         
         function transmitData(obj, emitter, receiver)

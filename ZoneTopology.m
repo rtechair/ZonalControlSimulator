@@ -2,22 +2,22 @@ classdef ZoneTopology < handle
     
     
     properties
-        Name
+        name
         
-        BusId
-        BranchIdx
-        GenOnIdx % offline generators within the zone are not considered
-        BattOnIdx % offline batteries withing the zone are not considered
+        busId
+        branchIdx
+        genOnIdx % offline generators within the zone are not considered
+        battOnIdx % offline batteries withing the zone are not considered
         
-        BusBorderId
-        BranchBorderIdx
+        busBorderId
+        branchBorderIdx
         
-        MaxPowerGeneration
+        maxPowerGeneration
         
-        NumberOfBuses
-        NumberOfBranches
-        NumberOfGen
-        NumberOfBatt
+        numberOfBuses
+        numberOfBranches
+        numberOfGen
+        numberOfBatt
     end
     
     methods
@@ -27,8 +27,8 @@ classdef ZoneTopology < handle
                 zoneBusId (:,1) {mustBeInteger}
                 electricalGrid
             end
-            obj.Name = name;
-            obj.BusId = zoneBusId;
+            obj.name = name;
+            obj.busId = zoneBusId;
             
             obj.setBranchesInZoneAndInBorder(electricalGrid);
             obj.setBusBorderId(electricalGrid);
@@ -42,18 +42,18 @@ classdef ZoneTopology < handle
         end
         
         function genOffIdx = getGenOffIdx(obj, electricalGrid)
-            genOffIdx = electricalGrid.getGenOffIdx(obj.BusId);
+            genOffIdx = electricalGrid.getGenOffIdx(obj.busId);
         end
          
         function battOffIdx = getBattOffIdx(obj, electricalGrid)
-            battOffIdx = electricalGrid.getBattOffIdx(obj.BusId);
+            battOffIdx = electricalGrid.getBattOffIdx(obj.busId);
         end
         
         function G = getGraphStatic(obj, electricalGrid)
             % Create the static graph of a zone defined by its branch indices in the
             % basecase.
         
-            insideAndBorderBranches = [obj.BranchIdx; obj.BranchBorderIdx];
+            insideAndBorderBranches = [obj.branchIdx; obj.branchBorderIdx];
             [fromBus, toBus] = electricalGrid.getEndBuses(insideAndBorderBranches);
             %{
                 %https://www.mathworks.com/help/matlab/ref/graph.html
@@ -80,24 +80,24 @@ classdef ZoneTopology < handle
                 https://www.mathworks.com/help/matlab/ref/graph.plot.html#namevaluepairarguments
             %}
             % unique to remove redundancy as several generators can be on a same bus
-            busIdWithGenOn = electricalGrid.getBuses(obj.GenOnIdx);
-            busIdWithBattOn = electricalGrid.getBuses(obj.BattOnIdx);
+            busIdWithGenOn = electricalGrid.getBuses(obj.genOnIdx);
+            busIdWithBattOn = electricalGrid.getBuses(obj.battOnIdx);
             
-            isBusOfZoneWithGenOn = ismember(obj.BusId, busIdWithGenOn);
-            isBusOfZoneWithBattOn = ismember(obj.BusId, busIdWithBattOn);
+            isBusOfZoneWithGenOn = ismember(obj.busId, busIdWithGenOn);
+            isBusOfZoneWithBattOn = ismember(obj.busId, busIdWithBattOn);
             
-            figName = ['Zone ' obj.Name ': red node = bus within zone, black node = bus at the border'];
-            figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
+            figName = ['Zone ' obj.name ': red node = bus within zone, black node = bus at the border'];
+            figure('name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
             graphStatic = obj.getGraphStatic(electricalGrid);
             P = plot(graphStatic);
             P = obj.configurePlot(P);
             
             % display in red color, each bus inside the zone
-            highlight(P, string(obj.BusId), 'NodeColor', 'r')
+            highlight(P, string(obj.busId), 'NodeColor', 'r')
             
             % for each bus, show a text displaying: bus id, if there is a
             % generator and if there is a battery
-            for bus = 1: size(obj.BusId,1)
+            for bus = 1: size(obj.busId,1)
                % default texts:
                textGen = '';
                textBatt ='';
@@ -113,8 +113,8 @@ classdef ZoneTopology < handle
                end
                
                % label to display
-               textNode = [num2str(obj.BusId(bus, 1)), textGen, textBatt];
-               labelnode(P, string(obj.BusId(bus, 1)), textNode);
+               textNode = [num2str(obj.busId(bus, 1)), textGen, textBatt];
+               labelnode(P, string(obj.busId(bus, 1)), textNode);
             end
             
         end
@@ -135,31 +135,31 @@ classdef ZoneTopology < handle
     methods (Access = protected)
        
         function setBranchesInZoneAndInBorder(obj, electricalGrid)
-            [obj.BranchIdx, obj.BranchBorderIdx] = ...
-                electricalGrid.getInnerAndBorderBranchIdx(obj.BusId);
+            [obj.branchIdx, obj.branchBorderIdx] = ...
+                electricalGrid.getInnerAndBorderBranchIdx(obj.busId);
         end
         
         function setBusBorderId(obj, electricalGrid)
-            obj.BusBorderId = electricalGrid.getBusBorderId(obj.BusId, obj.BranchBorderIdx);
+            obj.busBorderId = electricalGrid.getBusBorderId(obj.busId, obj.branchBorderIdx);
         end
         
         function setGenOnIdx(obj, electricalGrid)
-            obj.GenOnIdx = electricalGrid.getGenOnIdx(obj.BusId);
+            obj.genOnIdx = electricalGrid.getGenOnIdx(obj.busId);
         end
         
         function setBattOnIdx(obj, electricalGrid)
-            obj.BattOnIdx = electricalGrid.getBattOnIdx(obj.BusId);
+            obj.battOnIdx = electricalGrid.getBattOnIdx(obj.busId);
         end
         
         function setMaxPowerGeneration(obj, electricalGrid)
-           obj.MaxPowerGeneration = electricalGrid.getMaxPowerGeneration(obj.GenOnIdx); 
+           obj.maxPowerGeneration = electricalGrid.getMaxPowerGeneration(obj.genOnIdx); 
         end
         
         function setNumberOfElements(obj)                     
-            obj.NumberOfBuses = size(obj.BusId,1);
-            obj.NumberOfBranches = size(obj.BranchIdx,1);
-            obj.NumberOfGen = size(obj.GenOnIdx,1);
-            obj.NumberOfBatt = size(obj.BattOnIdx,1);
+            obj.numberOfBuses = size(obj.busId,1);
+            obj.numberOfBranches = size(obj.branchIdx,1);
+            obj.numberOfGen = size(obj.genOnIdx,1);
+            obj.numberOfBatt = size(obj.battOnIdx,1);
         end
     end
 end

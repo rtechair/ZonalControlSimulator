@@ -1,17 +1,17 @@
 classdef TimeSeriesRenewableEnergy < handle
    
     properties (SetAccess = protected)
-        PowerAvailableState
-        PowerAvailableVariation
-        CurrentStep
-        DiscretizedWindChargingRate
+        powerAvailableState
+        powerAvailableVariation
+        step
+        discretizedWindChargingRate
     end
     
     properties (SetAccess = immutable)
-        StartGenIteration
-        NumberOfIterations
+        startGenIteration
+        numberOfIterations
         maxPowerGeneration
-        NumberOfGen
+        numberOfGen
     end
     
     methods
@@ -19,12 +19,12 @@ classdef TimeSeriesRenewableEnergy < handle
         function obj = TimeSeriesRenewableEnergy(filenameWindChargingRate, ...
                 startGenInSeconds, controlCycle, ...
                 durationSimulation, maxGenerationPerGen, numberOfGen)
-            obj.StartGenIteration = floor(startGenInSeconds / controlCycle);
-            obj.NumberOfIterations = floor(durationSimulation / controlCycle);
+            obj.startGenIteration = floor(startGenInSeconds / controlCycle);
+            obj.numberOfIterations = floor(durationSimulation / controlCycle);
             obj.maxPowerGeneration = maxGenerationPerGen;
-            obj.NumberOfGen = numberOfGen;
+            obj.numberOfGen = numberOfGen;
             
-            obj.CurrentStep = 1;
+            obj.step = 1;
 
             obj.setDiscretizedWindChargingRate(filenameWindChargingRate, controlCycle);
             
@@ -35,22 +35,22 @@ classdef TimeSeriesRenewableEnergy < handle
         end
         
         function disturbance = getDisturbancePowerAvailable(obj)
-            disturbance = obj.PowerAvailableVariation(:,obj.CurrentStep);
+            disturbance = obj.powerAvailableVariation(:,obj.step);
         end
         
         function powerAvailable = getInitialPowerAvailable(obj)
-            powerAvailable = obj.PowerAvailableState(:,1);
+            powerAvailable = obj.powerAvailableState(:,1);
         end
         
         % TODO: unclear name, plus a difficult behavior to grasp: get the value, then create an object encapsulating the value
         function objectDisturbance = getTimeSeries(obj)
-            objectDisturbance = DisturbancePowerAvailable(obj.NumberOfGen);      
+            objectDisturbance = DisturbancePowerAvailable(obj.numberOfGen);      
             value = obj.getDisturbancePowerAvailable();
             objectDisturbance.setDisturbancePowerAvailable(value);
         end
         
        function prepareForNextStep(obj)
-            obj.CurrentStep = obj.CurrentStep + 1;
+            obj.step = obj.step + 1;
        end 
         
     end
@@ -62,32 +62,32 @@ classdef TimeSeriesRenewableEnergy < handle
            rateInRealTime = table2array(readtable(filenameWindChargingRate))';
            numberOfSamples = size(rateInRealTime,2);
            discretTime = 1:  controlCycle : numberOfSamples;
-           obj.DiscretizedWindChargingRate = rateInRealTime(discretTime);           
+           obj.discretizedWindChargingRate = rateInRealTime(discretTime);           
        end
         
        function setPowerAvailableState(obj)
-           obj.PowerAvailableState = zeros(obj.NumberOfGen, obj.NumberOfIterations + 1);
-           for gen = 1:obj.NumberOfGen
-               start = obj.StartGenIteration(gen);
-               range = start : start + obj.NumberOfIterations;
-               windRate = obj.DiscretizedWindChargingRate(1,range);
+           obj.powerAvailableState = zeros(obj.numberOfGen, obj.numberOfIterations + 1);
+           for gen = 1:obj.numberOfGen
+               start = obj.startGenIteration(gen);
+               range = start : start + obj.numberOfIterations;
+               windRate = obj.discretizedWindChargingRate(1,range);
                maxGen = obj.maxPowerGeneration(gen,1);
-               obj.PowerAvailableState(gen,:) = maxGen * windRate;
+               obj.powerAvailableState(gen,:) = maxGen * windRate;
            end
        end
        
        function setPowerAvailableVariation(obj)
-           obj.PowerAvailableVariation = zeros(obj.NumberOfGen, obj.NumberOfIterations);
-           for instant = 1:obj.NumberOfIterations
-               obj.PowerAvailableVariation(:,instant) = obj.PowerAvailableState(:, instant+1) ...
-                   - obj.PowerAvailableState(:, instant);
+           obj.powerAvailableVariation = zeros(obj.numberOfGen, obj.numberOfIterations);
+           for instant = 1:obj.numberOfIterations
+               obj.powerAvailableVariation(:,instant) = obj.powerAvailableState(:, instant+1) ...
+                   - obj.powerAvailableState(:, instant);
            end
        end
        
        function checkInitialIterationCorrectness(obj)
-           numberOfSamples = size(obj.DiscretizedWindChargingRate,2);
-          maxStartingIterationPossible = numberOfSamples - obj.NumberOfIterations;
-          if any(obj.StartGenIteration > maxStartingIterationPossible)
+           numberOfSamples = size(obj.discretizedWindChargingRate,2);
+          maxStartingIterationPossible = numberOfSamples - obj.numberOfIterations;
+          if any(obj.startGenIteration > maxStartingIterationPossible)
               obj.errorStartingIterationExceedsMax(maxStartingIterationPossible)
           end
        end

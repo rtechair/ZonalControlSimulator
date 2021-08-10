@@ -1,30 +1,30 @@
 classdef StateOfZone < handle
    
     properties
-       PowerBranchFlow  % Fij
-       PowerCurtailment % PC
-       PowerBattery     % PB
-       EnergyBattery    % EB
-       PowerGeneration  % PG
-       PowerAvailable   % PA
+       powerBranchFlow  % Fij
+       powerCurtailment % PC
+       powerBattery     % PB
+       energyBattery    % EB
+       powerGeneration  % PG
+       powerAvailable   % PA
     end        
     
     methods
         function obj = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries)
-            obj.PowerBranchFlow = zeros(numberOfBranches, 1);
-            obj.PowerCurtailment = zeros(numberOfGenerators, 1);
-            obj.PowerBattery = zeros(numberOfBatteries, 1);
-            obj.EnergyBattery = zeros(numberOfBatteries, 1);
-            obj.PowerGeneration = zeros(numberOfGenerators, 1);
-            obj.PowerAvailable = zeros(numberOfGenerators, 1);
+            obj.powerBranchFlow = zeros(numberOfBranches, 1);
+            obj.powerCurtailment = zeros(numberOfGenerators, 1);
+            obj.powerBattery = zeros(numberOfBatteries, 1);
+            obj.energyBattery = zeros(numberOfBatteries, 1);
+            obj.powerGeneration = zeros(numberOfGenerators, 1);
+            obj.powerAvailable = zeros(numberOfGenerators, 1);
         end
         
         function setPowerBranchFlow(obj, newValue)
-            obj.PowerBranchFlow = newValue;
+            obj.powerBranchFlow = newValue;
         end
         
         function updatePowerBranchFlow(obj, electricalGrid, branchIdx)
-            obj.PowerBranchFlow = electricalGrid.getPowerBranchFlow(branchIdx);
+            obj.powerBranchFlow = electricalGrid.getPowerBranchFlow(branchIdx);
         end
         
     end

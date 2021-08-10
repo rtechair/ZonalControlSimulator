@@ -1,23 +1,23 @@
 classdef ControlOfZone < handle
     
    properties
-       ControlCurtailment
-       ControlBattery
+       controlCurtailment
+       controlBattery
    end
    
    properties (SetAccess = immutable)
-       NumberOfGen
-       NumberOfBatt
+       numberOfGen
+       numberOfBatt
    end
    
    methods 
        
        function obj = ControlOfZone(numberOfGenerators, numberOfBatteries)
-           obj.NumberOfGen = numberOfGenerators;
-           obj.NumberOfBatt = numberOfBatteries;
+           obj.numberOfGen = numberOfGenerators;
+           obj.numberOfBatt = numberOfBatteries;
            
-           obj.ControlCurtailment = zeros(numberOfGenerators,1);
-           obj.ControlBattery = zeros(numberOfBatteries,1);
+           obj.controlCurtailment = zeros(numberOfGenerators,1);
+           obj.controlBattery = zeros(numberOfBatteries,1);
        end
        
        
@@ -27,23 +27,23 @@ classdef ControlOfZone < handle
        end
        
        function setControlCurtailment(obj, value)
-           obj.ControlCurtailment = value;
+           obj.controlCurtailment = value;
        end
        
        
        function setControlBattery(obj, value)
-           obj.ControlBattery = value;
+           obj.controlBattery = value;
        end
        
    end
    
    methods (Access = protected)
        function modifyControlCurtailment(obj, valueToAdd)
-           obj.ControlCurtailment = obj.ControlCurtailment + valueToAdd;
+           obj.controlCurtailment = obj.controlCurtailment + valueToAdd;
        end
        
        function modifyControlBattery(obj, valueToAdd)
-           obj.ControlBattery = obj.ControlBattery + valueToAdd;
+           obj.controlBattery = obj.controlBattery + valueToAdd;
        end
    end
     

@@ -2,49 +2,49 @@ classdef Result < handle
    
     properties
         % State
-        PowerBranchFlow         % Fij
-        PowerCurtailment        % PC
-        PowerBattery            % PB
-        EnergyBattery           % EB
-        PowerGeneration         % PG
-        PowerAvailable          % PA
+        powerBranchFlow         % Fij
+        powerCurtailment        % PC
+        powerBattery            % PB
+        energyBattery           % EB
+        powerGeneration         % PG
+        powerAvailable          % PA
         
         % Control
-        ControlCurtailment      % DeltaPC
-        ControlBattery          % DeltaPB
+        controlCurtailment      % DeltaPC
+        controlBattery          % DeltaPB
         
         % Disturbance
-        DisturbanceTransit      % DeltaPT
-        DisturbanceGeneration   % DeltaPG
-        DisturbanceAvailable    % DeltaPA
+        disturbanceTransit      % DeltaPT
+        disturbanceGeneration   % DeltaPG
+        disturbanceAvailable    % DeltaPA
         
-        CurrentStep             % k
+        step             % k
         
-        BranchFlowLimit
+        branchFlowLimit  % maxFij
     end
     
     properties ( SetAccess = immutable)
         zoneName
-        SamplingTime
-        NumberOfIterations
+        controlCycle
+        numberOfIterations
         
-        NumberOfBuses
-        NumberOfBranches
-        NumberOfGen
-        NumberOfBatt
+        numberOfBuses
+        numberOfBranches
+        numberOfGen
+        numberOfBatt
                     
-        MaxPowerGeneration
+        maxPowerGeneration
         
-        BusId
-        BranchIdx
-        GenOnIdx
-        BattOnIdx
+        busId
+        branchIdx
+        genOnIdx
+        battOnIdx
         
-        DelayCurt
-        DelayBatt
-        DelayTimeSeries2Zone
-        DelayController2Zone
-        DelayZone2Controller
+        delayCurt
+        delayBatt
+        delayTimeSeries2Zone
+        delayController2Zone
+        delayZone2Controller
     end
     
     methods
@@ -54,72 +54,72 @@ classdef Result < handle
                 maxPowerGeneration, branchFlowLimit, busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
                 delayTimeSeries2Zone, delayController2Zone, delayZone2Controller)
             obj.zoneName = zoneName;
-            obj.NumberOfIterations = floor(durationSimulation / controlCycle);
-            obj.NumberOfBuses = numberOfBuses;
-            obj.NumberOfBranches = numberOfBranches;
-            obj.NumberOfGen = numberOfGenerators;
-            obj.NumberOfBatt = numberOfBatteries;
+            obj.numberOfIterations = floor(durationSimulation / controlCycle);
+            obj.numberOfBuses = numberOfBuses;
+            obj.numberOfBranches = numberOfBranches;
+            obj.numberOfGen = numberOfGenerators;
+            obj.numberOfBatt = numberOfBatteries;
             
-            obj.MaxPowerGeneration = maxPowerGeneration;
-            obj.BranchFlowLimit = branchFlowLimit;
-            obj.SamplingTime = controlCycle;
+            obj.maxPowerGeneration = maxPowerGeneration;
+            obj.branchFlowLimit = branchFlowLimit;
+            obj.controlCycle = controlCycle;
             
-            obj.BusId = busId;
-            obj.BranchIdx = branchIdx;
-            obj.GenOnIdx = genOnIdx;
-            obj.BattOnIdx = battOnIdx;
+            obj.busId = busId;
+            obj.branchIdx = branchIdx;
+            obj.genOnIdx = genOnIdx;
+            obj.battOnIdx = battOnIdx;
             
-            obj.DelayCurt = delayCurt;
-            obj.DelayBatt = delayBatt;
+            obj.delayCurt = delayCurt;
+            obj.delayBatt = delayBatt;
             
-            obj.DelayTimeSeries2Zone = delayTimeSeries2Zone;
-            obj.DelayController2Zone = delayController2Zone;
-            obj.DelayZone2Controller = delayZone2Controller;
+            obj.delayTimeSeries2Zone = delayTimeSeries2Zone;
+            obj.delayController2Zone = delayController2Zone;
+            obj.delayZone2Controller = delayZone2Controller;
             
-            obj.CurrentStep = 0; % 0, i.e. initialization before the actual simulation
+            obj.step = 0; % 0, i.e. initialization before the actual simulation
             
             % State
-            obj.PowerBranchFlow = zeros(numberOfBranches, obj.NumberOfIterations + 1);
-            obj.PowerCurtailment = zeros(numberOfGenerators, obj.NumberOfIterations + 1);
-            obj.PowerBattery = zeros(numberOfBatteries, obj.NumberOfIterations + 1);
-            obj.EnergyBattery = zeros(numberOfBatteries, obj.NumberOfIterations + 1);
-            obj.PowerGeneration = zeros(numberOfGenerators, obj.NumberOfIterations + 1);
-            obj.PowerAvailable = zeros(numberOfGenerators, obj.NumberOfIterations + 1);
+            obj.powerBranchFlow = zeros(numberOfBranches, obj.numberOfIterations + 1);
+            obj.powerCurtailment = zeros(numberOfGenerators, obj.numberOfIterations + 1);
+            obj.powerBattery = zeros(numberOfBatteries, obj.numberOfIterations + 1);
+            obj.energyBattery = zeros(numberOfBatteries, obj.numberOfIterations + 1);
+            obj.powerGeneration = zeros(numberOfGenerators, obj.numberOfIterations + 1);
+            obj.powerAvailable = zeros(numberOfGenerators, obj.numberOfIterations + 1);
             
             % Control
-            obj.ControlCurtailment = zeros(numberOfGenerators, obj.NumberOfIterations);
-            obj.ControlBattery = zeros(numberOfBatteries, obj.NumberOfIterations);
+            obj.controlCurtailment = zeros(numberOfGenerators, obj.numberOfIterations);
+            obj.controlBattery = zeros(numberOfBatteries, obj.numberOfIterations);
             
             % Disturbance 
-            obj.DisturbanceTransit = zeros(numberOfBuses, obj.NumberOfIterations);
-            obj.DisturbanceGeneration = zeros(numberOfGenerators, obj.NumberOfIterations);
-            obj.DisturbanceAvailable = zeros(numberOfGenerators, obj.NumberOfIterations);
+            obj.disturbanceTransit = zeros(numberOfBuses, obj.numberOfIterations);
+            obj.disturbanceGeneration = zeros(numberOfGenerators, obj.numberOfIterations);
+            obj.disturbanceAvailable = zeros(numberOfGenerators, obj.numberOfIterations);
         end
         
         
         function saveState(obj, powerBranchFlow, powerCurtailment, powerBattery, ...
                 energyBattery, powerGeneration, powerAvailable)
-            obj.PowerBranchFlow(:, obj.CurrentStep + 1) = powerBranchFlow;
-            obj.PowerCurtailment(:, obj.CurrentStep + 1) = powerCurtailment;
-            obj.PowerBattery(:, obj.CurrentStep + 1) = powerBattery;
-            obj.EnergyBattery(:, obj.CurrentStep + 1) = energyBattery;
-            obj.PowerGeneration(:, obj.CurrentStep + 1) = powerGeneration;
-            obj.PowerAvailable(:, obj.CurrentStep + 1) = powerAvailable;
+            obj.powerBranchFlow(:, obj.step + 1) = powerBranchFlow;
+            obj.powerCurtailment(:, obj.step + 1) = powerCurtailment;
+            obj.powerBattery(:, obj.step + 1) = powerBattery;
+            obj.energyBattery(:, obj.step + 1) = energyBattery;
+            obj.powerGeneration(:, obj.step + 1) = powerGeneration;
+            obj.powerAvailable(:, obj.step + 1) = powerAvailable;
         end
         
         function saveControl(obj, controlCurt, controlBatt)
-            obj.ControlCurtailment(:, obj.CurrentStep) = controlCurt;
-            obj.ControlBattery(:, obj.CurrentStep) = controlBatt;
+            obj.controlCurtailment(:, obj.step) = controlCurt;
+            obj.controlBattery(:, obj.step) = controlBatt;
         end
         
         function saveDisturbance(obj, transit, generation, available)
-            obj.DisturbanceTransit(:, obj.CurrentStep) = transit;
-            obj.DisturbanceGeneration(:, obj.CurrentStep) = generation;
-            obj.DisturbanceAvailable(:, obj.CurrentStep) = available;
+            obj.disturbanceTransit(:, obj.step) = transit;
+            obj.disturbanceGeneration(:, obj.step) = generation;
+            obj.disturbanceAvailable(:, obj.step) = available;
         end
         
         function prepareForNextStep(obj)
-            obj.CurrentStep = obj.CurrentStep + 1;
+            obj.step = obj.step + 1;
         end
  
     end

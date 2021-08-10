@@ -1,22 +1,22 @@
 classdef TelecomZone2Controller < Telecommunication
     
     properties
-        BufferQueueData
-        DelayTelecom
+        bufferQueueData
+        delayTelecom
     end
     
     methods
         function obj = TelecomZone2Controller(...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, delayTelecom)
             
-            obj.DelayTelecom = delayTelecom;
+            obj.delayTelecom = delayTelecom;
             
             blankState = StateOfZone(numberOfBranches, numberOfGen, numberOfBatt);
             blankDisturbanceTransit = zeros(numberOfBuses, 1);            
             stateAndDistTransitArray(1:delayTelecom) = ...
                 StateAndDisturbanceTransit(blankState, blankDisturbanceTransit);
             
-            obj.BufferQueueData = stateAndDistTransitArray;
+            obj.bufferQueueData = stateAndDistTransitArray;
         end
         
         function data = receive(obj, emitter)
@@ -24,16 +24,16 @@ classdef TelecomZone2Controller < Telecommunication
         end
         
         function store(obj, newStateAndDistTransit)
-            obj.BufferQueueData(end+1) = newStateAndDistTransit;
+            obj.bufferQueueData(end+1) = newStateAndDistTransit;
         end
         
         function send(obj, receiver)
-            sentStateAndDisturbTransit = obj.BufferQueueData(1);
+            sentStateAndDisturbTransit = obj.bufferQueueData(1);
             receiver.receiveStateAndDistTransit(sentStateAndDisturbTransit)
         end
         
         function dropOldestData(obj)
-            obj.BufferQueueData = obj.BufferQueueData(2:end);
+            obj.bufferQueueData = obj.bufferQueueData(2:end);
         end
         
         function transmitData(obj, emitter, receiver)

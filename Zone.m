@@ -53,23 +53,23 @@ classdef Zone < handle
             startSelected = timeSeriesSetting.startSelected;
             start = startPossibility{startSelected};
             controlCycle = obj.setting.controlCycle;
-            maxPowerGeneration = obj.topology.MaxPowerGeneration;
-            numberOfGenOn = obj.topology.NumberOfGen;
+            maxPowerGeneration = obj.topology.maxPowerGeneration;
+            numberOfGenOn = obj.topology.numberOfGen;
             obj.timeSeries = TimeSeriesRenewableEnergy(...
                 filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
         end
         
         function setZoneEvolution(obj)
-            numberOfBuses = obj.topology.NumberOfBuses;
-            numberOfBranches = obj.topology.NumberOfBranches;
-            numberOfGenOn = obj.topology.NumberOfGen;
-            numberOfBattOn = obj.topology.NumberOfBatt;
+            numberOfBuses = obj.topology.numberOfBuses;
+            numberOfBranches = obj.topology.numberOfBranches;
+            numberOfGenOn = obj.topology.numberOfGen;
+            numberOfBattOn = obj.topology.numberOfBatt;
 
             % cautious, here the delay is in seconds
             delayCurtSeconds = obj.setting.DelayInSeconds.curtailment;
             delayBattSeconds = obj.setting.DelayInSeconds.battery;
             controlCycle = obj.setting.controlCycle;
-            maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            maxPowerGeneration = obj.topology.maxPowerGeneration;
             battConstPowerReduc = obj.setting.batteryConstantPowerReduction;
 
             obj.zoneEvolution = SimulatedZone(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
@@ -82,10 +82,10 @@ classdef Zone < handle
             delayController2Zone = telecomSetting.controller2Zone;
             delayZone2Controller = telecomSetting.zone2Controller;
 
-            numberOfBuses = obj.topology.NumberOfBuses;
-            numberOfBranches = obj.topology.NumberOfBranches;
-            numberOfGenOn = obj.topology.NumberOfGen;
-            numberOfBattOn = obj.topology.NumberOfBatt;
+            numberOfBuses = obj.topology.numberOfBuses;
+            numberOfBranches = obj.topology.numberOfBranches;
+            numberOfGenOn = obj.topology.numberOfGen;
+            numberOfBattOn = obj.topology.numberOfBatt;
             
             obj.telecomTimeSeries2Zone = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
             obj.telecomController2Zone = TelecomController2Zone(...
@@ -96,17 +96,17 @@ classdef Zone < handle
         
         function setResult(obj, duration)
             controlCycle = obj.setting.controlCycle;
-            numberOfBuses = obj.topology.NumberOfBuses;
-            numberOfBranches = obj.topology.NumberOfBranches;
-            numberOfGenOn = obj.topology.NumberOfGen;
-            numberOfBattOn = obj.topology.NumberOfBatt;
-            maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            numberOfBuses = obj.topology.numberOfBuses;
+            numberOfBranches = obj.topology.numberOfBranches;
+            numberOfGenOn = obj.topology.numberOfGen;
+            numberOfBattOn = obj.topology.numberOfBatt;
+            maxPowerGeneration = obj.topology.maxPowerGeneration;
             branchFlowLimit = obj.setting.branchFlowLimit;
             
-            busId = obj.topology.BusId;
-            branchIdx = obj.topology.BranchIdx;
-            genOnIdx = obj.topology.GenOnIdx;
-            battOnIdx = obj.topology.BattOnIdx;
+            busId = obj.topology.busId;
+            branchIdx = obj.topology.branchIdx;
+            genOnIdx = obj.topology.genOnIdx;
+            battOnIdx = obj.topology.battOnIdx;
             
             % The delays here are in number of iterations, not in seconds
             delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
@@ -138,8 +138,8 @@ classdef Zone < handle
         % WARNING: actually this function sets a limiter as the controller
         function setController(obj)
             branchFlowLimit = obj.setting.branchFlowLimit;
-            numberOfGenOn = obj.topology.NumberOfGen;
-            numberOfBattOn = obj.topology.NumberOfBatt;
+            numberOfGenOn = obj.topology.numberOfGen;
+            numberOfBattOn = obj.topology.numberOfBatt;
             increasingEchelon = obj.controllerSetting.IncreaseCurtPercentEchelon;
             decreasingEchelon = obj.controllerSetting.DecreaseCurtPercentEchelon;
             lowerThreshold = obj.controllerSetting.LowerThresholdPercent;
@@ -148,7 +148,7 @@ classdef Zone < handle
             % cautious, here the delay is in iterations!
             delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
             delayBatt = obj.setting.DelayInSeconds.battery / controlCycle; % unused
-            maxPowerGeneration = obj.topology.MaxPowerGeneration;
+            maxPowerGeneration = obj.topology.maxPowerGeneration;
             
             obj.controller = Limiter(branchFlowLimit, numberOfGenOn, numberOfBattOn, ...
                 increasingEchelon, decreasingEchelon, lowerThreshold, upperThreshold, ...
@@ -166,17 +166,17 @@ classdef Zone < handle
         %{
         The zone sends to the controller all the information about its state,
         but only one disturbance: the power transiting through the buses.
-        That is why the zone uses an object 'State' but not an object
+        That is why the zone uses an object 'state' but not an object
         'Disturbance' to store the Power Transit.
         %}
         function updatePowerFlow(obj, electricalGrid)
-            branchIdx = obj.topology.BranchIdx;
-            obj.zoneEvolution.State.updatePowerBranchFlow(electricalGrid, branchIdx);
+            branchIdx = obj.topology.branchIdx;
+            obj.zoneEvolution.state.updatePowerBranchFlow(electricalGrid, branchIdx);
         end
         
         function updatePowerTransit(obj, electricalGrid)
-            busId = obj.topology.BusId;
-            branchBorderIdx = obj.topology.BranchBorderIdx;
+            busId = obj.topology.busId;
+            branchBorderIdx = obj.topology.branchBorderIdx;
             obj.zoneEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
         end
         
@@ -186,14 +186,14 @@ classdef Zone < handle
         end
         
         function updateGridGeneration(obj, electricalGrid)
-            genOnIdx = obj.topology.GenOnIdx;
+            genOnIdx = obj.topology.genOnIdx;
             powerGeneration = obj.getPowerGeneration();
             electricalGrid.updateGeneration(genOnIdx, powerGeneration);
         end
         
         function updateGridBattInjection(obj, electricalGrid)
-            battOnIdx = obj.topology.BattOnIdx;
-            powerBattery = obj.zoneEvolution.State.PowerBattery;
+            battOnIdx = obj.topology.battOnIdx;
+            powerBattery = obj.zoneEvolution.state.powerBattery;
             electricalGrid.updateBattInjection(battOnIdx, powerBattery);
         end
         
@@ -261,31 +261,31 @@ classdef Zone < handle
         %% GETTER
         
         function busId = getBusId(obj)
-            busId = obj.topology.BusId;
+            busId = obj.topology.busId;
         end
         
         function branchIdx = getBranchIdx(obj)
-            branchIdx = obj.topology.BranchIdx;
+            branchIdx = obj.topology.branchIdx;
         end
         
         function branchBorderIdx = getBranchBorderIdx(obj)
-            branchBorderIdx = obj.topology.BranchBorderIdx;
+            branchBorderIdx = obj.topology.branchBorderIdx;
         end
         
         function genOnIdx = getGenOnIdx(obj)
-            genOnIdx = obj.topology.GenOnIdx;
+            genOnIdx = obj.topology.genOnIdx;
         end
         
         function battOnIdx = getBattOnIdx(obj)
-            battOnIdx = obj.topology.BattOnIdx;
+            battOnIdx = obj.topology.battOnIdx;
         end
         
         function powerGeneration = getPowerGeneration(obj)
-           powerGeneration = obj.zoneEvolution.State.PowerGeneration;
+           powerGeneration = obj.zoneEvolution.state.powerGeneration;
         end
         
         function powerBattery = getPowerBattery(obj)
-            powerBattery = obj.zoneEvolution.State.PowerBattery;
+            powerBattery = obj.zoneEvolution.state.powerBattery;
         end
     end
 end

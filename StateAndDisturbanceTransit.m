@@ -1,23 +1,23 @@
 classdef StateAndDisturbanceTransit < handle
     
    properties
-      StateOfZone
-      DisturbancePowerInTransit
+      stateOfZone
+      disturbancePowerInTransit
    end
     
    methods
        function obj = StateAndDisturbanceTransit(stateOfZone, disturbancePowerInTransit)
-           obj.StateOfZone = stateOfZone;
-           obj.DisturbancePowerInTransit = disturbancePowerInTransit;
+           obj.stateOfZone = stateOfZone;
+           obj.disturbancePowerInTransit = disturbancePowerInTransit;
                        
        end
        
        function state = getStateOfZone(obj)
-           state = obj.StateOfZone;
+           state = obj.stateOfZone;
        end
        
        function distTransit = getDisturbanceTransit(obj)
-           distTransit = obj.DisturbancePowerInTransit;
+           distTransit = obj.disturbancePowerInTransit;
        end
    end
 end

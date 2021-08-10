@@ -1,28 +1,28 @@
 classdef Limiter < Controller
    
     properties (SetAccess = protected)
-       QueueDelayedCurtControlPercent
-       FutureStateCurt
-       CurtControlPercent
-       NoBatteryInjectionControl
+       queueDelayedCurtControlPercent
+       futureStateCurt
+       curtControlPercent
+       noBatteryInjectionControl
        
-       State
-       DistTransit
+       state
+       distTransit
     end
     
     
     properties (SetAccess = immutable)
-        BranchFlowLimit
+        branchFlowLimit
         
-        IncreaseCurtPercentEchelon
-        DecreaseCurtPercentEchelon
+        increaseCurtPercentEchelon
+        decreaseCurtPercentEchelon
         
-        LowFlowThreshold
-        HighFlowThreshold
+        lowFlowThreshold
+        highFlowThreshold
         
-        NumberOfGen
-        NumberOfBatt
-        MaxGeneration
+        numberOfGen
+        numberOfBatt
+        maxGeneration
     end
         
     
@@ -31,45 +31,45 @@ classdef Limiter < Controller
                 increaseCurtPercentEchelon, decreaseCurtPercentEchelon, lowerThresholdPercent, upperThresholdPercent, ...
                 delayCurtailment, maxGeneration)
             
-            obj.MaxGeneration = maxGeneration;
-            obj.BranchFlowLimit = branchFlowLimit;
+            obj.maxGeneration = maxGeneration;
+            obj.branchFlowLimit = branchFlowLimit;
             
             
-            obj.IncreaseCurtPercentEchelon = increaseCurtPercentEchelon;
-            obj.DecreaseCurtPercentEchelon = - decreaseCurtPercentEchelon;
+            obj.increaseCurtPercentEchelon = increaseCurtPercentEchelon;
+            obj.decreaseCurtPercentEchelon = - decreaseCurtPercentEchelon;
             
-            obj.LowFlowThreshold = lowerThresholdPercent * branchFlowLimit;
-            obj.HighFlowThreshold = upperThresholdPercent * branchFlowLimit;
+            obj.lowFlowThreshold = lowerThresholdPercent * branchFlowLimit;
+            obj.highFlowThreshold = upperThresholdPercent * branchFlowLimit;
             
             obj.doNotUseBatteries()
             
             
-            obj.QueueDelayedCurtControlPercent = zeros(1, delayCurtailment);
-            obj.FutureStateCurt = 0;
+            obj.queueDelayedCurtControlPercent = zeros(1, delayCurtailment);
+            obj.futureStateCurt = 0;
             
-            obj.NumberOfGen = numberOfGen;
-            obj.NumberOfBatt = numberOfBatt;
+            obj.numberOfGen = numberOfGen;
+            obj.numberOfBatt = numberOfBatt;
             
         end
         
         function curtControlForAllGen = getCurtailmentControl(obj)
-            curtControlForAllGen = obj.CurtControlPercent * obj.MaxGeneration;
+            curtControlForAllGen = obj.curtControlPercent * obj.maxGeneration;
         end
         
         function battControlForAllBatt = getBatteryInjectionControl(obj)
-            battControlForAllBatt = obj.NoBatteryInjectionControl * zeros(obj.NumberOfBatt,1);
+            battControlForAllBatt = obj.noBatteryInjectionControl * zeros(obj.numberOfBatt,1);
         end
         
         function objectControl = getControl(obj)
             curtControlForAllGen = obj.getCurtailmentControl();
             battControlForAllGen = obj.getBatteryInjectionControl();
-            objectControl = ControlOfZone(obj.NumberOfGen, obj.NumberOfBatt);
+            objectControl = ControlOfZone(obj.numberOfGen, obj.numberOfBatt);
             objectControl.setControlCurtailment(curtControlForAllGen);
             objectControl.setControlBattery(battControlForAllGen);
         end
         
         function computeControl(obj)
-            branchFlowState = obj.State.PowerBranchFlow;
+            branchFlowState = obj.state.powerBranchFlow;
             if obj.isABranchOverHighFlowThreshold(branchFlowState) && obj.canCurtailmentIncrease()
                 obj.increaseCurtailment();
                 obj.updateFutureCurtailment();
@@ -89,8 +89,8 @@ classdef Limiter < Controller
         end
         
         function receiveStateAndDistTransit(obj, stateAndDistTransit)
-            obj.State = stateAndDistTransit.getStateOfZone();
-            obj.DistTransit = stateAndDistTransit.getDisturbanceTransit();
+            obj.state = stateAndDistTransit.getStateOfZone();
+            obj.distTransit = stateAndDistTransit.getDisturbanceTransit();
         end
         
     end
@@ -99,46 +99,46 @@ classdef Limiter < Controller
         
         % the curtailment limiter does not use the batteries
         function doNotUseBatteries(obj)
-            obj.NoBatteryInjectionControl = 0;
+            obj.noBatteryInjectionControl = 0;
         end
         
         function increaseCurtailment(obj)
-            obj.CurtControlPercent = obj.IncreaseCurtPercentEchelon;
+            obj.curtControlPercent = obj.increaseCurtPercentEchelon;
         end
         
         function decreaseCurtailment(obj)
-            obj.CurtControlPercent = obj.DecreaseCurtPercentEchelon;
+            obj.curtControlPercent = obj.decreaseCurtPercentEchelon;
         end
         
         function doNotAlterCurtailment(obj)
-            obj.CurtControlPercent = 0;
+            obj.curtControlPercent = 0;
         end
                    
         
         function isOverThreshold = isABranchOverHighFlowThreshold(obj, branchFlowState)
-           isOverThreshold = any( abs(branchFlowState) > obj.HighFlowThreshold );
+           isOverThreshold = any( abs(branchFlowState) > obj.highFlowThreshold );
         end
         
         function areAllUnderThreshold = areAllBranchesUnderLowFlowThreshold(obj, branchFlowState)
-            areAllUnderThreshold = all( abs(branchFlowState) < obj.LowFlowThreshold );
+            areAllUnderThreshold = all( abs(branchFlowState) < obj.lowFlowThreshold );
         end
         
         function canCurtIncrease = canCurtailmentIncrease(obj)
-            canCurtIncrease = (obj.FutureStateCurt + obj.IncreaseCurtPercentEchelon <= 1);
+            canCurtIncrease = (obj.futureStateCurt + obj.increaseCurtPercentEchelon <= 1);
         end
         
         function canCurtDecrease = canCurtailmentDecrease(obj)
-            canCurtDecrease = (obj.FutureStateCurt + obj.DecreaseCurtPercentEchelon >= 0);
+            canCurtDecrease = (obj.futureStateCurt + obj.decreaseCurtPercentEchelon >= 0);
         end
         
         function updateFutureCurtailment(obj)
-            obj.FutureStateCurt = obj.FutureStateCurt + obj.CurtControlPercent;
+            obj.futureStateCurt = obj.futureStateCurt + obj.curtControlPercent;
         end
         
         function updateDelayedCurtControlPercentQueue(obj)
-            OldestControlDropped = obj.QueueDelayedCurtControlPercent(2:end);
-            newControlAdded = [OldestControlDropped obj.CurtControlPercent];
-            obj.QueueDelayedCurtControlPercent = newControlAdded;
+            OldestControlDropped = obj.queueDelayedCurtControlPercent(2:end);
+            newControlAdded = [OldestControlDropped obj.curtControlPercent];
+            obj.queueDelayedCurtControlPercent = newControlAdded;
         end
 
     end

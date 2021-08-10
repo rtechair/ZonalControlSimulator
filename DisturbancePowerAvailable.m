@@ -1,23 +1,23 @@
 classdef DisturbancePowerAvailable < handle
    
     properties (SetAccess = protected)
-        NumberOfGen
-        DisturbanceValue
+        numberOfGen
+        disturbanceValue
     end
     
     methods 
         
         function obj = DisturbancePowerAvailable(numberOfGen)
-            obj.NumberOfGen = numberOfGen;
-            obj.DisturbanceValue = zeros(numberOfGen,1);
+            obj.numberOfGen = numberOfGen;
+            obj.disturbanceValue = zeros(numberOfGen,1);
         end
         
         function setDisturbancePowerAvailable(obj, newDisturbance)
-            obj.DisturbanceValue = newDisturbance;
+            obj.disturbanceValue = newDisturbance;
         end
         
         function disturbance = getValue(obj)
-            disturbance = obj.DisturbanceValue;
+            disturbance = obj.disturbanceValue;
         end
         
     end
