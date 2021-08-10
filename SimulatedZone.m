@@ -27,6 +27,12 @@ classdef SimulatedZone < handle
        DelayBatt
        
        MaxPowerGeneration
+       
+       %{
+        From the paper 'Modeling the Partial Renewable Power Curtailment
+        for Transmission Network Management', BattConstPowerReduc corresponds to:
+        T * C_n^B in the battery energy equation
+        %}
        BattConstPowerReduc
     end
     
