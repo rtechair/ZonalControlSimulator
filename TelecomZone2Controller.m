@@ -19,12 +19,8 @@ classdef TelecomZone2Controller < Telecommunication
             obj.queueData = stateAndDistTransitArray;
         end
         
-        function data = receive(obj, emitter)
-            data = emitter.getStateAndDistTransit();
-        end
-        
-        function store(obj, newStateAndDistTransit)
-            obj.queueData(end+1) = newStateAndDistTransit;
+        function receive(obj, emitter)
+            obj.queueData(end+1) = emitter.getStateAndDistTransit();
         end
         
         function send(obj, receiver)
@@ -37,8 +33,7 @@ classdef TelecomZone2Controller < Telecommunication
         end
         
         function transmitData(obj, emitter, receiver)
-            stateAndDisturbTransit = obj.receive(emitter);
-            obj.store(stateAndDisturbTransit);
+            obj.receive(emitter);
             obj.send(receiver);
             obj.dropOldestData();
         end

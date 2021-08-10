@@ -13,15 +13,9 @@ classdef TelecomTimeSeries2Zone < Telecommunication
             obj.queueData = disturbanceArray;
         end
         
-        function disturbance = receive(obj, emitter)
-            disturbance = emitter.getTimeSeries();
+        function receive(obj, emitter)
+            obj.queueData(end+1) = emitter.getTimeSeries();
         end
-        
-        
-        function store(obj, newDisturbance)
-            obj.queueData(end+1) = newDisturbance;
-        end
-        
         
         function send(obj, receiver)
             sentDisturbance = obj.queueData(1);
@@ -33,8 +27,7 @@ classdef TelecomTimeSeries2Zone < Telecommunication
         end
         
         function transmitData(obj, emitter, receiver)
-            disturbance = obj.receive(emitter);
-            obj.store(disturbance);
+            obj.receive(emitter);
             obj.send(receiver);
             obj.dropOldestData();
             emitter.prepareForNextStep();
