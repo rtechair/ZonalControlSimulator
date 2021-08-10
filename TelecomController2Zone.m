@@ -1,15 +1,15 @@
 classdef TelecomController2Zone < Telecommunication
     
     properties
-        bufferQueueData % 1st element is to be sent, last element is the last received
-        delayTelecom
+        queueData
+        delay
     end
     
     methods
         function obj = TelecomController2Zone(numberOfGen, numberOfBatt, delayTelecom)
-            obj.delayTelecom = delayTelecom;
+            obj.delay = delayTelecom;
             controlArray(1:delayTelecom) = ControlOfZone(numberOfGen, numberOfBatt);
-            obj.bufferQueueData = controlArray;
+            obj.queueData = controlArray;
         end
         
         function control = receive(obj, emitter)
@@ -17,16 +17,16 @@ classdef TelecomController2Zone < Telecommunication
         end
         
         function store(obj, newControl)
-            obj.bufferQueueData(end+1) = newControl;
+            obj.queueData(end+1) = newControl;
         end
         
         function send(obj, receiver)
-            sentControl = obj.bufferQueueData(1);
+            sentControl = obj.queueData(1);
             receiver.receiveControl(sentControl)
         end
         
         function dropOldestData(obj)
-            obj.bufferQueueData = obj.bufferQueueData(2:end);
+            obj.queueData = obj.queueData(2:end);
         end
            
         function transmitData(obj, emitter, receiver)

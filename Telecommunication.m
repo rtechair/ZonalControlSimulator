@@ -1,19 +1,15 @@
 classdef (Abstract) Telecommunication < handle
 
     properties (Abstract)
-        bufferQueueData
-        delayTelecom
+        queueData % 1st element is to be sent, last element is the last received
+        delay
     end
-    
 
     methods (Abstract)
         
-        data = receive(obj, emitter);
-        store(obj, newData);
+        receive(obj, emitter);
         send(obj, receiver);
-        transmitData;
+        transmitData(obj, emitter, receiver);
     end
-    
-  
-    
+
 end
