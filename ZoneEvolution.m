@@ -4,10 +4,10 @@ classdef ZoneEvolution < handle
     properties
         state
         
-        bufferQueueControlCurt
-        bufferQueueControlBatt
+        queueControlCurt
+        queueControlBatt
         
-        bufferQueuePowerTransit
+        queuePowerTransit
         
         disturbanceTransit
         disturbanceGeneration
@@ -59,10 +59,10 @@ classdef ZoneEvolution < handle
             
             
             % blank buffers
-            obj.bufferQueueControlCurt = zeros(numberOfGenerators, obj.delayCurt);
-            obj.bufferQueueControlBatt = zeros(numberOfBatteries, obj.delayBatt);
+            obj.queueControlCurt = zeros(numberOfGenerators, obj.delayCurt);
+            obj.queueControlBatt = zeros(numberOfBatteries, obj.delayBatt);
             
-            obj.bufferQueuePowerTransit = zeros(obj.numberOfBuses,1);
+            obj.queuePowerTransit = zeros(obj.numberOfBuses,1);
             
             % blank transit disturbance
             obj.disturbanceTransit = zeros(numberOfBuses, 1);
@@ -74,26 +74,26 @@ classdef ZoneEvolution < handle
         end
         
         function receiveControl(obj, controlOfZone)
-            obj.bufferQueueControlCurt(:,end+1) = controlOfZone.controlCurtailment;
-            obj.bufferQueueControlBatt(:,end+1) = controlOfZone.controlBattery;
+            obj.queueControlCurt(:,end+1) = controlOfZone.controlCurtailment;
+            obj.queueControlBatt(:,end+1) = controlOfZone.controlBattery;
         end
         
         function dropOldestControl(obj)
-            obj.bufferQueueControlCurt = obj.bufferQueueControlCurt(:, 2:end);
-            obj.bufferQueueControlBatt = obj.bufferQueueControlBatt(:, 2:end);
+            obj.queueControlCurt = obj.queueControlCurt(:, 2:end);
+            obj.queueControlBatt = obj.queueControlBatt(:, 2:end);
         end
         
         function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
-            obj.bufferQueuePowerTransit(:,end+1) = ...
+            obj.queuePowerTransit(:,end+1) = ...
                 electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
         end
                 
         function updateDisturbanceTransit(obj)
-            obj.disturbanceTransit = obj.bufferQueuePowerTransit(:,2) - obj.bufferQueuePowerTransit(:,1);
+            obj.disturbanceTransit = obj.queuePowerTransit(:,2) - obj.queuePowerTransit(:,1);
         end
         
         function dropOldestPowerTransit(obj)
-            obj.bufferQueuePowerTransit = obj.bufferQueuePowerTransit(:, 2:end);
+            obj.queuePowerTransit = obj.queuePowerTransit(:, 2:end);
         end
         
         function saveState(obj, memory)
@@ -122,7 +122,7 @@ classdef ZoneEvolution < handle
             f = obj.state.powerAvailable ...
                 + obj.disturbanceAvailable ...
                 - obj.state.powerGeneration ...
-                + obj.bufferQueueControlCurt(:,1);
+                + obj.queueControlCurt(:,1);
             g = obj.maxPowerGeneration...
                 - obj.state.powerCurtailment...
                 - obj.state.powerGeneration;
@@ -130,8 +130,8 @@ classdef ZoneEvolution < handle
         end
         
         function updateState(obj)
-            appliedControlCurt = obj.bufferQueueControlCurt(:,1);
-            appliedControlBatt = obj.bufferQueueControlBatt(:, 1);
+            appliedControlCurt = obj.queueControlCurt(:,1);
+            appliedControlBatt = obj.queueControlBatt(:, 1);
             
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
