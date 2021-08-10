@@ -1,28 +1,28 @@
 classdef BasecaseOverview < handle
    
     properties
-        Matpowercase
-        InternalMatpowercase
-        MapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
+        matpowercase
+        internalMatpowercase
+        mapBus_id_e2i % sparse column vector, convert external bus id -> internal bus id
     end
     
     methods
         
         function obj = BasecaseOverview(filenameBasecase)
-            obj.Matpowercase = loadcase(filenameBasecase);
-            obj.InternalMatpowercase = ext2int(obj.Matpowercase);  
-            obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
+            obj.matpowercase = loadcase(filenameBasecase);
+            obj.internalMatpowercase = ext2int(obj.matpowercase);  
+            obj.mapBus_id_e2i = obj.internalMatpowercase.order.bus.e2i;
         end
               
         function displayCaseInfo(obj)
             % Use Matpower function 'case_info' to display informations about the basecase 
-            case_info(obj.Matpowercase)
+            case_info(obj.matpowercase)
         end
                 
         function busIdx = getBusIdx(obj, busId)
             % the mapping is sparse and returns a sparse matrix, thus make
             % it dense with 'full'
-           busIdx = full(obj.MapBus_id_e2i(busId)); 
+           busIdx = full(obj.mapBus_id_e2i(busId)); 
         end
         
         function branchIdx = getFirstBranchIdx(obj, busFrom, busTo)
@@ -32,20 +32,20 @@ classdef BasecaseOverview < handle
             
             % Why only the 1st branch connecting the 2 buses:
             % On the branches we had to remove, there was only 1 branch connecting the 2 buses
-            busFromOfBranches = obj.Matpowercase.branch(:, 1);
-            busToOfBranches = obj.Matpowercase.branch(:, 2);
+            busFromOfBranches = obj.matpowercase.branch(:, 1);
+            busToOfBranches = obj.matpowercase.branch(:, 2);
             branchIdx = find(busFromOfBranches == busFrom...
                            & busToOfBranches   == busTo  ,1); 
         end
         
         function genIdx = getGenAtBus(obj, busId)
-           allBusesOfGen = obj.Matpowercase.gen(:,1);
+           allBusesOfGen = obj.matpowercase.gen(:,1);
            genIdx = find(allBusesOfGen == busId);
         end
         
         function genOnIdx = getGenOnAtBus(obj, busId)
-           allBusesOfGen = obj.Matpowercase.gen(:,1);
-           isGenOn = obj.Matpowercase.gen(:,8) > 0;
+           allBusesOfGen = obj.matpowercase.gen(:,1);
+           isGenOn = obj.matpowercase.gen(:,8) > 0;
            genOnIdx = find(allBusesOfGen == busId & isGenOn == 1);
         end
         
@@ -55,28 +55,28 @@ classdef BasecaseOverview < handle
             %% Output
             % All the values describing a branch according to Matpower manual: see Table B-3 Branch Data.
             % Alternatively, see section Branch Data Format of CASEFORMAT, type "help caseformat"           
-            branchInfo = num2cell(obj.Matpowercase.branch(branchIdx,:));
+            branchInfo = num2cell(obj.matpowercase.branch(branchIdx,:));
             [busFrom, busTo, r,x, b, rateA, rateB, rateC,ratio,angle,status,minAngle,maxAngle] = ...
                 branchInfo{:};
         end
         
         function boolean = isABusDeleted(obj)
             % check if some buses have been deleted during the internal conversion by Matpower function 'ext2int'
-            numberOfDeletedBuses = size(obj.InternalMatpowercase.order.bus.status.off, 1);
+            numberOfDeletedBuses = size(obj.internalMatpowercase.order.bus.status.off, 1);
             boolean = numberOfDeletedBuses ~= 0;
         end
         
         function boolean = isABranchDeleted(obj)
             % check if some branches have been deleted during the internal conversion by Matpower function 'ext2int'
-            numberOfDeletedBranches = size(obj.InternalMatpowercase.order.branch.status.off,1);
+            numberOfDeletedBranches = size(obj.internalMatpowercase.order.branch.status.off,1);
             boolean = numberOfDeletedBranches ~= 0;
         end
         
         function boolean = doExternalAndInternalBusOrdersMatch(obj)
-            numberOfExtBuses = size(obj.Matpowercase.bus,1);
-            lastExtBusIdx = obj.Matpowercase.bus(numberOfExtBuses,1);
+            numberOfExtBuses = size(obj.matpowercase.bus,1);
+            lastExtBusIdx = obj.matpowercase.bus(numberOfExtBuses,1);
             % e2i is a sparse matrix, thus to obtain a dense 1x1 matrix, 'full' is necessary
-            lastIntBusIdx = full(obj.InternalMatpowercase.order.bus.e2i(lastExtBusIdx));
+            lastIntBusIdx = full(obj.internalMatpowercase.order.bus.e2i(lastExtBusIdx));
             boolean = lastIntBusIdx == lastExtBusIdx;
         end
         
@@ -135,7 +135,7 @@ classdef BasecaseOverview < handle
         
         
         function boolean = isBusPresent(obj, busId)
-            busIdx = find(obj.Matpowercase.bus(:,1) == busId, 1);
+            busIdx = find(obj.matpowercase.bus(:,1) == busId, 1);
             boolean = ~isempty(busIdx);
         end
         
@@ -168,8 +168,8 @@ classdef BasecaseOverview < handle
         end
         
         function boolean = isGenAtBusPresent(obj, busId)
-           busesOfGenAndBatt =  obj.Matpowercase.gen(:,1);
-           minRealPowerOutput = obj.Matpowercase.gen(:,10);
+           busesOfGenAndBatt =  obj.matpowercase.gen(:,1);
+           minRealPowerOutput = obj.matpowercase.gen(:,10);
            isItAGen = minRealPowerOutput >= 0;
            genIdx = find(busesOfGenAndBatt == busId & isItAGen, 1);
            boolean = ~isempty(genIdx);
@@ -184,8 +184,8 @@ classdef BasecaseOverview < handle
         end
         
         function boolean = isBattAtBusPresent(obj, busId)
-            busesOfGenAndBatt = obj.Matpowercase.gen(:,1);
-           minRealPowerOutput = obj.Matpowercase.gen(:,10);
+            busesOfGenAndBatt = obj.matpowercase.gen(:,1);
+           minRealPowerOutput = obj.matpowercase.gen(:,10);
            % a battery has a negative min power output, as opposed to a generator
            isItABatt = minRealPowerOutput < 0;
            battIdx = find(busesOfGenAndBatt == busId & isItABatt, 1);

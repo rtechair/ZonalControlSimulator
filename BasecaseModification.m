@@ -7,7 +7,7 @@ classdef BasecaseModification < BasecaseOverview
         end
         
         function addBus(obj, id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm)
-            % Add a bus to the existing Matpowercase at the bottom of the 'bus' field
+            % Add a bus to the existing matpowercase at the bottom of the 'bus' field
             %% Input
             % All the needed values describing a branch according to MATPOWER manual: see Table B-1 Bus Data.
             % Alternatively, see section Bus Data Format of CASEFORMAT, type "help caseformat"
@@ -27,31 +27,31 @@ classdef BasecaseModification < BasecaseOverview
                 maxVm (1,1) double {mustBePositive}
                 minVm (1,1) double {mustBePositive, mustBeLessThanOrEqual(minVm,maxVm)}
             end
-            obj.Matpowercase.bus(end+1, :) = ...
+            obj.matpowercase.bus(end+1, :) = ...
                 [id, type, Pd, Qd, Gs, Bs, area, Vm, Va, baseKV, zone, maxVm, minVm];
         end
         
         function setRealPowerLoad(obj, busIdx, Pd)
-            obj.Matpowercase.bus(busIdx, 3) = Pd;
+            obj.matpowercase.bus(busIdx, 3) = Pd;
         end
         
         function setReactivePowerLoad(obj, busIdx, Qd)
-            obj.Matpowercase.bus(busIdx, 4) = Qd;
+            obj.matpowercase.bus(busIdx, 4) = Qd;
         end
         
         function addBranch(obj, busFrom, busTo, r, x, b, rateA, rateB, rateC, ratio, angle,...
                 status, angmin, angmax)
-            % Add a branch to the existing Matpowercase at the bottom of
+            % Add a branch to the existing matpowercase at the bottom of
             % the 'branch' field.
             %% Input
             % All the values describing a branch according to Matpower
             % manual: see Table B-3 Branch Data.
             % Alternatively, see section Branch Data Format of CASEFORMAT, type "help caseformat"
-            obj.Matpowercase.branch(end+1,:) = [busFrom, busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
+            obj.matpowercase.branch(end+1,:) = [busFrom, busTo,r,x,b,rateA,rateB,rateC,ratio,angle,status,angmin,angmax];
         end
         
         function addGenerator(obj, busId, maxPowerGeneration, minPowerGeneration, num, startup, shutdown, c3, c2, c1, c0)
-            % Add a generator or a battery to the existing Matpowercase at the bottom of the 'gen' field.
+            % Add a generator or a battery to the existing matpowercase at the bottom of the 'gen' field.
             % A battery is a generator with minPowerGeneration < 0
             % The method is equivalent to Matpower's function 'addgen2mpc', but with default values for gencost.
             
@@ -75,22 +75,22 @@ classdef BasecaseModification < BasecaseOverview
                 c1 (1,1) double = 0
                 c0 (1,1) double = 0
             end
-            obj.Matpowercase.gencost(end+1,:) = [num startup shutdown c3 c2 c1 c0];
-            obj.Matpowercase.gen(end+1,:) = [busId 0 0 300 -300 1.025 100 1 maxPowerGeneration minPowerGeneration zeros(1,11)];
+            obj.matpowercase.gencost(end+1,:) = [num startup shutdown c3 c2 c1 c0];
+            obj.matpowercase.gen(end+1,:) = [busId 0 0 300 -300 1.025 100 1 maxPowerGeneration minPowerGeneration zeros(1,11)];
         end
         
         function addBattery(obj, busId, maxPowerGeneration, minPowerGeneration)
-            % Add a battery to the existing Matpowercase at the bottom of the 'gen' field.
+            % Add a battery to the existing matpowercase at the bottom of the 'gen' field.
             % A battery is a generator with minPowerGeneration < 0
             obj.addGenerator(busId, maxPowerGeneration, minPowerGeneration);
         end
         
         function removeBranch(obj, branchIdx)
-            obj.Matpowercase.branch(branchIdx,:) = [];
+            obj.matpowercase.branch(branchIdx,:) = [];
         end 
         
         function switchOffGen(obj, genOnIdx)
-           obj.Matpowercase.gen(genOnIdx,8) = 0; 
+           obj.matpowercase.gen(genOnIdx,8) = 0; 
         end
             
         function addZoneVG(obj)
@@ -222,8 +222,8 @@ classdef BasecaseModification < BasecaseOverview
         end
                
         function updateInternalMatpowercase(obj)
-           obj.InternalMatpowercase = ext2int(obj.Matpowercase);  
-           obj.MapBus_id_e2i = obj.InternalMatpowercase.order.bus.e2i;
+           obj.internalMatpowercase = ext2int(obj.matpowercase);  
+           obj.mapBus_id_e2i = obj.internalMatpowercase.order.bus.e2i;
         end
         
         function handleBasecaseForZone_VG_VTV_BLA(obj)
@@ -232,7 +232,7 @@ classdef BasecaseModification < BasecaseOverview
             else
                disp(['case6468rte_zone_VG_VTV_BLA.m does not exist.' newline ...
                    ' Using case6468rte from matpower''s data, add the zones VG, VTV and BLA.' newline])
-               obj.Matpowercase = loadcase('case6468rte');
+               obj.matpowercase = loadcase('case6468rte');
                obj.addZoneVG();
                obj.addZoneVTV();
                obj.addZoneBLA();
@@ -243,7 +243,7 @@ classdef BasecaseModification < BasecaseOverview
         end
         
         function saveMatpowercase(obj, newFilename)
-            savecase(newFilename, obj.Matpowercase);
+            savecase(newFilename, obj.matpowercase);
         end
         
     end
