@@ -1,4 +1,4 @@
-classdef SimulatedZone < handle
+classdef ZoneEvolution < handle
     
    
     properties
@@ -38,7 +38,7 @@ classdef SimulatedZone < handle
     
     methods
        
-        function obj = SimulatedZone(numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
+        function obj = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
                 delayCurtailmentInSeconds, delayBatteryInSeconds, controlCycle, ...
                 maxGeneration, battConstPowerReduc)
             obj.numberOfBuses = numberOfBuses;

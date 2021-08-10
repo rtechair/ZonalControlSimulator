@@ -72,7 +72,7 @@ classdef Zone < handle
             maxPowerGeneration = obj.topology.maxPowerGeneration;
             battConstPowerReduc = obj.setting.batteryConstantPowerReduction;
 
-            obj.zoneEvolution = SimulatedZone(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
+            obj.zoneEvolution = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
                 delayCurtSeconds, delayBattSeconds, controlCycle, maxPowerGeneration, battConstPowerReduc);
         end
         
