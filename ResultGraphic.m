@@ -33,10 +33,9 @@ classdef ResultGraphic < Result
                 hold on;
                 stairs(time, obj.powerAvailable(gen,:), ':'); % PA
                 stairs(time, obj.powerCurtailment(gen, :), '-.'); % PC
-                f1 = obj.maxPowerGeneration(gen) - obj.powerCurtailment(gen,:);
-                stairs(time, f1, '--'); % MaxPG - PC
-                stairs(time, min(obj.powerAvailable(gen, :), f1)); % min(PA, MaxPG - PC)
-                
+                maxPGminusPC = obj.maxPowerGeneration(gen) - obj.powerCurtailment(gen,:);
+                stairs(time, maxPGminusPC, '--'); % MaxPG - PC
+                stairs(time, obj.powerGeneration(gen,:)); % PG
                 legend({'PA', 'PC', 'MaxPG - PC', 'PG = min(PA, MaxPG-PC)'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
