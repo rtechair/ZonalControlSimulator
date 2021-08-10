@@ -64,9 +64,9 @@ classdef ResultGraphic < Result
                 stairs(time, obj.disturbanceGeneration(gen, :)); % DeltaPG
                 stairs(time, obj.controlCurtailment(gen, :), '--'); % DeltaPC: control taken by the controller
                 delayForZone = obj.delayCurt + obj.delayController2Zone;
-                f1 = [zeros(1, delayForZone) ...
+                controlCurtApplied = [zeros(1, delayForZone) ...
                     obj.controlCurtailment(gen, 1: obj.numberOfIterations-delayForZone)];
-                stairs(time, f1, '-.'); % DeltaPC: control applied on the zone
+                stairs(time, controlCurtApplied, '-.'); % DeltaPC: control applied on the zone
                         
                 legend({'\DeltaPA', '\DeltaPG', '\DeltaPC', ...
                     '\DeltaPC(step+delayCurt + delayTelecom)'}, 'Location', 'Best');
@@ -100,7 +100,7 @@ classdef ResultGraphic < Result
                 branchIdx = obj.branchIdx(br);
                 [fromBus, toBus] = electricalGrid.getEndBuses(branchIdx);
                 name = ['Branch ', int2str(branchIdx), ...
-                    ' from ', int2str(fromBus), ' to ', int2str(toBus)]; 
+                    ' from bus ', int2str(fromBus), ' to ', int2str(toBus)]; 
                 title(name);
             end
         end
@@ -109,7 +109,7 @@ classdef ResultGraphic < Result
             time = 1: obj.numberOfIterations+1;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt(obj.numberOfBranches));
-            figName = ['Zone ' obj.zoneName ': absolute branch power flow |Fij|'];
+            figName = ['Zone ' obj.zoneName ': absolute branch power flow |Fij|, Upper Bound'];
             figAbsFlowBranch = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for br = 1:obj.numberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
@@ -119,13 +119,13 @@ classdef ResultGraphic < Result
                 branchLimitOverTime = ones(1, obj.numberOfIterations+1)*obj.branchFlowLimit;
                 stairs(time, branchLimitOverTime);
                 
-                legend({'Absolute Branch Power Flow |Fij|','branch flow limit'},'Location','Best')
+                legend({'|Fij|','UB'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 branchIdx = obj.branchIdx(br);
                 [fromBus, toBus] = electricalGrid.getEndBuses(branchIdx);
                 name = ['Branch ', int2str(branchIdx), ...
-                    ' from ', int2str(fromBus), ' to ', int2str(toBus)]; 
+                    ' from bus ', int2str(fromBus), ' to ', int2str(toBus)]; 
                 title(name);
             end
         end
