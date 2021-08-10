@@ -10,8 +10,8 @@ classdef ZoneEvolution < handle
         bufferQueuePowerTransit
         
         disturbanceTransit
-        DisturbanceGeneration
-        DisturbanceAvailable
+        disturbanceGeneration
+        disturbanceAvailable
     end
     
     properties (SetAccess = immutable)
@@ -70,7 +70,7 @@ classdef ZoneEvolution < handle
         end
         
         function receiveTimeSeries(obj, disturbancePowerAvailable)
-            obj.DisturbanceAvailable = disturbancePowerAvailable.getValue();
+            obj.disturbanceAvailable = disturbancePowerAvailable.getValue();
         end
         
         function receiveControl(obj, controlOfZone)
@@ -107,8 +107,8 @@ classdef ZoneEvolution < handle
         
         function saveDisturbance(obj, memory)
             memory.saveDisturbance(obj.disturbanceTransit,...
-                obj.DisturbanceGeneration,...
-                obj.DisturbanceAvailable);
+                obj.disturbanceGeneration,...
+                obj.disturbanceAvailable);
         end
         
         function object = getStateAndDistTransit(obj)
@@ -120,13 +120,13 @@ classdef ZoneEvolution < handle
             % with  f = PA    + DeltaPA - PG + DeltaPC(k - delayCurt)
             % and   g = maxPG - PC      - PG
             f = obj.state.powerAvailable ...
-                + obj.DisturbanceAvailable ...
+                + obj.disturbanceAvailable ...
                 - obj.state.powerGeneration ...
                 + obj.bufferQueueControlCurt(:,1);
             g = obj.maxPowerGeneration...
                 - obj.state.powerCurtailment...
                 - obj.state.powerGeneration;
-            obj.DisturbanceGeneration = min(f,g);
+            obj.disturbanceGeneration = min(f,g);
         end
         
         function updateState(obj)
@@ -141,11 +141,11 @@ classdef ZoneEvolution < handle
                 ( obj.state.powerBattery + appliedControlBatt);
             
             % PA += DeltaPA
-            obj.state.powerAvailable = obj.state.powerAvailable + obj.DisturbanceAvailable;
+            obj.state.powerAvailable = obj.state.powerAvailable + obj.disturbanceAvailable;
                
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
             obj.state.powerGeneration = obj.state.powerGeneration ...
-                + obj.DisturbanceGeneration ...
+                + obj.disturbanceGeneration ...
                 - appliedControlCurt;
             
             % PC += DeltaPC(k - delayCurt)
