@@ -30,6 +30,15 @@ ITERATIONS OF THE SIMULATION
 
 DISPLAY RESULTS
 
+
+In this project, column vectors are used instead of row vectors, e.g.
+busId, branchIdx, zoneEvolution's properties, etc.
+The reason is for consistency with column vectors obtained from Matpower
+functions [1].
+Hence, rows corresponds to elements, such as buses, branches, generators and
+batteries, while columns corresponds to time steps.
+ 
+[1] https://matpower.org/docs/ref/
 %}
     properties
        grid
