@@ -83,13 +83,18 @@ classdef ResultGraphic < Result
             time = 1: obj.numberOfIterations+1;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt(obj.numberOfBranches));
-            figName = ['Zone ' obj.zoneName ': branch power flow Fij'];
+            figName = ['Zone ' obj.zoneName ': branch power flow Fij, Upper Bound and Lower Bound'];
             figFlowBranch = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for br = 1:obj.numberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
                 stairs(time, obj.powerBranchFlow(br,:)); % Fij
-                legend({'Branch Power Flow Fij'},'Location','Best')
+                upperBoundOverTime = ones(1, obj.numberOfIterations+1) * obj.branchFlowLimit;
+                lowerBoundOverTime = - ones(1, obj.numberOfIterations+1) * obj.branchFlowLimit;
+                stairs(time, upperBoundOverTime);
+                stairs(time, lowerBoundOverTime);
+                legend({'Fij', 'UB', 'LB'}...
+                    ,'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 branchIdx = obj.branchIdx(br);
