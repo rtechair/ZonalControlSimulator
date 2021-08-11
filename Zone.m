@@ -218,6 +218,7 @@ classdef Zone < handle
         end
         
         function prepareForNextStep(obj)
+            obj.timeSeries.prepareForNextStep();
             obj.result.prepareForNextStep();
         end
         
@@ -241,7 +242,6 @@ classdef Zone < handle
             obj.zoneEvolution.dropOldestPowerTransit();
             obj.transmitDataZone2Controller();
             obj.zoneEvolution.dropOldestControl();
-            obj.timeSeries.prepareForNextStep();
         end
         
         function saveResult(obj)
