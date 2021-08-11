@@ -20,7 +20,6 @@ classdef ControlOfZone < handle
            obj.controlBattery = zeros(numberOfBatteries,1);
        end
        
-       
        function modifyControl(obj, valueToAdd)
            obj.modifyControlCurtailment(valueToAdd);
            obj.modifyControlBattery(valueToAdd);
@@ -29,7 +28,6 @@ classdef ControlOfZone < handle
        function setControlCurtailment(obj, value)
            obj.controlCurtailment = value;
        end
-       
        
        function setControlBattery(obj, value)
            obj.controlBattery = value;

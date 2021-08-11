@@ -16,7 +16,6 @@ classdef TelecomTimeSeries2Zone < Telecommunication
             obj.receive(emitter);
             obj.send(receiver);
             obj.dropOldestData();
-            emitter.prepareForNextStep();
         end 
     end
     

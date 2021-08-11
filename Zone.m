@@ -241,6 +241,7 @@ classdef Zone < handle
             obj.zoneEvolution.dropOldestPowerTransit();
             obj.transmitDataZone2Controller();
             obj.zoneEvolution.dropOldestControl();
+            obj.timeSeries.prepareForNextStep();
         end
         
         function saveResult(obj)

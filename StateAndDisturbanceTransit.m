@@ -9,7 +9,6 @@ classdef StateAndDisturbanceTransit < handle
        function obj = StateAndDisturbanceTransit(stateOfZone, disturbanceTransit)
            obj.stateOfZone = stateOfZone;
            obj.disturbanceTransit = disturbanceTransit;
-                       
        end
        
        function state = getStateOfZone(obj)
