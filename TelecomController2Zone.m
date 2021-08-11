@@ -12,6 +12,14 @@ classdef TelecomController2Zone < Telecommunication
             obj.queueData = controlArray;
         end
         
+        function transmitData(obj, emitter, receiver)
+            obj.receive(emitter);
+            obj.send(receiver);
+            obj.dropOldestData();
+        end
+    end
+    
+    methods (Access = protected)
         function receive(obj, emitter)
             obj.queueData(end+1) = emitter.getControl();
         end
@@ -23,12 +31,6 @@ classdef TelecomController2Zone < Telecommunication
         function dropOldestData(obj)
             obj.queueData = obj.queueData(2:end);
         end
-           
-        function transmitData(obj, emitter, receiver)
-            obj.receive(emitter);
-            obj.send(receiver);
-            obj.dropOldestData();
-        end
-        
     end
+    
 end

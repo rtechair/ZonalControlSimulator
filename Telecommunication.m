@@ -6,10 +6,12 @@ classdef (Abstract) Telecommunication < handle
     end
 
     methods (Abstract)
-        
+        transmitData(obj, emitter, receiver);
+    end
+    
+    methods(Abstract, Access = protected)
         receive(obj, emitter);
         send(obj, receiver);
-        transmitData(obj, emitter, receiver);
     end
 
 end
