@@ -17,8 +17,7 @@ classdef TelecomController2Zone < Telecommunication
         end
         
         function send(obj, receiver)
-            sentControl = obj.queueData(1);
-            receiver.receiveControl(sentControl)
+            receiver.receiveControl(obj.queueData(1))
         end
         
         function dropOldestData(obj)

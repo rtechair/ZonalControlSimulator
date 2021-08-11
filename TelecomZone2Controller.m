@@ -24,8 +24,7 @@ classdef TelecomZone2Controller < Telecommunication
         end
         
         function send(obj, receiver)
-            sentStateAndDisturbTransit = obj.queueData(1);
-            receiver.receiveStateAndDistTransit(sentStateAndDisturbTransit)
+            receiver.receiveStateAndDistTransit(obj.queueData(1))
         end
         
         function dropOldestData(obj)
