@@ -8,10 +8,10 @@ classdef TelecomZone2Controller < Telecommunication
             
             blankState = StateOfZone(numberOfBranches, numberOfGen, numberOfBatt);
             blankDisturbanceTransit = zeros(numberOfBuses, 1);            
-            stateAndDistTransitArray(1:delayTelecom) = ...
+            blankStateAndDistTransit(1:delayTelecom) = ...
                 StateAndDisturbanceTransit(blankState, blankDisturbanceTransit);
             
-            obj.queueData = stateAndDistTransitArray;
+            obj.queueData = blankStateAndDistTransit;
         end
     end
     

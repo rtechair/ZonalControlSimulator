@@ -3,8 +3,8 @@ classdef TelecomTimeSeries2Zone < Telecommunication
     methods
         function obj = TelecomTimeSeries2Zone(numberOfGen, delayTelecom)
             obj.delay = delayTelecom;
-            disturbanceArray(1: delayTelecom) = DisturbancePowerAvailable(numberOfGen);
-            obj.queueData = disturbanceArray;
+            blankDisturbance(1: delayTelecom) = DisturbancePowerAvailable(numberOfGen);
+            obj.queueData = blankDisturbance;
         end
     end
     

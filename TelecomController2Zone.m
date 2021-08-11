@@ -3,8 +3,8 @@ classdef TelecomController2Zone < Telecommunication
     methods
         function obj = TelecomController2Zone(numberOfGen, numberOfBatt, delayTelecom)
             obj.delay = delayTelecom;
-            controlArray(1:delayTelecom) = ControlOfZone(numberOfGen, numberOfBatt);
-            obj.queueData = controlArray;
+            blankControl(1:delayTelecom) = ControlOfZone(numberOfGen, numberOfBatt);
+            obj.queueData = blankControl;
         end
     end
     
