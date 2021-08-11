@@ -22,10 +22,6 @@ classdef TelecomTimeSeries2Zone < Telecommunication
         function send(obj, receiver)
             receiver.receiveTimeSeries(obj.queueData(1));
         end
-        
-        function dropOldestData(obj)
-            obj.queueData = obj.queueData(2:end);
-        end
     end
     
 end

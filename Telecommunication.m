@@ -13,5 +13,11 @@ classdef (Abstract) Telecommunication < handle
         receive(obj, emitter);
         send(obj, receiver);
     end
+    
+    methods
+        function dropOldestData(obj)
+            obj.queueData = obj.queueData(2:end);
+        end
+    end
 
 end
