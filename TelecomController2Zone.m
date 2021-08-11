@@ -6,12 +6,6 @@ classdef TelecomController2Zone < Telecommunication
             controlArray(1:delayTelecom) = ControlOfZone(numberOfGen, numberOfBatt);
             obj.queueData = controlArray;
         end
-        
-        function transmitData(obj, emitter, receiver)
-            obj.receive(emitter);
-            obj.send(receiver);
-            obj.dropOldestData();
-        end
     end
     
     methods (Access = protected)

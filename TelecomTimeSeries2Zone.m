@@ -6,12 +6,6 @@ classdef TelecomTimeSeries2Zone < Telecommunication
             disturbanceArray(1: delayTelecom) = DisturbancePowerAvailable(numberOfGen);
             obj.queueData = disturbanceArray;
         end
-        
-        function transmitData(obj, emitter, receiver)
-            obj.receive(emitter);
-            obj.send(receiver);
-            obj.dropOldestData();
-        end 
     end
     
     methods (Access = protected)

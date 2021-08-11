@@ -5,16 +5,19 @@ classdef (Abstract) Telecommunication < handle
         delay
     end
 
-    methods (Abstract)
-        transmitData(obj, emitter, receiver);
-    end
-    
+
     methods(Abstract, Access = protected)
         receive(obj, emitter);
         send(obj, receiver);
     end
     
     methods
+        function transmitData(obj, emitter, receiver)
+            obj.receive(emitter);
+            obj.send(receiver);
+            obj.dropOldestData();
+        end
+        
         function dropOldestData(obj)
             obj.queueData = obj.queueData(2:end);
         end

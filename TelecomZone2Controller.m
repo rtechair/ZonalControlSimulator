@@ -13,12 +13,6 @@ classdef TelecomZone2Controller < Telecommunication
             
             obj.queueData = stateAndDistTransitArray;
         end
-        
-        function transmitData(obj, emitter, receiver)
-            obj.receive(emitter);
-            obj.send(receiver);
-            obj.dropOldestData();
-        end
     end
     
     methods (Access = protected)       
