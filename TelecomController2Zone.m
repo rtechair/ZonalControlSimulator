@@ -1,10 +1,5 @@
 classdef TelecomController2Zone < Telecommunication
     
-    properties
-        queueData
-        delay
-    end
-    
     methods
         function obj = TelecomController2Zone(numberOfGen, numberOfBatt, delayTelecom)
             obj.delay = delayTelecom;

@@ -1,10 +1,5 @@
 classdef TelecomTimeSeries2Zone < Telecommunication
     
-    properties
-        queueData
-        delay
-    end
-    
     methods
         function obj = TelecomTimeSeries2Zone(numberOfGen, delayTelecom)
             obj.delay = delayTelecom;
