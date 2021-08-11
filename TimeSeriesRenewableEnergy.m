@@ -24,7 +24,8 @@ classdef TimeSeriesRenewableEnergy < handle
             obj.maxPowerGeneration = maxGenerationPerGen;
             obj.numberOfGen = numberOfGen;
             
-            obj.step = 1;
+            % step starts at 0 because of initialization, later updated to 1 to start the simulation
+            obj.step = 0;
 
             obj.setDiscretizedWindChargingRate(filenameWindChargingRate, controlCycle);
             
