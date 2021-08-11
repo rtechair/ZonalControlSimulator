@@ -101,8 +101,7 @@ batteries, while columns corresponds to time steps.
             obj.initializeZonesPowerAvailable();
             obj.initializeZonesPowerGeneration();
             
-            obj.updateGridGeneration();
-            obj.updateGridBatteryInjection();
+            obj.updateGridForAllZones();
             
             obj.grid.runPowerFlow();
             
@@ -150,16 +149,10 @@ batteries, while columns corresponds to time steps.
            end
         end
         
-        function updateGridGeneration(obj)
+        function updateGridForAllZones(obj)
             for i = 1:obj.numberOfZones
-               obj.zones{i}.updateGridGeneration(obj.grid);
+                obj.zones{i}.updateGrid(obj.grid);
             end
-        end
-        
-        function updateGridBatteryInjection(obj)
-           for i = 1:obj.numberOfZones
-              obj.zones{i}.updateGridBattInjection(obj.grid);
-           end
         end
         
         function updateZonesPowerFlow(obj)
