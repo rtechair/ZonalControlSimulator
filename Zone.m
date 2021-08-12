@@ -83,15 +83,14 @@ classdef Zone < handle
             numberOfGenOn = obj.topology.numberOfGen;
             numberOfBattOn = obj.topology.numberOfBatt;
 
-            % cautious, here the delay is in seconds
-            delayCurtSeconds = obj.setting.DelayInSeconds.curtailment;
-            delayBattSeconds = obj.setting.DelayInSeconds.battery;
-            controlCycle = obj.setting.controlCycle;
+            delayCurt = obj.delayInIterations.curt;
+            delayBatt = obj.delayInIterations.batt;
+            
             maxPowerGeneration = obj.topology.maxPowerGeneration;
             battConstPowerReduc = obj.setting.batteryConstantPowerReduction;
 
             obj.zoneEvolution = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
-                delayCurtSeconds, delayBattSeconds, controlCycle, maxPowerGeneration, battConstPowerReduc);
+                delayCurt, delayBatt, maxPowerGeneration, battConstPowerReduc);
         end
         
         function setTelecom(obj)
