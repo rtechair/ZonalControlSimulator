@@ -93,7 +93,7 @@ classdef ZoneEvolution < handle
         end
         
         function dropOldestPowerTransit(obj)
-            obj.queuePowerTransit = obj.queuePowerTransit(:, 2:end);
+            obj.queuePowerTransit = obj.queuePowerTransit(:,2);
         end
         
         function saveState(obj, memory)

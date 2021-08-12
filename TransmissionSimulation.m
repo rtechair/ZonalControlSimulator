@@ -112,7 +112,6 @@ batteries, while columns corresponds to time steps.
             obj.transmitDataZone2Controller();
             obj.saveZonesState();
             
-            obj.dropZonesOldestPowerTransit();
             obj.prepareZonesForNextStep();
         end
         
