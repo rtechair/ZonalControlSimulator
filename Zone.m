@@ -3,6 +3,7 @@ classdef Zone < handle
     properties
        name
        setting
+       delayInIterations
        topology
        zoneEvolution
        
@@ -21,6 +22,7 @@ classdef Zone < handle
         function obj = Zone(name, electricalGrid, duration)
             obj.name = name;
             obj.setSetting();
+            obj.setDelayInIterations();
             obj.setTopology(electricalGrid);
             obj.setTimeSeries(duration);
             obj.setZoneEvolution();
@@ -37,6 +39,22 @@ classdef Zone < handle
         
         function zoneFilename = getFilename(obj)
             zoneFilename = ['zone' obj.name '.json'];
+        end
+        
+        function setDelayInIterations(obj)
+            controlCycle = obj.setting.controlCycle;
+            delayInSeconds = obj.setting.DelayInSeconds;
+            delayCurtInSeconds = delayInSeconds.curtailment;
+            delayBattInSeconds = delayInSeconds.battery;
+            delayTimeSeries2ZoneInSeconds = delayInSeconds.Telecom.timeSeries2Zone;
+            delayController2ZoneInSeconds = delayInSeconds.Telecom.controller2Zone;
+            delayZone2ControllerInSeconds = delayInSeconds.Telecom.zone2Controller;
+            obj.delayInIterations = DelayInIterations(...
+                controlCycle, delayCurtInSeconds, delayBattInSeconds, ...
+                delayTimeSeries2ZoneInSeconds, ...
+                delayController2ZoneInSeconds, ...
+                delayZone2ControllerInSeconds);
+            
         end
         
         function setTopology(obj, electricalGrid)
