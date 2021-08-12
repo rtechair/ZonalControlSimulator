@@ -19,9 +19,9 @@
         "battery": 1,
         "Telecom":
         {
-            "timeSeries2Zone":1,
-            "controller2Zone":1,
-            "zone2Controller":1
+            "timeSeries2Zone":5,
+            "controller2Zone":5,
+            "zone2Controller":5
         }
     },
     "Bus": [
