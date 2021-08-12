@@ -218,9 +218,11 @@ classdef Zone < handle
         end
         
         function prepareForNextStep(obj)
-            
             obj.timeSeries.prepareForNextStep();
             obj.result.prepareForNextStep();
+            
+            obj.zoneEvolution.dropOldestPowerTransit();
+            obj.zoneEvolution.dropOldestControl();
         end
         
         function boolean = isToBeSimulated(obj, currentTime)
@@ -242,9 +244,6 @@ classdef Zone < handle
             obj.zoneEvolution.updateDisturbanceTransit();
             
             obj.transmitDataZone2Controller();
-            
-            obj.zoneEvolution.dropOldestPowerTransit();
-            obj.zoneEvolution.dropOldestControl();
         end
         
         function saveResult(obj)
