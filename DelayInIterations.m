@@ -1,11 +1,11 @@
 classdef DelayInIterations < handle
    
     properties (SetAccess = immutable)
-        delayCurt
-        delayBatt
-        delayZone2Controller
-        delayController2Zone
-        delayTimeSeries2Zone
+        curt
+        batt
+        zone2Controller
+        controller2Zone
+        timeSeries2Zone
     end
     
     methods
@@ -13,11 +13,11 @@ classdef DelayInIterations < handle
                 delayZone2ControllerInSeconds, ...
                 delayController2ZoneInSeconds, ...
                 delayTimeSeries2ZoneInSeconds)
-            obj.delayCurt = ceil(delayCurtInSeconds / controlCycle);
-            obj.delayBatt = ceil(delayBattInSeconds / controlCycle);
-            obj.delayZone2Controller = ceil(delayZone2ControllerInSeconds / controlCycle);
-            obj.delayController2Zone = ceil(delayController2ZoneInSeconds / controlCycle);
-            obj.delayTimeSeries2Zone = ceil(delayTimeSeries2ZoneInSeconds / controlCycle);
+            obj.curt = ceil(delayCurtInSeconds / controlCycle);
+            obj.batt = ceil(delayBattInSeconds / controlCycle);
+            obj.zone2Controller = ceil(delayZone2ControllerInSeconds / controlCycle);
+            obj.controller2Zone = ceil(delayController2ZoneInSeconds / controlCycle);
+            obj.timeSeries2Zone = ceil(delayTimeSeries2ZoneInSeconds / controlCycle);
         end
     end
     
