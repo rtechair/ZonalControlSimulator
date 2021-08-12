@@ -72,7 +72,7 @@ classdef Zone < handle
             start = startPossibility{startSelected};
             controlCycle = obj.setting.controlCycle;
             maxPowerGeneration = obj.topology.maxPowerGeneration;
-            numberOfGenOn = obj.topology.numberOfGen;
+            numberOfGenOn = obj.topology.numberOfGenOn;
             obj.timeSeries = TimeSeriesRenewableEnergy(...
                 filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
         end
@@ -80,8 +80,8 @@ classdef Zone < handle
         function setZoneEvolution(obj)
             numberOfBuses = obj.topology.numberOfBuses;
             numberOfBranches = obj.topology.numberOfBranches;
-            numberOfGenOn = obj.topology.numberOfGen;
-            numberOfBattOn = obj.topology.numberOfBatt;
+            numberOfGenOn = obj.topology.numberOfGenOn;
+            numberOfBattOn = obj.topology.numberOfBattOn;
 
             delayCurt = obj.delayInIterations.curt;
             delayBatt = obj.delayInIterations.batt;
@@ -100,8 +100,8 @@ classdef Zone < handle
             
             numberOfBuses = obj.topology.numberOfBuses;
             numberOfBranches = obj.topology.numberOfBranches;
-            numberOfGenOn = obj.topology.numberOfGen;
-            numberOfBattOn = obj.topology.numberOfBatt;
+            numberOfGenOn = obj.topology.numberOfGenOn;
+            numberOfBattOn = obj.topology.numberOfBattOn;
             
             obj.telecomTimeSeries2Zone = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
             obj.telecomController2Zone = TelecomController2Zone(...
@@ -114,8 +114,8 @@ classdef Zone < handle
             controlCycle = obj.setting.controlCycle;
             numberOfBuses = obj.topology.numberOfBuses;
             numberOfBranches = obj.topology.numberOfBranches;
-            numberOfGenOn = obj.topology.numberOfGen;
-            numberOfBattOn = obj.topology.numberOfBatt;
+            numberOfGenOn = obj.topology.numberOfGenOn;
+            numberOfBattOn = obj.topology.numberOfBattOn;
             maxPowerGeneration = obj.topology.maxPowerGeneration;
             branchFlowLimit = obj.setting.branchFlowLimit;
             
@@ -151,8 +151,8 @@ classdef Zone < handle
         % WARNING: actually this function sets a limiter as the controller
         function setController(obj)
             branchFlowLimit = obj.setting.branchFlowLimit;
-            numberOfGenOn = obj.topology.numberOfGen;
-            numberOfBattOn = obj.topology.numberOfBatt;
+            numberOfGenOn = obj.topology.numberOfGenOn;
+            numberOfBattOn = obj.topology.numberOfBattOn;
             increasingEchelon = obj.controllerSetting.IncreaseCurtPercentEchelon;
             decreasingEchelon = obj.controllerSetting.DecreaseCurtPercentEchelon;
             lowerThreshold = obj.controllerSetting.LowerThresholdPercent;
