@@ -16,8 +16,8 @@ classdef ZoneTopology < handle
         
         numberOfBuses
         numberOfBranches
-        numberOfGen
-        numberOfBatt
+        numberOfGenOn
+        numberOfBattOn
     end
     
     methods
@@ -158,8 +158,8 @@ classdef ZoneTopology < handle
         function setNumberOfElements(obj)                     
             obj.numberOfBuses = size(obj.busId,1);
             obj.numberOfBranches = size(obj.branchIdx,1);
-            obj.numberOfGen = size(obj.genOnIdx,1);
-            obj.numberOfBatt = size(obj.battOnIdx,1);
+            obj.numberOfGenOn = size(obj.genOnIdx,1);
+            obj.numberOfBattOn = size(obj.battOnIdx,1);
         end
     end
 end
