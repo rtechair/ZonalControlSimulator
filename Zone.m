@@ -125,10 +125,8 @@ classdef Zone < handle
             genOnIdx = obj.topology.genOnIdx;
             battOnIdx = obj.topology.battOnIdx;
             
-            % The delays here are in number of iterations, not in seconds
-            delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
-            delayBatt = obj.setting.DelayInSeconds.battery / controlCycle;
-
+            delayCurt = obj.delayInIterations.curt;
+            delayBatt = obj.delayInIterations.batt;
             delayTimeSeries2Zone = obj.delayInIterations.timeSeries2Zone;
             delayController2Zone = obj.delayInIterations.controller2Zone;
             delayZone2Controller = obj.delayInIterations.zone2Controller;
