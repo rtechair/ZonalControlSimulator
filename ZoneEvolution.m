@@ -7,7 +7,7 @@ classdef ZoneEvolution < handle
         queueControlCurt
         queueControlBatt
         
-        queuePowerTransit
+        queuePowerTransit % to compute disturbanceTransit
         
         disturbanceTransit
         disturbanceGeneration
@@ -27,17 +27,17 @@ classdef ZoneEvolution < handle
     
     methods
        
-        function obj = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
+        function obj = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
                 delayCurt, delayBatt, maxPowerGeneration, battConstPowerReduc)
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.battConstPowerReduc = battConstPowerReduc;
             
             % blank state
-            obj.state = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries);
+            obj.state = StateOfZone(numberOfBranches, numberOfGenOn, numberOfBattOn);
             
-            % blank buffers
-            obj.queueControlCurt = zeros(numberOfGenerators, delayCurt);
-            obj.queueControlBatt = zeros(numberOfBatteries, delayBatt);
+            % blank queues
+            obj.queueControlCurt = zeros(numberOfGenOn, delayCurt);
+            obj.queueControlBatt = zeros(numberOfBattOn, delayBatt);
             
             obj.queuePowerTransit = zeros(numberOfBuses,1);
             
@@ -107,7 +107,7 @@ classdef ZoneEvolution < handle
         
         function updateState(obj)
             appliedControlCurt = obj.queueControlCurt(:,1);
-            appliedControlBatt = obj.queueControlBatt(:, 1);
+            appliedControlBatt = obj.queueControlBatt(:,1);
             
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
