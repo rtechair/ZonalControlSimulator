@@ -15,7 +15,6 @@ classdef ZoneEvolution < handle
     end
     
     properties (SetAccess = immutable)
-       numberOfGen
        numberOfBatt
        
        delayCurtSeconds
@@ -39,7 +38,6 @@ classdef ZoneEvolution < handle
         function obj = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
                 delayCurtailmentInSeconds, delayBatteryInSeconds, controlCycle, ...
                 maxGeneration, battConstPowerReduc)
-            obj.numberOfGen = numberOfGenerators;
             obj.numberOfBatt = numberOfBatteries;
             
             obj.delayCurtSeconds = delayCurtailmentInSeconds;
