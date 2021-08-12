@@ -95,11 +95,10 @@ classdef Zone < handle
         end
         
         function setTelecom(obj)
-            telecomSetting = obj.setting.DelayInSeconds.Telecom;
-            delayTimeSeries2Zone = telecomSetting.timeSeries2Zone;
-            delayController2Zone = telecomSetting.controller2Zone;
-            delayZone2Controller = telecomSetting.zone2Controller;
-
+            delayTimeSeries2Zone = obj.delayInIterations.timeSeries2Zone;
+            delayController2Zone = obj.delayInIterations.controller2Zone;
+            delayZone2Controller = obj.delayInIterations.zone2Controller;
+            
             numberOfBuses = obj.topology.numberOfBuses;
             numberOfBranches = obj.topology.numberOfBranches;
             numberOfGenOn = obj.topology.numberOfGen;
@@ -129,11 +128,10 @@ classdef Zone < handle
             % The delays here are in number of iterations, not in seconds
             delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
             delayBatt = obj.setting.DelayInSeconds.battery / controlCycle;
-            % TODO: cautious here, what is the unit of the telecom delays?
-            telecomSetting = obj.setting.DelayInSeconds.Telecom;
-            delayTimeSeries2Zone = telecomSetting.timeSeries2Zone;
-            delayController2Zone = telecomSetting.controller2Zone;
-            delayZone2Controller = telecomSetting.zone2Controller;
+
+            delayTimeSeries2Zone = obj.delayInIterations.timeSeries2Zone;
+            delayController2Zone = obj.delayInIterations.controller2Zone;
+            delayZone2Controller = obj.delayInIterations.zone2Controller;
             
             obj.result = ResultGraphic(obj.name, duration, controlCycle,...
                 numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
