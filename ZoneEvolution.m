@@ -15,8 +15,6 @@ classdef ZoneEvolution < handle
     end
     
     properties (SetAccess = immutable)
-       numberOfBatt
-       
        delayCurtSeconds
        delayBattSeconds
        controlCycle
@@ -38,8 +36,6 @@ classdef ZoneEvolution < handle
         function obj = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenerators, numberOfBatteries, ...
                 delayCurtailmentInSeconds, delayBatteryInSeconds, controlCycle, ...
                 maxGeneration, battConstPowerReduc)
-            obj.numberOfBatt = numberOfBatteries;
-            
             obj.delayCurtSeconds = delayCurtailmentInSeconds;
             obj.delayBattSeconds = delayBatteryInSeconds;
             obj.controlCycle = controlCycle;
@@ -52,7 +48,6 @@ classdef ZoneEvolution < handle
             % blank state
             obj.state = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries);
             
-            
             % blank buffers
             obj.queueControlCurt = zeros(numberOfGenerators, obj.delayCurt);
             obj.queueControlBatt = zeros(numberOfBatteries, obj.delayBatt);
@@ -61,7 +56,6 @@ classdef ZoneEvolution < handle
             
             % blank transit disturbance
             obj.disturbanceTransit = zeros(numberOfBuses, 1);
-            
         end
         
         function receiveTimeSeries(obj, disturbancePowerAvailable)
