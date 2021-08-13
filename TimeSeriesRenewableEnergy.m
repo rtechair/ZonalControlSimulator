@@ -35,8 +35,8 @@ classdef TimeSeriesRenewableEnergy < handle
             obj.setProfileDisturbancePowerAvailable();
         end
         
-        function powerAvailable = getInitialPowerAvailable(obj)
-            powerAvailable = obj.ProfilePowerAvailable(:,1);
+        function value = getInitialPowerAvailable(obj)
+            value = obj.ProfilePowerAvailable(:,1);
         end
         
         function object = getDisturbancePowerAvailable(obj)
