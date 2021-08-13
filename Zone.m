@@ -185,7 +185,9 @@ classdef Zone < handle
         %}
         function updatePowerFlow(obj, electricalGrid)
             branchIdx = obj.topology.branchIdx;
-            obj.zoneEvolution.state.updatePowerFlow(electricalGrid, branchIdx);
+            state = obj.zoneEvolution.state;
+            powerFlow = electricalGrid.getPowerFlow(branchIdx);
+            state.setPowerFlow(powerFlow);
         end
         
         function updatePowerTransit(obj, electricalGrid)
