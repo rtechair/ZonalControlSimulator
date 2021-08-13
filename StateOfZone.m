@@ -27,9 +27,5 @@ classdef StateOfZone < handle
             obj.PowerAvailable = value;
         end
         
-        function updatePowerFlow(obj, electricalGrid, branchIdx)
-            obj.powerFlow = electricalGrid.getPowerFlow(branchIdx);
-        end
-        
     end
 end
