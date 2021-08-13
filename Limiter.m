@@ -55,7 +55,7 @@ classdef Limiter < Controller
         end
         
         function computeControl(obj)
-            powerFlow = obj.state.powerBranchFlow;
+            powerFlow = obj.state.powerFlow;
             doesCurtailmentIncrease = obj.isABranchOverHighFlowThreshold(powerFlow) ...
                 && obj.canCurtailmentIncrease();
             doesCurtailmentDecrease = obj.areAllBranchesUnderLowFlowThreshold(powerFlow) ...
