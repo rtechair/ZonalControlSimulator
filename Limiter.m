@@ -55,12 +55,17 @@ classdef Limiter < Controller
         end
         
         function computeControl(obj)
-            branchFlowState = obj.state.powerBranchFlow;
-            if obj.isABranchOverHighFlowThreshold(branchFlowState) && obj.canCurtailmentIncrease()
+            powerFlow = obj.state.powerBranchFlow;
+            doesCurtailmentIncrease = obj.isABranchOverHighFlowThreshold(powerFlow) ...
+                && obj.canCurtailmentIncrease();
+            doesCurtailmentDecrease = obj.areAllBranchesUnderLowFlowThreshold(powerFlow) ...
+                && obj.canCurtailmentDecrease();
+            
+            if doesCurtailmentIncrease
                 obj.increaseCurtailment();
                 obj.updateFutureCurtailment();
                 obj.updateQueueControlCurtPercent();
-            elseif obj.areAllBranchesUnderLowFlowThreshold(branchFlowState) && obj.canCurtailmentDecrease()
+            elseif doesCurtailmentDecrease
                 obj.decreaseCurtailment();
                 obj.updateFutureCurtailment();
                 obj.updateQueueControlCurtPercent();
@@ -123,15 +128,15 @@ classdef Limiter < Controller
         end
         
         function updateQueueControlCurtPercent(obj)
-            obj.dropOldestControl();
-            obj.addNewControl();
+            obj.dropOldestControlCurt();
+            obj.addNewControlCurt();
         end
         
-        function dropOldestControl(obj)
+        function dropOldestControlCurt(obj)
             obj.queueControlCurtPercent = obj.queueControlCurtPercent(2:end);
         end
         
-        function addNewControl(obj)
+        function addNewControlCurt(obj)
             obj.queueControlCurtPercent = [obj.queueControlCurtPercent obj.controlCurtPercent];
         end
 
