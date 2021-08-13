@@ -10,7 +10,7 @@ classdef ZoneEvolution < handle
         queuePowerTransit % to compute disturbancePowerTransit
         
         disturbancePowerTransit
-        disturbanceGeneration
+        disturbancePowerGeneration
         disturbanceAvailable
     end
     
@@ -83,7 +83,7 @@ classdef ZoneEvolution < handle
         
         function saveDisturbance(obj, memory)
             memory.saveDisturbance(obj.disturbancePowerTransit,...
-                obj.disturbanceGeneration,...
+                obj.disturbancePowerGeneration,...
                 obj.disturbanceAvailable);
         end
         
@@ -91,7 +91,7 @@ classdef ZoneEvolution < handle
             object = StateAndDisturbancePowerTransit(obj.state, obj.disturbancePowerTransit);
         end
         
-        function computeDisturbanceGeneration(obj)
+        function computeDisturbancePowerGeneration(obj)
             % DeltaPG = min(f,g)
             % with  f = PA    + DeltaPA - PG + DeltaPC(k - delayCurt)
             % and   g = maxPG - PC      - PG
@@ -102,7 +102,7 @@ classdef ZoneEvolution < handle
             g = obj.maxPowerGeneration...
                 - obj.state.powerCurtailment...
                 - obj.state.powerGeneration;
-            obj.disturbanceGeneration = min(f,g);
+            obj.disturbancePowerGeneration = min(f,g);
         end
         
         function updateState(obj)
@@ -121,7 +121,7 @@ classdef ZoneEvolution < handle
                
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
             obj.state.powerGeneration = obj.state.powerGeneration ...
-                + obj.disturbanceGeneration ...
+                + obj.disturbancePowerGeneration ...
                 - appliedControlCurt;
             
             % PC += DeltaPC(k - delayCurt)

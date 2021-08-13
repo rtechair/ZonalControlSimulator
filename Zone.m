@@ -248,7 +248,7 @@ classdef Zone < handle
             obj.controller.saveControl(obj.result);
             obj.transmitDataController2Zone()
             obj.transmitDataTimeSeries2Zone();
-            obj.zoneEvolution.computeDisturbanceGeneration();
+            obj.zoneEvolution.computeDisturbancePowerGeneration();
             obj.zoneEvolution.updateState();
         end
         
