@@ -7,9 +7,9 @@ classdef ZoneEvolution < handle
         queueControlCurt
         queueControlBatt
         
-        queuePowerTransit % to compute disturbanceTransit
+        queuePowerTransit % to compute disturbancePowerTransit
         
-        disturbanceTransit
+        disturbancePowerTransit
         disturbanceGeneration
         disturbanceAvailable
     end
@@ -42,7 +42,7 @@ classdef ZoneEvolution < handle
             obj.queuePowerTransit = zeros(numberOfBuses,1);
             
             % blank transit disturbance
-            obj.disturbanceTransit = zeros(numberOfBuses, 1);
+            obj.disturbancePowerTransit = zeros(numberOfBuses, 1);
         end
         
         function receiveTimeSeries(obj, disturbancePowerAvailable)
@@ -64,8 +64,8 @@ classdef ZoneEvolution < handle
                 electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
         end
                 
-        function updateDisturbanceTransit(obj)
-            obj.disturbanceTransit = obj.queuePowerTransit(:,2) - obj.queuePowerTransit(:,1);
+        function updateDisturbancePowerTransit(obj)
+            obj.disturbancePowerTransit = obj.queuePowerTransit(:,2) - obj.queuePowerTransit(:,1);
         end
         
         function dropOldestPowerTransit(obj)
@@ -82,13 +82,13 @@ classdef ZoneEvolution < handle
         end
         
         function saveDisturbance(obj, memory)
-            memory.saveDisturbance(obj.disturbanceTransit,...
+            memory.saveDisturbance(obj.disturbancePowerTransit,...
                 obj.disturbanceGeneration,...
                 obj.disturbanceAvailable);
         end
         
         function object = getStateAndDisturbancePowerTransit(obj)
-            object = StateAndDisturbancePowerTransit(obj.state, obj.disturbanceTransit);
+            object = StateAndDisturbancePowerTransit(obj.state, obj.disturbancePowerTransit);
         end
         
         function computeDisturbanceGeneration(obj)

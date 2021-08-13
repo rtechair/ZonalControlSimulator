@@ -255,7 +255,7 @@ classdef Zone < handle
         function update(obj, electricalGrid)
             obj.updatePowerFlow(electricalGrid);
             obj.updatePowerTransit(electricalGrid);
-            obj.zoneEvolution.updateDisturbanceTransit();
+            obj.zoneEvolution.updateDisturbancePowerTransit();
             
             obj.transmitDataZone2Controller();
         end
