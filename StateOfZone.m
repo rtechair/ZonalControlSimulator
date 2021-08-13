@@ -1,7 +1,7 @@
 classdef StateOfZone < handle
    
-    properties
-       powerBranchFlow  % Fij
+    properties %(SetAccess = protected)
+       powerFlow  % Fij
        powerCurtailment % PC
        powerBattery     % PB
        energyBattery    % EB
@@ -11,7 +11,7 @@ classdef StateOfZone < handle
     
     methods
         function obj = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries)
-            obj.powerBranchFlow = zeros(numberOfBranches, 1);
+            obj.powerFlow = zeros(numberOfBranches, 1);
             obj.powerCurtailment = zeros(numberOfGenerators, 1);
             obj.powerBattery = zeros(numberOfBatteries, 1);
             obj.energyBattery = zeros(numberOfBatteries, 1);
@@ -19,12 +19,16 @@ classdef StateOfZone < handle
             obj.powerAvailable = zeros(numberOfGenerators, 1);
         end
         
-        function setPowerBranchFlow(obj, newValue)
-            obj.powerBranchFlow = newValue;
+        function setPowerFlow(obj, value)
+            obj.powerFlow = value;
         end
         
-        function updatePowerBranchFlow(obj, electricalGrid, branchIdx)
-            obj.powerBranchFlow = electricalGrid.getPowerBranchFlow(branchIdx);
+        function setPowerAvailable(obj, value)
+            obj.PowerAvailable = value;
+        end
+        
+        function updatePowerFlow(obj, electricalGrid, branchIdx)
+            obj.powerFlow = electricalGrid.getPowerFlow(branchIdx);
         end
         
     end
