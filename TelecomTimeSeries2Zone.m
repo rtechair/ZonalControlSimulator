@@ -10,7 +10,7 @@ classdef TelecomTimeSeries2Zone < Telecommunication
     
     methods (Access = protected)
         function receive(obj, emitter)
-            obj.queueData(end+1) = emitter.getTimeSeries();
+            obj.queueData(end+1) = emitter.getDisturbancePowerAvailable();
         end
         
         function send(obj, receiver)
