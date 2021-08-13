@@ -45,7 +45,7 @@ classdef ZoneEvolution < handle
             obj.disturbancePowerTransit = zeros(numberOfBuses, 1);
         end
         
-        function receiveTimeSeries(obj, objectDisturbancePowerAvailable)
+        function receiveDisturbancePowerAvailable(obj, objectDisturbancePowerAvailable)
             obj.disturbancePowerAvailable = objectDisturbancePowerAvailable.getValue();
         end
         

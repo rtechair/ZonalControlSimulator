@@ -14,9 +14,8 @@ classdef TelecomTimeSeries2Zone < Telecommunication
         end
         
         function send(obj, receiver)
-            receiver.receiveTimeSeries(obj.queueData(1));
+            receiver.receiveDisturbancePowerAvailable(obj.queueData(1));
         end
     end
     
 end
-    
