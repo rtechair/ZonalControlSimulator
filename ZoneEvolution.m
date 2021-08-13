@@ -50,8 +50,8 @@ classdef ZoneEvolution < handle
         end
         
         function receiveControl(obj, controlOfZone)
-            obj.queueControlCurt(:,end+1) = controlOfZone.controlCurtailment;
-            obj.queueControlBatt(:,end+1) = controlOfZone.controlBattery;
+            obj.queueControlCurt(:,end+1) = controlOfZone.getControlCurtailment;
+            obj.queueControlBatt(:,end+1) = controlOfZone.getControlBattery;
         end
         
         function dropOldestControl(obj)
