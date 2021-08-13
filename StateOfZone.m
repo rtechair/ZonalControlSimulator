@@ -1,13 +1,16 @@
 classdef StateOfZone < handle
    
-    properties %(SetAccess = protected)
+    properties
        powerFlow  % Fij
        powerCurtailment % PC
        powerBattery     % PB
        energyBattery    % EB
        powerGeneration  % PG
+    end
+    
+    properties (SetAccess = protected)
        powerAvailable   % PA
-    end        
+    end
     
     methods
         function obj = StateOfZone(numberOfBranches, numberOfGenerators, numberOfBatteries)
@@ -19,12 +22,16 @@ classdef StateOfZone < handle
             obj.powerAvailable = zeros(numberOfGenerators, 1);
         end
         
+        function value = getPowerAvailable(obj)
+            value = obj.powerAvailable;
+        end
+        
         function setPowerFlow(obj, value)
             obj.powerFlow = value;
         end
         
         function setPowerAvailable(obj, value)
-            obj.PowerAvailable = value;
+            obj.powerAvailable = value;
         end
         
     end

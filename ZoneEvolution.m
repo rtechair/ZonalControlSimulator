@@ -95,7 +95,8 @@ classdef ZoneEvolution < handle
             % DeltaPG = min(f,g)
             % with  f = PA    + DeltaPA - PG + DeltaPC(k - delayCurt)
             % and   g = maxPG - PC      - PG
-            f = obj.state.powerAvailable ...
+            powerAvailable = obj.state.getPowerAvailable();
+            f = powerAvailable ...
                 + obj.disturbancePowerAvailable ...
                 - obj.state.powerGeneration ...
                 + obj.queueControlCurt(:,1);
@@ -117,7 +118,9 @@ classdef ZoneEvolution < handle
                 ( obj.state.powerBattery + appliedControlBatt);
             
             % PA += DeltaPA
-            obj.state.powerAvailable = obj.state.powerAvailable + obj.disturbancePowerAvailable;
+            oldPowerAvailable = obj.state.getPowerAvailable();
+            newPowerAvailable = oldPowerAvailable + obj.disturbancePowerAvailable;
+            obj.state.setPowerAvailable(newPowerAvailable);
                
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
             obj.state.powerGeneration = obj.state.powerGeneration ...
@@ -132,7 +135,8 @@ classdef ZoneEvolution < handle
         end
         
         function setInitialPowerAvailable(obj, timeSeries)
-           obj.state.powerAvailable = timeSeries.getInitialPowerAvailable(); 
+            initialPowerAvailable = timeSeries.getInitialPowerAvailable();
+            obj.state.setPowerAvailable(initialPowerAvailable);
         end
         
         function setInitialPowerGeneration(obj)
