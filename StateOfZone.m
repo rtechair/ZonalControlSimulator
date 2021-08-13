@@ -7,8 +7,8 @@ classdef StateOfZone < handle
        powerGeneration  % PG
     end
     
-    properties (SetAccess = protected)
-       powerFlow  % Fij
+    properties (SetAccess = protected, GetAccess = protected)
+       powerFlow        % Fij
        powerAvailable   % PA
     end
     
