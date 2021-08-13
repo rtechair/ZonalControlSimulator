@@ -7,15 +7,15 @@ classdef TelecomZone2Controller < Telecommunication
             obj.delay = delayTelecom;
             
             blankState = StateOfZone(numberOfBranches, numberOfGen, numberOfBatt);
-            blankDisturbanceTransit = zeros(numberOfBuses, 1);            
-            blankStateAndDistTransit(1:delayTelecom) = ...
-                StateAndDisturbanceTransit(blankState, blankDisturbanceTransit);
+            blankDisturbancePowerTransit = zeros(numberOfBuses, 1);
+            blankStateAndDisturbancePowerTransit(1:delayTelecom) = ...
+                StateAndDisturbanceTransit(blankState, blankDisturbancePowerTransit);
             
-            obj.queueData = blankStateAndDistTransit;
+            obj.queueData = blankStateAndDisturbancePowerTransit;
         end
     end
     
-    methods (Access = protected)       
+    methods (Access = protected)
         function receive(obj, emitter)
             obj.queueData(end+1) = emitter.getStateAndDistTransit();
         end
