@@ -87,7 +87,7 @@ classdef ZoneEvolution < handle
                 obj.disturbanceAvailable);
         end
         
-        function object = getStateAndDistTransit(obj)
+        function object = getStateAndDisturbancePowerTransit(obj)
             object = StateAndDisturbanceTransit(obj.state, obj.disturbanceTransit);
         end
         

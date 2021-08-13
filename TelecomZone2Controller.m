@@ -17,7 +17,7 @@ classdef TelecomZone2Controller < Telecommunication
     
     methods (Access = protected)
         function receive(obj, emitter)
-            obj.queueData(end+1) = emitter.getStateAndDistTransit();
+            obj.queueData(end+1) = emitter.getStateAndDisturbancePowerTransit();
         end
         
         function send(obj, receiver)
