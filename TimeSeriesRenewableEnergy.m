@@ -35,19 +35,16 @@ classdef TimeSeriesRenewableEnergy < handle
             obj.setProfileDisturbancePowerAvailable();
         end
         
-        function value = getDisturbancePowerAvailableValue(obj)
-            value = obj.ProfileDisturbancePowerAvailable(:,obj.step);
-        end
-        
         function powerAvailable = getInitialPowerAvailable(obj)
             powerAvailable = obj.ProfilePowerAvailable(:,1);
         end
         
-        % TODO: unclear name, plus a difficult behavior to grasp: get the value, then create an object encapsulating the value
-        function objectDisturbance = getDisturbancePowerAvailable(obj)
-            objectDisturbance = DisturbancePowerAvailable(obj.numberOfGen);      
+        function object = getDisturbancePowerAvailable(obj)
+            % The telecommunication needs an object, not a matrix of the
+            % value. Thus, the method returns an object wrapping the value
+            % of the disturbance power available
             value = obj.getDisturbancePowerAvailableValue();
-            objectDisturbance.setDisturbancePowerAvailable(value);
+            object = DisturbancePowerAvailable(value);
         end
         
        function prepareForNextStep(obj)
@@ -87,18 +84,22 @@ classdef TimeSeriesRenewableEnergy < handle
        
        function checkInitialIterationCorrectness(obj)
            numberOfSamples = size(obj.discretizedWindChargingRate,2);
-          maxStartingIterationPossible = numberOfSamples - obj.numberOfIterations;
-          if any(obj.startGenIteration > maxStartingIterationPossible)
-              obj.errorStartingIterationExceedsMax(maxStartingIterationPossible)
-          end
+           maxStartingIterationPossible = numberOfSamples - obj.numberOfIterations;
+           if any(obj.startGenIteration > maxStartingIterationPossible)
+                obj.errorStartingIterationExceedsMax(maxStartingIterationPossible)
+           end
        end
        
        function errorStartingIterationExceedsMax(obj, upperBound)
            message = ['the starting iterations chosen for wind time series of the generators exceeds ' ...
-            'the max discrete range, check that startingIterationOfWindForGen is < ' ...
+            'the max discrete range, check in the JSON file, that the selected starts for generators are < ' ...
             num2str(upperBound) ', in the load data zone script'];
         error(message)
-       end        
+       end
+       
+       function value = getDisturbancePowerAvailableValue(obj)
+           value = obj.ProfileDisturbancePowerAvailable(:,obj.step);
+       end
        
     end
     
