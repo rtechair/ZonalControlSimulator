@@ -9,7 +9,7 @@ classdef TelecomZone2Controller < Telecommunication
             blankState = StateOfZone(numberOfBranches, numberOfGen, numberOfBatt);
             blankDisturbancePowerTransit = zeros(numberOfBuses, 1);
             blankStateAndDisturbancePowerTransit(1:delayTelecom) = ...
-                StateAndDisturbanceTransit(blankState, blankDisturbancePowerTransit);
+                StateAndDisturbancePowerTransit(blankState, blankDisturbancePowerTransit);
             
             obj.queueData = blankStateAndDisturbancePowerTransit;
         end
