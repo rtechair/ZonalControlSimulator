@@ -85,7 +85,8 @@ classdef TimeSeriesRenewableEnergy < handle
        function checkInitialIterationCorrectness(obj)
            numberOfSamples = size(obj.discretizedWindChargingRate,2);
            maxStartingIterationPossible = numberOfSamples - obj.numberOfIterations;
-           if any(obj.startGenIteration > maxStartingIterationPossible)
+           isThereAnyStartOfGenTooLate = any(obj.startGenIteration > maxStartingIterationPossible);
+           if isThereAnyStartOfGenTooLate
                 obj.errorStartingIterationExceedsMax(maxStartingIterationPossible)
            end
        end
