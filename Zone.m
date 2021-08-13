@@ -149,6 +149,7 @@ classdef Zone < handle
         end
         
         % WARNING: actually this function sets a limiter as the controller
+        % TODO: handle the case when it is not the limiter
         function setController(obj)
             branchFlowLimit = obj.setting.branchFlowLimit;
             numberOfGenOn = obj.topology.numberOfGenOn;
@@ -163,7 +164,7 @@ classdef Zone < handle
             delayBatt = obj.setting.DelayInSeconds.battery / controlCycle; % unused
             maxPowerGeneration = obj.topology.maxPowerGeneration;
             
-            obj.controller = Limiter(branchFlowLimit, numberOfGenOn, numberOfBattOn, ...
+            obj.controller = Limiter(branchFlowLimit, numberOfBattOn, ...
                 increasingEchelon, decreasingEchelon, lowerThreshold, upperThreshold, ...
                 delayCurt, maxPowerGeneration);
         end
