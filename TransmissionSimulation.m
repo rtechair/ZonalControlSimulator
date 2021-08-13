@@ -47,19 +47,16 @@ batteries, while columns corresponds to time steps.
        numberOfZones
        zones
        
-       duration
-       start
-       step
-       currentTime
+       durationSimulation
+       windowSimulation
     end
    
     methods
         function obj = TransmissionSimulation(filenameSimulation)
             %% set elements
             obj.simulationSetting = decodeJsonFile(filenameSimulation);
-            obj.duration = obj.simulationSetting.durationInSeconds;
-            obj.step = obj.simulationSetting.windowInSeconds;
-            obj.start = obj.step;
+            obj.durationSimulation = obj.simulationSetting.durationInSeconds;
+            obj.windowSimulation = obj.simulationSetting.windowInSeconds;
             
             obj.setZoneName();
             obj.setNumberOfZones();
@@ -93,7 +90,7 @@ batteries, while columns corresponds to time steps.
             obj.zones = cell(obj.numberOfZones,1);
             for i = 1:obj.numberOfZones
                 name = obj.zoneName{i};
-                obj.zones{i} = Zone(name, obj.grid, obj.duration);
+                obj.zones{i} = Zone(name, obj.grid, obj.durationSimulation);
             end
         end
         
@@ -116,23 +113,32 @@ batteries, while columns corresponds to time steps.
         end
         
         function runSimulation(obj)
-            for time = obj.start:obj.step:obj.duration
+            step = obj.windowSimulation;
+            start = step;
+            duration = obj.durationSimulation;
+            for time = start:step:duration
+                
                 for i = 1:obj.numberOfZones
-                    if obj.zones{i}.isToBeSimulated(time)
-                        obj.zones{i}.simulate();
-                        obj.zones{i}.updateGrid(obj.grid);
+                    zone = obj.zones{i};
+                    isZoneSimulated = zone.isToBeSimulated(time);
+                    if isZoneSimulated
+                        zone.simulate();
+                        zone.updateGrid(obj.grid);
                     end
                 end
                 
                 obj.grid.runPowerFlow()
                 
                 for i = 1:obj.numberOfZones
-                    if obj.zones{i}.isToBeSimulated(time)
-                        obj.zones{i}.update(obj.grid);
-                        obj.zones{i}.saveResult();
-                        obj.zones{i}.prepareForNextStep()
+                    zone = obj.zones{i};
+                    isZoneSimulated = zone.isToBeSimulated(time);
+                    if isZoneSimulated
+                        zone.update(obj.grid);
+                        zone.saveResult();
+                        zone.prepareForNextStep()
                     end
                 end
+                
             end
         end
         
