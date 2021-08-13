@@ -155,7 +155,7 @@ classdef ElectricalGrid < handle
         end
               
         
-        function branchFlow = getPowerBranchFlow(obj, branchIdx)
+        function branchFlow = getPowerFlow(obj, branchIdx)
             % branchIdx and not internalBranchIdx, due to 
             % 'result' struct is an external matpowercase, not internal
             branchFlow = obj.resultPowerFlow.branch(branchIdx, 14); 
@@ -225,7 +225,7 @@ classdef ElectricalGrid < handle
         end
         
         function powerTransit = getPowerTransitBusFrom(obj, branchIdx)
-            % it is the same as 'getPowerBranchFlow' method, simply a
+            % it is the same as 'getPowerFlow' method, simply a
             % change of name to be more understandable
             powerTransit = obj.resultPowerFlow.branch(branchIdx, 14);
         end
