@@ -11,8 +11,8 @@ classdef Limiter < Controller
     end    
     
     properties (SetAccess = immutable)
-        increaseCurtPercentEchelon
-        decreaseCurtPercentEchelon
+        echelonIncreaseCurtPercent
+        echelonDecreaseCurtPercent
         
         lowFlowThreshold
         highFlowThreshold
@@ -22,17 +22,18 @@ classdef Limiter < Controller
         
     
     methods
-        function obj = Limiter(branchFlowLimit, numberOfBatt, ...
-                increaseCurtPercentEchelon, decreaseCurtPercentEchelon, lowerThresholdPercent, upperThresholdPercent, ...
+        function obj = Limiter(powerFlowLimit, numberOfBatt,...
+                echelonIncreaseCurtPercent, absoluteEchelonDecreaseCurtPercent, ...
+                lowerThresholdPercent, upperThresholdPercent, ...
                 delayCurtailment, maxPowerGeneration)
             
             obj.maxPowerGeneration = maxPowerGeneration;
             
-            obj.increaseCurtPercentEchelon = increaseCurtPercentEchelon;
-            obj.decreaseCurtPercentEchelon = - decreaseCurtPercentEchelon;
+            obj.echelonIncreaseCurtPercent = echelonIncreaseCurtPercent;
+            obj.echelonDecreaseCurtPercent = - absoluteEchelonDecreaseCurtPercent;
             
-            obj.lowFlowThreshold = lowerThresholdPercent * branchFlowLimit;
-            obj.highFlowThreshold = upperThresholdPercent * branchFlowLimit;
+            obj.lowFlowThreshold = lowerThresholdPercent * powerFlowLimit;
+            obj.highFlowThreshold = upperThresholdPercent * powerFlowLimit;
             
             obj.doNotUseBatteries(numberOfBatt);
             
@@ -40,18 +41,17 @@ classdef Limiter < Controller
             obj.futureStateCurtPercent = 0;
         end
         
-        function curtControlForAllGen = getCurtailmentControl(obj)
-            curtControlForAllGen = obj.controlCurtPercent * obj.maxPowerGeneration;
+        function value = getControlCurtailment(obj)
+            value = obj.controlCurtPercent * obj.maxPowerGeneration;
         end
         
-        function battControlForAllBatt = getBatteryInjectionControl(obj)
-            battControlForAllBatt = obj.controlBatt;
+        function value = getControlBattery(obj)
+            value = obj.controlBatt;
         end
         
         function objectControl = getControl(obj)
-            curtControlForAllGen = obj.getCurtailmentControl();
-            battControlForAllGen = obj.getBatteryInjectionControl();
-            objectControl = ControlOfZone(curtControlForAllGen, battControlForAllGen);
+            controlCurt = obj.getControlCurtailment();
+            objectControl = ControlOfZone(controlCurt, obj.controlBatt);
         end
         
         function computeControl(obj)
@@ -71,7 +71,8 @@ classdef Limiter < Controller
         end
         
         function saveControl(obj, memory)
-           memory.saveControl(obj.getCurtailmentControl(), obj.getBatteryInjectionControl()) 
+            controlCurt = obj.getControlCurtailment();
+            memory.saveControl(controlCurt, obj.controlBatt);
         end
         
         function receiveStateAndDistTransit(obj, stateAndDistTransit)
@@ -89,11 +90,11 @@ classdef Limiter < Controller
         end
         
         function increaseCurtailment(obj)
-            obj.controlCurtPercent = obj.increaseCurtPercentEchelon;
+            obj.controlCurtPercent = obj.echelonIncreaseCurtPercent;
         end
         
         function decreaseCurtailment(obj)
-            obj.controlCurtPercent = obj.decreaseCurtPercentEchelon;
+            obj.controlCurtPercent = obj.echelonDecreaseCurtPercent;
         end
         
         function doNotAlterCurtailment(obj)
@@ -110,11 +111,11 @@ classdef Limiter < Controller
         end
         
         function boolean = canCurtailmentIncrease(obj)
-            boolean = (obj.futureStateCurtPercent + obj.increaseCurtPercentEchelon) <= 1;
+            boolean = (obj.futureStateCurtPercent + obj.echelonIncreaseCurtPercent) <= 1;
         end
         
         function boolean = canCurtailmentDecrease(obj)
-            boolean = (obj.futureStateCurtPercent + obj.decreaseCurtPercentEchelon) >= 0;
+            boolean = (obj.futureStateCurtPercent + obj.echelonDecreaseCurtPercent) >= 0;
         end
         
         function updateFutureCurtailment(obj)
