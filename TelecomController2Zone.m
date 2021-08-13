@@ -5,8 +5,8 @@ classdef TelecomController2Zone < Telecommunication
             obj.delay = delayTelecom;
             blankControlCurtailment = zeros(numberOfGen,1);
             blankControlBattery = zeros(numberOfBatt,1);
-            blankControl(1:delayTelecom) = ControlOfZone(blankControlCurtailment, blankControlBattery);
-            obj.queueData = blankControl;
+            blankControls(1:delayTelecom) = ControlOfZone(blankControlCurtailment, blankControlBattery);
+            obj.queueData = blankControls;
         end
     end
     
@@ -16,7 +16,7 @@ classdef TelecomController2Zone < Telecommunication
         end
         
         function send(obj, receiver)
-            receiver.receiveControl(obj.queueData(1))
+            receiver.receiveControl(obj.queueData(1));
         end
     end
     
