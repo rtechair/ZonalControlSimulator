@@ -1,25 +1,19 @@
 classdef DisturbancePowerAvailable < handle
-   
+% Wrapper class of a value DISTURBANCE POWER AVAILABLE
+% such that the telecommunication, from the time series to the zone
+% manipulates an object instead of a matrix
     properties (SetAccess = protected)
-        numberOfGen
         disturbanceValue
     end
     
     methods 
-        
-        function obj = DisturbancePowerAvailable(numberOfGen)
-            obj.numberOfGen = numberOfGen;
-            obj.disturbanceValue = zeros(numberOfGen,1);
+        function obj = DisturbancePowerAvailable(value)
+            obj.disturbanceValue = value;
         end
         
-        function setDisturbancePowerAvailable(obj, newDisturbance)
-            obj.disturbanceValue = newDisturbance;
+        function value = getValue(obj)
+            value = obj.disturbanceValue;
         end
-        
-        function disturbance = getValue(obj)
-            disturbance = obj.disturbanceValue;
-        end
-        
     end
     
 end
