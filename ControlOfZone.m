@@ -13,21 +13,6 @@ classdef ControlOfZone < handle
            obj.controlBattery = controlBattery;
        end
        
-       function modifyControl(obj, valueToAdd)
-           % The telecommunication from the controller to the zone can modify the values
-           obj.modifyControlCurtailment(valueToAdd);
-           obj.modifyControlBattery(valueToAdd);
-       end
    end
    
-   methods (Access = protected)
-       function modifyControlCurtailment(obj, valueToAdd)
-           obj.controlCurtailment = obj.controlCurtailment + valueToAdd;
-       end
-       
-       function modifyControlBattery(obj, valueToAdd)
-           obj.controlBattery = obj.controlBattery + valueToAdd;
-       end
-   end
-    
 end
