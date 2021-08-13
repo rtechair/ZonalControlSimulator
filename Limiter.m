@@ -63,9 +63,7 @@ classdef Limiter < Controller
         function objectControl = getControl(obj)
             curtControlForAllGen = obj.getCurtailmentControl();
             battControlForAllGen = obj.getBatteryInjectionControl();
-            objectControl = ControlOfZone(obj.numberOfGen, obj.numberOfBatt);
-            objectControl.setControlCurtailment(curtControlForAllGen);
-            objectControl.setControlBattery(battControlForAllGen);
+            objectControl = ControlOfZone(curtControlForAllGen, battControlForAllGen);
         end
         
         function computeControl(obj)
