@@ -11,7 +11,7 @@ classdef ZoneEvolution < handle
         
         disturbancePowerTransit
         disturbancePowerGeneration
-        disturbanceAvailable
+        disturbancePowerAvailable
     end
     
     properties (SetAccess = immutable)
@@ -45,8 +45,8 @@ classdef ZoneEvolution < handle
             obj.disturbancePowerTransit = zeros(numberOfBuses, 1);
         end
         
-        function receiveTimeSeries(obj, disturbancePowerAvailable)
-            obj.disturbanceAvailable = disturbancePowerAvailable.getValue();
+        function receiveTimeSeries(obj, objectDisturbancePowerAvailable)
+            obj.disturbancePowerAvailable = objectDisturbancePowerAvailable.getValue();
         end
         
         function receiveControl(obj, controlOfZone)
@@ -84,7 +84,7 @@ classdef ZoneEvolution < handle
         function saveDisturbance(obj, memory)
             memory.saveDisturbance(obj.disturbancePowerTransit,...
                 obj.disturbancePowerGeneration,...
-                obj.disturbanceAvailable);
+                obj.disturbancePowerAvailable);
         end
         
         function object = getStateAndDisturbancePowerTransit(obj)
@@ -96,7 +96,7 @@ classdef ZoneEvolution < handle
             % with  f = PA    + DeltaPA - PG + DeltaPC(k - delayCurt)
             % and   g = maxPG - PC      - PG
             f = obj.state.powerAvailable ...
-                + obj.disturbanceAvailable ...
+                + obj.disturbancePowerAvailable ...
                 - obj.state.powerGeneration ...
                 + obj.queueControlCurt(:,1);
             g = obj.maxPowerGeneration...
@@ -117,7 +117,7 @@ classdef ZoneEvolution < handle
                 ( obj.state.powerBattery + appliedControlBatt);
             
             % PA += DeltaPA
-            obj.state.powerAvailable = obj.state.powerAvailable + obj.disturbanceAvailable;
+            obj.state.powerAvailable = obj.state.powerAvailable + obj.disturbancePowerAvailable;
                
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
             obj.state.powerGeneration = obj.state.powerGeneration ...
