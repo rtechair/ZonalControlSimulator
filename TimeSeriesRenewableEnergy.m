@@ -1,8 +1,8 @@
 classdef TimeSeriesRenewableEnergy < handle
    
     properties (SetAccess = protected)
-        powerAvailableState
-        powerAvailableVariation
+        ProfilePowerAvailable
+        ProfileDisturbancePowerAvailable
         step
         discretizedWindChargingRate
     end
@@ -18,10 +18,10 @@ classdef TimeSeriesRenewableEnergy < handle
         
         function obj = TimeSeriesRenewableEnergy(filenameWindChargingRate, ...
                 startGenInSeconds, controlCycle, ...
-                durationSimulation, maxGenerationPerGen, numberOfGen)
+                durationSimulation, maxPowerGeneration, numberOfGen)
             obj.startGenIteration = floor(startGenInSeconds / controlCycle);
             obj.numberOfIterations = floor(durationSimulation / controlCycle);
-            obj.maxPowerGeneration = maxGenerationPerGen;
+            obj.maxPowerGeneration = maxPowerGeneration;
             obj.numberOfGen = numberOfGen;
             
             % step starts at 0 because of initialization, later updated to 1 to start the simulation
@@ -31,22 +31,22 @@ classdef TimeSeriesRenewableEnergy < handle
             
             obj.checkInitialIterationCorrectness()
             
-            obj.setPowerAvailableState();
-            obj.setPowerAvailableVariation();
+            obj.setProfilePowerAvailable();
+            obj.setProfileDisturbancePowerAvailable();
         end
         
-        function disturbance = getDisturbancePowerAvailable(obj)
-            disturbance = obj.powerAvailableVariation(:,obj.step);
+        function value = getDisturbancePowerAvailableValue(obj)
+            value = obj.ProfileDisturbancePowerAvailable(:,obj.step);
         end
         
         function powerAvailable = getInitialPowerAvailable(obj)
-            powerAvailable = obj.powerAvailableState(:,1);
+            powerAvailable = obj.ProfilePowerAvailable(:,1);
         end
         
         % TODO: unclear name, plus a difficult behavior to grasp: get the value, then create an object encapsulating the value
-        function objectDisturbance = getTimeSeries(obj)
+        function objectDisturbance = getDisturbancePowerAvailable(obj)
             objectDisturbance = DisturbancePowerAvailable(obj.numberOfGen);      
-            value = obj.getDisturbancePowerAvailable();
+            value = obj.getDisturbancePowerAvailableValue();
             objectDisturbance.setDisturbancePowerAvailable(value);
         end
         
@@ -66,22 +66,22 @@ classdef TimeSeriesRenewableEnergy < handle
            obj.discretizedWindChargingRate = rateInRealTime(discretTime);           
        end
         
-       function setPowerAvailableState(obj)
-           obj.powerAvailableState = zeros(obj.numberOfGen, obj.numberOfIterations + 1);
+       function setProfilePowerAvailable(obj)
+           obj.ProfilePowerAvailable = zeros(obj.numberOfGen, obj.numberOfIterations + 1);
            for gen = 1:obj.numberOfGen
                start = obj.startGenIteration(gen);
                range = start : start + obj.numberOfIterations;
                windRate = obj.discretizedWindChargingRate(1,range);
                maxGen = obj.maxPowerGeneration(gen,1);
-               obj.powerAvailableState(gen,:) = maxGen * windRate;
+               obj.ProfilePowerAvailable(gen,:) = maxGen * windRate;
            end
        end
        
-       function setPowerAvailableVariation(obj)
-           obj.powerAvailableVariation = zeros(obj.numberOfGen, obj.numberOfIterations);
-           for instant = 1:obj.numberOfIterations
-               obj.powerAvailableVariation(:,instant) = obj.powerAvailableState(:, instant+1) ...
-                   - obj.powerAvailableState(:, instant);
+       function setProfileDisturbancePowerAvailable(obj)
+           obj.ProfileDisturbancePowerAvailable = zeros(obj.numberOfGen, obj.numberOfIterations);
+           for time = 1:obj.numberOfIterations
+               obj.ProfileDisturbancePowerAvailable(:,time) = obj.ProfilePowerAvailable(:, time+1) ...
+                   - obj.ProfilePowerAvailable(:, time);
            end
        end
        
