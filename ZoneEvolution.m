@@ -73,12 +73,12 @@ classdef ZoneEvolution < handle
         end
         
         function saveState(obj, memory)
-            memory.saveState(obj.state.powerFlow, ...
+            memory.saveState(obj.state.getPowerFlow, ...
                 obj.state.powerCurtailment, ...
                 obj.state.powerBattery,...
                 obj.state.energyBattery,...
                 obj.state.powerGeneration,...
-                obj.state.powerAvailable);
+                obj.state.getPowerAvailable);
         end
         
         function saveDisturbance(obj, memory)
@@ -140,7 +140,8 @@ classdef ZoneEvolution < handle
         end
         
         function setInitialPowerGeneration(obj)
-           obj.state.powerGeneration = min(obj.state.powerAvailable, obj.maxPowerGeneration); 
+            powerAvailable = obj.state.getPowerAvailable;
+            obj.state.powerGeneration = min(powerAvailable, obj.maxPowerGeneration);
         end
     end
     
