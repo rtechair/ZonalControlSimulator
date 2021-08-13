@@ -11,28 +11,22 @@ classdef Limiter < Controller
     end    
     
     properties (SetAccess = immutable)
-        branchFlowLimit
-        
         increaseCurtPercentEchelon
         decreaseCurtPercentEchelon
         
         lowFlowThreshold
         highFlowThreshold
         
-        numberOfGen
-        numberOfBatt
         maxPowerGeneration
     end
         
     
     methods
-        function obj = Limiter(branchFlowLimit, numberOfGen, numberOfBatt, ...
+        function obj = Limiter(branchFlowLimit, numberOfBatt, ...
                 increaseCurtPercentEchelon, decreaseCurtPercentEchelon, lowerThresholdPercent, upperThresholdPercent, ...
                 delayCurtailment, maxPowerGeneration)
             
             obj.maxPowerGeneration = maxPowerGeneration;
-            obj.branchFlowLimit = branchFlowLimit;
-            
             
             obj.increaseCurtPercentEchelon = increaseCurtPercentEchelon;
             obj.decreaseCurtPercentEchelon = - decreaseCurtPercentEchelon;
@@ -40,15 +34,10 @@ classdef Limiter < Controller
             obj.lowFlowThreshold = lowerThresholdPercent * branchFlowLimit;
             obj.highFlowThreshold = upperThresholdPercent * branchFlowLimit;
             
-            obj.doNotUseBatteries();
-            
+            obj.doNotUseBatteries(numberOfBatt);
             
             obj.queueControlCurtPercent = zeros(1, delayCurtailment);
             obj.futureStateCurtPercent = 0;
-            
-            obj.numberOfGen = numberOfGen;
-            obj.numberOfBatt = numberOfBatt;
-            
         end
         
         function curtControlForAllGen = getCurtailmentControl(obj)
@@ -56,7 +45,7 @@ classdef Limiter < Controller
         end
         
         function battControlForAllBatt = getBatteryInjectionControl(obj)
-            battControlForAllBatt = obj.controlBatt * zeros(obj.numberOfBatt,1);
+            battControlForAllBatt = obj.controlBatt;
         end
         
         function objectControl = getControl(obj)
@@ -94,9 +83,9 @@ classdef Limiter < Controller
     
     methods (Access = protected) 
         
-        function doNotUseBatteries(obj)
+        function doNotUseBatteries(obj, numberOfBatt)
             % the curtailment limiter does not use the batteries
-            obj.controlBatt = 0;
+            obj.controlBatt = zeros(numberOfBatt,1);
         end
         
         function increaseCurtailment(obj)
