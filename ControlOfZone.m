@@ -1,26 +1,21 @@
 classdef ControlOfZone < handle
-    
+% Wrapper class of the 2 controls defined by the controller:
+% the control of the generator curtailments
+% the control of the battery injections
    properties
        controlCurtailment
        controlBattery
    end
    
-   properties (SetAccess = immutable)
-       numberOfGen
-       numberOfBatt
-   end
-   
-   methods 
-       
+   methods
        function obj = ControlOfZone(numberOfGenerators, numberOfBatteries)
-           obj.numberOfGen = numberOfGenerators;
-           obj.numberOfBatt = numberOfBatteries;
-           
+           % blank controls
            obj.controlCurtailment = zeros(numberOfGenerators,1);
            obj.controlBattery = zeros(numberOfBatteries,1);
        end
        
        function modifyControl(obj, valueToAdd)
+           % The telecommunication from the controller to the zone can modify the values
            obj.modifyControlCurtailment(valueToAdd);
            obj.modifyControlBattery(valueToAdd);
        end
@@ -32,7 +27,6 @@ classdef ControlOfZone < handle
        function setControlBattery(obj, value)
            obj.controlBattery = value;
        end
-       
    end
    
    methods (Access = protected)
