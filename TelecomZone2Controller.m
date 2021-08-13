@@ -21,7 +21,7 @@ classdef TelecomZone2Controller < Telecommunication
         end
         
         function send(obj, receiver)
-            receiver.receiveStateAndDistTransit(obj.queueData(1))
+            receiver.receiveStateAndDisturbancePowerTransit(obj.queueData(1));
         end
     end
     
