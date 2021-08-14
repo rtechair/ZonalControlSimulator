@@ -2,7 +2,7 @@ classdef DisturbancePowerAvailable < handle
 % Wrapper class of a value DISTURBANCE POWER AVAILABLE
 % such that the telecommunication, from the time series to the zone
 % manipulates an object instead of a matrix
-    properties (SetAccess = protected)
+    properties (SetAccess = protected, GetAccess = protected)
         disturbanceValue
     end
     
