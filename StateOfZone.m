@@ -1,14 +1,11 @@
 classdef StateOfZone < handle
-   
-    properties
-       powerGeneration  % PG
-    end
     
     properties (SetAccess = protected, GetAccess = protected)
        powerFlow        % Fij
        powerCurtailment % PC
        powerBattery     % PB
        energyBattery    % EB
+       powerGeneration  % PG
        powerAvailable   % PA
     end
     
@@ -38,6 +35,10 @@ classdef StateOfZone < handle
             value = obj.energyBattery;
         end
         
+        function value = getPowerGeneration(obj)
+            value = obj.powerGeneration;
+        end
+        
         function value = getPowerAvailable(obj)
             value = obj.powerAvailable;
         end
@@ -56,6 +57,10 @@ classdef StateOfZone < handle
         
         function setEnergyBattery(obj, value)
             obj.energyBattery = value;
+        end
+        
+        function setPowerGeneration(obj, value)
+            obj.powerGeneration = value;
         end
         
         function setPowerAvailable(obj, value)
