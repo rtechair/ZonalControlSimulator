@@ -55,7 +55,7 @@ classdef StateOfZone < handle
         end
         
         function setEnergyBattery(obj, value)
-            obj.energyBattery = valuej;
+            obj.energyBattery = value;
         end
         
         function setPowerAvailable(obj, value)
