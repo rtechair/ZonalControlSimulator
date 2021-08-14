@@ -1,7 +1,7 @@
 classdef ZoneTopology < handle
     
     
-    properties
+    properties (SetAccess = protected, GetAccess = protected)
         name
         
         busId
