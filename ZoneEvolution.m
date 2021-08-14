@@ -78,7 +78,7 @@ classdef ZoneEvolution < handle
                 obj.state.getPowerCurtailment, ...
                 obj.state.getPowerBattery,...
                 obj.state.getEnergyBattery,...
-                obj.state.powerGeneration,...
+                obj.state.getPowerGeneration,...
                 obj.state.getPowerAvailable);
         end
         
@@ -97,15 +97,17 @@ classdef ZoneEvolution < handle
             % with  f = PA    + DeltaPA - PG + DeltaPC(k - delayCurt)
             % and   g = maxPG - PC      - PG
             powerAvailable = obj.state.getPowerAvailable();
+            powerGeneration = obj.state.getPowerGeneration();
+            appliedControlCurt = obj.queueControlCurt(:,1);
             f = powerAvailable ...
                 + obj.disturbancePowerAvailable ...
-                - obj.state.powerGeneration ...
-                + obj.queueControlCurt(:,1);
+                + powerGeneration ...
+                + appliedControlCurt;
             
             powerCurtailment = obj.state.getPowerCurtailment;
             g = obj.maxPowerGeneration...
                 - powerCurtailment...
-                - obj.state.powerGeneration;
+                - powerGeneration;
             obj.disturbancePowerGeneration = min(f,g);
         end
         
@@ -128,9 +130,10 @@ classdef ZoneEvolution < handle
             obj.state.setPowerAvailable(newPowerAvailable);
                
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
-            obj.state.powerGeneration = obj.state.powerGeneration ...
-                + obj.disturbancePowerGeneration ...
+            oldPowerGeneration = obj.state.getPowerGeneration();
+            newPowerGeneration = oldPowerGeneration + obj.disturbancePowerGeneration ...
                 - appliedControlCurt;
+            obj.state.setPowerGeneration(newPowerGeneration);
             
             % PC += DeltaPC(k - delayCurt)
             oldPowerCurtailment = obj.state.getPowerCurtailment;
@@ -149,7 +152,8 @@ classdef ZoneEvolution < handle
         
         function setInitialPowerGeneration(obj)
             powerAvailable = obj.state.getPowerAvailable;
-            obj.state.powerGeneration = min(powerAvailable, obj.maxPowerGeneration);
+            initialPowerGeneration = min(powerAvailable, obj.maxPowerGeneration);
+            obj.state.setPowerGeneration(initialPowerGeneration);
         end
     end
     
