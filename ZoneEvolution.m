@@ -73,9 +73,10 @@ classdef ZoneEvolution < handle
         end
         
         function saveState(obj, memory)
-            memory.saveState(obj.state.getPowerFlow, ...
+            memory.saveState(...
+                obj.state.getPowerFlow, ...
                 obj.state.getPowerCurtailment, ...
-                obj.state.powerBattery,...
+                obj.state.getPowerBattery,...
                 obj.state.energyBattery,...
                 obj.state.powerGeneration,...
                 obj.state.getPowerAvailable);
@@ -115,9 +116,10 @@ classdef ZoneEvolution < handle
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
             % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
+            oldPowerBattery = obj.state.getPowerBattery;
             obj.state.energyBattery = obj.state.energyBattery ...
                 - obj.battConstPowerReduc * ...
-                ( obj.state.powerBattery + appliedControlBatt);
+                ( oldPowerBattery + appliedControlBatt);
             
             % PA += DeltaPA
             oldPowerAvailable = obj.state.getPowerAvailable();
@@ -135,7 +137,8 @@ classdef ZoneEvolution < handle
             obj.state.setPowerCurtailment(newPowerCurtailment);
             
             % PB += DeltaPB(k - delayBatt)
-            obj.state.powerBattery = obj.state.powerBattery - appliedControlBatt;
+            newPowerBattery = oldPowerBattery - appliedControlBatt;
+            obj.state.setPowerBattery(newPowerBattery);
         end
         
         function setInitialPowerAvailable(obj, timeSeries)

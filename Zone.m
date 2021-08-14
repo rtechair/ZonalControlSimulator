@@ -202,14 +202,16 @@ classdef Zone < handle
         end
         
         function updateGridGeneration(obj, electricalGrid)
+            % TODO: the access to 'powerGeneration' is strange
             genOnIdx = obj.topology.genOnIdx;
-            powerGeneration = obj.getPowerGeneration();
+            powerGeneration = obj.zoneEvolution.state.powerGeneration;
             electricalGrid.updateGeneration(genOnIdx, powerGeneration);
         end
         
         function updateGridBattInjection(obj, electricalGrid)
+            % TODO: the access to 'powerBattery' is strange
             battOnIdx = obj.topology.battOnIdx;
-            powerBattery = obj.zoneEvolution.state.powerBattery;
+            powerBattery = obj.zoneEvolution.state.getPowerBattery;
             electricalGrid.updateBattInjection(battOnIdx, powerBattery);
         end
         
