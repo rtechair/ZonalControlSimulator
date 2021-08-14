@@ -41,6 +41,46 @@ classdef ZoneTopology < handle
             obj.setNumberOfElements();
         end
         
+        function value = getBusId(obj)
+            value = obj.busId;
+        end
+        
+        function value = getBranchIdx(obj)
+            value = obj.branchIdx;
+        end
+        
+        function value = getGenOnIdx(obj)
+            value = obj.genOnIdx;
+        end
+        
+        function value = getBattOnIdx(obj)
+            value = obj.battOnIdx;
+        end
+        
+        function value = getMaxPowerGeneration(obj)
+            value = obj.maxPowerGeneration;
+        end
+        
+        function value = getNumberOfBuses(obj)
+            value = obj.numberOfBuses;
+        end
+        
+        function value = getNumberOfBranches(obj)
+            value = obj.numberOfBranches;
+        end
+        
+        function value = getNumberOfGenOn(obj)
+            value = obj.numberOfGenOn;
+        end
+        
+        function value = getNumberOfBattOn(obj)
+            value = obj.numberOfBattOn;
+        end
+        
+        function value = getBranchBorderIdx(obj)
+            value = obj.branchBorderIdx;
+        end
+        
         function genOffIdx = getGenOffIdx(obj, electricalGrid)
             genOffIdx = electricalGrid.getGenOffIdx(obj.busId);
         end
