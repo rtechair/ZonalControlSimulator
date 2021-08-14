@@ -2,7 +2,7 @@ classdef StateAndDisturbancePowerTransit < handle
 % Wrapper class of an object STATE + a value DISTURBANCE POWER TRANSIT
 % such that the telecommunication, from the zone to the controller,
 % manipulates 1 object instead 1 object + 1 value.
-   properties (SetAccess = protected)
+   properties (SetAccess = protected, GetAccess = protected)
       stateOfZone
       disturbancePowerTransit
    end
