@@ -1,18 +1,16 @@
 classdef ZoneEvolution < handle
     
-   
-    properties
+    
+    properties (SetAccess = protected, GetAccess = protected)
         state
+        
+        queueControlCurt
+        queueControlBatt
+        queuePowerTransit % to compute disturbancePowerTransit
         
         disturbancePowerTransit
         disturbancePowerGeneration
         disturbancePowerAvailable
-    end
-    
-    properties (SetAccess = protected, GetAccess = protected)
-        queueControlCurt
-        queueControlBatt
-        queuePowerTransit % to compute disturbancePowerTransit
     end
     
     properties (SetAccess = immutable, GetAccess = protected)
