@@ -83,8 +83,8 @@ classdef Zone < handle
             numberOfGenOn = obj.topology.getNumberOfGenOn();
             numberOfBattOn = obj.topology.getNumberOfBattOn();
 
-            delayCurt = obj.delayInIterations.curt;
-            delayBatt = obj.delayInIterations.batt;
+            delayCurt = obj.delayInIterations.getDelayCurt();
+            delayBatt = obj.delayInIterations.getDelayBatt();
             
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             battConstPowerReduc = obj.setting.batteryConstantPowerReduction;
@@ -94,14 +94,14 @@ classdef Zone < handle
         end
         
         function setTelecom(obj)
-            delayTimeSeries2Zone = obj.delayInIterations.timeSeries2Zone;
-            delayController2Zone = obj.delayInIterations.controller2Zone;
-            delayZone2Controller = obj.delayInIterations.zone2Controller;
+            delayTimeSeries2Zone = obj.delayInIterations.getDelayTimeSeries2Zone();
+            delayController2Zone = obj.delayInIterations.getDelayController2Zone();
+            delayZone2Controller = obj.delayInIterations.getDelayZone2Controller();
             
             numberOfBuses = obj.topology.getNumberOfBuses();
-            numberOfBranches = obj.topology.getNumberOfBranches;
-            numberOfGenOn = obj.topology.getNumberOfGenOn;
-            numberOfBattOn = obj.topology.getNumberOfBattOn;
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGenOn = obj.topology.getNumberOfGenOn();
+            numberOfBattOn = obj.topology.getNumberOfBattOn();
             
             obj.telecomTimeSeries2Zone = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
             obj.telecomController2Zone = TelecomController2Zone(...
@@ -112,11 +112,11 @@ classdef Zone < handle
         
         function setResult(obj, duration)
             controlCycle = obj.setting.controlCycle;
-            numberOfBuses = obj.topology.getNumberOfBuses;
-            numberOfBranches = obj.topology.getNumberOfBranches;
-            numberOfGenOn = obj.topology.getNumberOfGenOn;
-            numberOfBattOn = obj.topology.getNumberOfBattOn;
-            maxPowerGeneration = obj.topology.getMaxPowerGeneration;
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGenOn = obj.topology.getNumberOfGenOn();
+            numberOfBattOn = obj.topology.getNumberOfBattOn();
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             branchFlowLimit = obj.setting.branchFlowLimit;
             
             busId = obj.topology.getBusId();
@@ -124,11 +124,11 @@ classdef Zone < handle
             genOnIdx = obj.topology.getGenOnIdx();
             battOnIdx = obj.topology.getBattOnIdx();
             
-            delayCurt = obj.delayInIterations.curt;
-            delayBatt = obj.delayInIterations.batt;
-            delayTimeSeries2Zone = obj.delayInIterations.timeSeries2Zone;
-            delayController2Zone = obj.delayInIterations.controller2Zone;
-            delayZone2Controller = obj.delayInIterations.zone2Controller;
+            delayCurt = obj.delayInIterations.getDelayCurt();
+            delayBatt = obj.delayInIterations.getDelayBatt();
+            delayTimeSeries2Zone = obj.delayInIterations.getDelayTimeSeries2Zone();
+            delayController2Zone = obj.delayInIterations.getDelayController2Zone();
+            delayZone2Controller = obj.delayInIterations.getDelayZone2Controller();
             
             obj.result = ResultGraphic(obj.name, duration, controlCycle,...
                 numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
@@ -243,6 +243,7 @@ classdef Zone < handle
         end
         
         function boolean = isToBeSimulated(obj, currentTime)
+            % TODO: THIS IS INCORRECT
             boolean = mod(currentTime, obj.setting.controlCycle) == 0;
         end
         
