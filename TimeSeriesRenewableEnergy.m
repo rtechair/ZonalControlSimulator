@@ -1,13 +1,13 @@
 classdef TimeSeriesRenewableEnergy < handle
    
-    properties (SetAccess = protected)
+    properties (SetAccess = protected, GetAccess = protected)
         ProfilePowerAvailable
         ProfileDisturbancePowerAvailable
         step
         discretizedWindChargingRate
     end
     
-    properties (SetAccess = immutable)
+    properties (SetAccess = immutable, GetAccess = protected)
         startGenIteration
         numberOfIterations
         maxPowerGeneration
