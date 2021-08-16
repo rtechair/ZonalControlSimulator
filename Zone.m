@@ -1,6 +1,6 @@
 classdef Zone < handle
    
-    properties
+    properties (SetAccess = protected, GetAccess = protected)
        name
        setting
        delayInIterations
