@@ -1,6 +1,6 @@
 classdef ElectricalGrid < handle
    
-    properties
+    properties (SetAccess = protected, GetAccess = protected)
         matpowercase
         internalMatpowercase % used by matpower 'runpf' function
         
