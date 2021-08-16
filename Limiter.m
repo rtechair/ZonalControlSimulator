@@ -1,6 +1,6 @@
 classdef Limiter < Controller
    
-    properties (SetAccess = protected)
+    properties (SetAccess = protected, GetAccess = protected)
        queueControlCurtPercent
        futureStateCurtPercent
        controlCurtPercent
