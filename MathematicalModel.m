@@ -8,7 +8,7 @@ classdef MathematicalModel < handle
 %   x(k+1) = A*x(k) + Bc*DeltaPC(k-delayCurt) + Bb*DeltaPB(k-delayBatt) 
 %            + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
 
-    properties (SetAccess = protected)
+    properties (SetAccess = protected, GetAcess = protected)
       
       internalMatpowercase  
         
