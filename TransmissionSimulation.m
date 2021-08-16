@@ -40,7 +40,7 @@ batteries, while columns corresponds to time steps.
  
 [1] https://matpower.org/docs/ref/
 %}
-    properties
+    properties (SetAccess = protected, GetAccess = protected)
        grid
        simulationSetting
        zoneName
@@ -116,8 +116,8 @@ batteries, while columns corresponds to time steps.
             step = obj.windowSimulation;
             start = step;
             duration = obj.durationSimulation;
+            
             for time = start:step:duration
-                
                 for i = 1:obj.numberOfZones
                     zone = obj.zones{i};
                     isZoneSimulated = zone.isToBeSimulated(time);
@@ -138,7 +138,6 @@ batteries, while columns corresponds to time steps.
                         zone.prepareForNextStep()
                     end
                 end
-                
             end
         end
         
