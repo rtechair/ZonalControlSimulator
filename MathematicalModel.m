@@ -1,12 +1,14 @@
 classdef MathematicalModel < handle
 %   To obtain the operators / matrices for the dynamic mathematical model
 %   of a zone.
-%   Matrices definition for the linear system x(k+1)=Ax(k)+Bu(k+tau)+Dd(k)
-%   x = [Fij Pc Pb Eb Pg Pa]     uc = DeltaPc      ub =DeltaPb     
-%   w = DeltaPg      h = DeltaPT
+%  The mathematical model is based on the paper:
+% 'Modeling the Partial Renewable Power Curtailment for Transmission Network Management'[1].
+%  Beware, x includes the power available PA! It is not displayed as such in the paper.
+%   x = [Fij PC PB EB PG PA]
 %   The model is described by the equation:
 %   x(k+1) = A*x(k) + Bc*DeltaPC(k-delayCurt) + Bb*DeltaPB(k-delayBatt) 
 %            + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
+% [1] https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
 
     properties (SetAccess = protected, GetAcess = protected)
       
