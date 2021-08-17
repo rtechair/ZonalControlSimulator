@@ -1,36 +1,7 @@
 classdef TransmissionSimulation < handle
-   
-    %{
-Abstract:
+% Act as the global simulator of transmission
 
-INITIALIZATION PRIOR TO THE SIMULATION
-
-- define the basecase used
-- define the duration of simulation
-- build the basecase as an 'ElectricalGrid' object, which is used during
-the simulation
-- load the zone setting 
-- define the topology of the zone as a 'ZoneTopology' object
-- define the time series used for the simulation as a 'TimeSeries' object
-- define the simulated zone which is used during the simulation
-- load the limiter setting
-- define the limiter as a 'Limiter' object
-
-- define the 3 telecommunications used during the simulation
-    - TelecomTimeSeries2Zone
-    - TelecomController2Zone
-    - TelecomZone2Controller
-
-- define the memory to save results of the simulation
-
-
-INITIALIZATION / FIRST ITERATION OF THE SIMULATION
-
-ITERATIONS OF THE SIMULATION
-
-DISPLAY RESULTS
-
-
+%{
 In this project, column vectors are used instead of row vectors, e.g.
 busId, branchIdx, zoneEvolution's properties, etc.
 The reason is for consistency with column vectors obtained from Matpower
