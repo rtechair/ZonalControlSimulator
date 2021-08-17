@@ -1,5 +1,15 @@
 classdef BasecaseOverview < handle
-   
+% Allows to get information easily with the dedicated methods regarding the matpowercase
+% and its associate internal matpowercase obtained from the Matpower's function 'ext2int'.
+%
+% A basecase is a representation of an electrical network.
+% A matpowercase is a data designed for Matlab/Matpower, representing a basecase,
+% with information about: the buses, the branches, the generators and the batteries.
+% Batteries in a matpowercase are treated as generators with a negative minimal power load.
+%
+% Alone, this class is only able to view information.
+% It is meant to be combined with its child class 'BaseCaseModifcation' to modify the matpowercase.
+
     properties
         matpowercase
         internalMatpowercase
