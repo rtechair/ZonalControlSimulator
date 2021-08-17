@@ -8,8 +8,10 @@ classdef ZoneEvolution < handle
     properties (SetAccess = protected, GetAccess = protected)
         state
         
+        % When received from the telecom, the controls are delayed before applied, thus the queues
         queueControlCurt
         queueControlBatt
+        
         queuePowerTransit % to compute disturbancePowerTransit
         
         disturbancePowerTransit
@@ -54,12 +56,14 @@ classdef ZoneEvolution < handle
         
         
         function receiveDisturbancePowerAvailable(obj, objectDisturbancePowerAvailable)
+            % the telecommunication from time series to zone, transmits objects, not values directly
             obj.disturbancePowerAvailable = objectDisturbancePowerAvailable.getValue();
         end
         
         function receiveControl(obj, controlOfZone)
-            obj.queueControlCurt(:,end+1) = controlOfZone.getControlCurtailment;
-            obj.queueControlBatt(:,end+1) = controlOfZone.getControlBattery;
+            % the telecommunication from controller to zone, transmits objects, not values directly
+            obj.queueControlCurt(:,end+1) = controlOfZone.getControlCurtailment();
+            obj.queueControlBatt(:,end+1) = controlOfZone.getControlBattery();
         end
         
         function dropOldestControl(obj)
@@ -107,15 +111,10 @@ classdef ZoneEvolution < handle
             powerAvailable = obj.state.getPowerAvailable();
             powerGeneration = obj.state.getPowerGeneration();
             appliedControlCurt = obj.queueControlCurt(:,1);
-            f = powerAvailable ...
-                + obj.disturbancePowerAvailable ...
-                - powerGeneration ...
-                + appliedControlCurt;
+            powerCurtailment = obj.state.getPowerCurtailment();
             
-            powerCurtailment = obj.state.getPowerCurtailment;
-            g = obj.maxPowerGeneration...
-                - powerCurtailment...
-                - powerGeneration;
+            f = powerAvailable + obj.disturbancePowerAvailable - powerGeneration + appliedControlCurt;
+            g = obj.maxPowerGeneration - powerCurtailment - powerGeneration;
             obj.disturbancePowerGeneration = min(f,g);
         end
         
@@ -126,10 +125,10 @@ classdef ZoneEvolution < handle
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
             % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
-            oldPowerBattery = obj.state.getPowerBattery;
-            oldEnergyBattery = obj.state.getEnergyBattery;
-            newEnergyBattery = oldEnergyBattery - obj.battConstPowerReduc * ...
-                (oldPowerBattery + appliedControlBatt);
+            oldPowerBattery = obj.state.getPowerBattery();
+            oldEnergyBattery = obj.state.getEnergyBattery();
+            newEnergyBattery = oldEnergyBattery ...
+                - obj.battConstPowerReduc * (oldPowerBattery + appliedControlBatt);
             obj.state.setEnergyBattery(newEnergyBattery);
             
             % PA += DeltaPA
@@ -144,7 +143,7 @@ classdef ZoneEvolution < handle
             obj.state.setPowerGeneration(newPowerGeneration);
             
             % PC += DeltaPC(k - delayCurt)
-            oldPowerCurtailment = obj.state.getPowerCurtailment;
+            oldPowerCurtailment = obj.state.getPowerCurtailment();
             newPowerCurtailment = oldPowerCurtailment + appliedControlCurt;
             obj.state.setPowerCurtailment(newPowerCurtailment);
             
@@ -159,7 +158,7 @@ classdef ZoneEvolution < handle
         end
         
         function setInitialPowerGeneration(obj)
-            powerAvailable = obj.state.getPowerAvailable;
+            powerAvailable = obj.state.getPowerAvailable();
             initialPowerGeneration = min(powerAvailable, obj.maxPowerGeneration);
             obj.state.setPowerGeneration(initialPowerGeneration);
         end
