@@ -1,5 +1,12 @@
 classdef Limiter < Controller
-   
+% Controller with simple mechanism, used to test the simulator, it will be later substracted with more complex controllers.
+% The mechanism is applied in the method 'computeControl' and fondamentally is:
+% - if a power flow is too high, increase the generator curtailment to reduce the generation.
+% - if all power flows are too low, reduce the curtailment
+% - else, do nothing.
+%
+% Limiter's parameters are defined in the associate json file of the limiter, with respect to a zone,
+% e.g. for zone 'VG', the limiter's parameters are in 'limiterVG.json'.
     properties (SetAccess = protected, GetAccess = protected)
        queueControlCurtPercent
        futureStateCurtPercent
