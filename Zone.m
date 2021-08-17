@@ -260,10 +260,16 @@ classdef Zone < handle
             
             % Iterations are defined by the euclidian division:
             % time = iterations * controlCycle + remainder, with 0 <= remainder < controlCycle
-            previousIteration = floor(previousTime / controlCycle);
-            currentIteration = floor(currentTime / controlCycle);
+            previousIteration = obj.getEuclideanQuotient(previousTime, controlCycle);
+            currentIteration = obj.getEuclideanQuotient(currentTime, controlCycle);
             
             boolean = currentIteration > previousIteration;
+        end
+        
+        % This method does not use the object, it is here to be close to its caller method
+        function quotient = getEuclideanQuotient(obj, dividend, divisor)
+            % dividend = divisor * quotient + remainder, with 0 <= remainder < quotient
+            quotient = floor(dividend / divisor);
         end
         
         function simulate(obj)
