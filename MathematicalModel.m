@@ -10,7 +10,7 @@ classdef MathematicalModel < handle
 %            + Dg*DeltaPG(k) + Dn*DeltaPT(k) + Da*DeltaPA(k)
 % [1] https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
 
-    properties (SetAccess = protected, GetAcess = protected)
+    properties (SetAccess = protected)
       
       internalMatpowercase  
         
@@ -22,7 +22,7 @@ classdef MathematicalModel < handle
       operatorDisturbTransit    % Dt
       
       injectionShiftFactor % ISF      
-      ISFreduced
+      ISFreduced % currently not working, cf. method 'setISFreduced'
 
       % Regarding the studied zone 
       internalBusId
@@ -31,7 +31,7 @@ classdef MathematicalModel < handle
       internalBattIdx
       
       numberOfBuses
-      numberOfBuses
+      numberOfBranches
       numberOfGen
       numberOfBatt
       
@@ -54,26 +54,26 @@ classdef MathematicalModel < handle
             
             obj.battConstPowerReduc = battConstPowerReduc;
             
-            obj.setNumberOfElements;
-            obj.setInjectionShiftFactor;
+            obj.setNumberOfElements();
+            obj.setInjectionShiftFactor();
             
-            obj.setOperatorState;
-            obj.setOperatorControlCurt;
-            obj.setOperatorControlBatt;
-            obj.setOperatorDisturbAvailable;
-            obj.setOperatorDisturbGeneration;
-            obj.setOperatorDisturbTransit;            
+            obj.setOperatorState();
+            obj.setOperatorControlCurt();
+            obj.setOperatorControlBatt();
+            obj.setOperatorDisturbAvailable();
+            obj.setOperatorDisturbGeneration();
+            obj.setOperatorDisturbTransit();
         end
         
         function setNumberOfElements(obj)
             obj.numberOfBuses = size(obj.internalBusId, 1);
-            obj.numberOfBuses = size(obj.internalBranchIdx, 1);
+            obj.numberOfBranches = size(obj.internalBranchIdx, 1);
             obj.numberOfGen = size(obj.internalGenIdx, 1);
             obj.numberOfBatt = size(obj.internalBattIdx, 1);
             
             % The state is x = [Fij Pc Pb Eb Pg Pa]', thus
             obj.numberOfStateVariables = ...
-                obj.numberOfBuses + 3*obj.numberOfGen + 2*obj.numberOfBatt;
+                obj.numberOfBranches + 3*obj.numberOfGen + 2*obj.numberOfBatt;
         end
         
         function setInjectionShiftFactor(obj)
