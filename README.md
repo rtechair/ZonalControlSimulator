@@ -10,12 +10,13 @@ The code requires:
 
 Transmission simulator:
 The intent is to study the power flows of specific zones, by simulating the electrical grid containing the zones. 
-Zones are made of buses, i.e. nodes, and branches, i.e. edges. On some buses, there are generators, and possibly batteries. There is one controller per zone, which takes decisions on generators and batteries within its zone. The decisions are partial curtailments for generators and battery injections.
-Dynamic Time Series are provided to describe the evolution of power available for the generators as they are wind turbines.
+Zones are made of buses, i.e. nodes, and branches, i.e. edges. On some buses, there are generators, and possibly batteries. 
+There is one controller per zone, which takes decisions on generators and batteries within its zone. The decisions are partial curtailments for generators and battery injections. 
+A time Series is provided to describe the evolution of power available for the generators as they are wind turbines.
 They are telecommunications that represents the transfer of information within a zone: the controls from the controller to the zone, the power available from the time series to the zone, and states of a the zone for the controller.
 
 Visually, the interactions are for 2 zones:
-
+```
 	______electrical grid____
 	|			|
 	zone			zone
@@ -23,9 +24,9 @@ Visually, the interactions are for 2 zones:
 	telecom			telecom
 	|      |		|      |
 controller  time series   controller  time series
+```
 
-
-The Current use case of the simulation is:
+The current use case of the simulation is:
 - simulate the zones and the electrical grid over the time period.
 - A controller, here a simple limiter, determines the controls to take on the zone:
 	if the power flow on a branch within the zone is too high, the limiter orders to curtail the production on all generators within the zone.
@@ -35,8 +36,8 @@ The Current use case of the simulation is:
 - the transmission of information through the telecommunication from the time series to the zone is not delayed.
 - the different zones do not have a common 'control cycle' (frequency of update), the transmission simulator handles the asynchronous scheluding of the zones.
 
-Regarding the results of the simulation, for each zone is displayed :
 
+Regarding the results of the simulation, for each zone is displayed :
 - the topology
 - the power flows
 - the state elements of generators
