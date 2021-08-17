@@ -120,7 +120,7 @@ batteries, while columns corresponds to time steps.
             for time = start:step:duration
                 for i = 1:obj.numberOfZones
                     zone = obj.zones{i};
-                    isZoneSimulated = zone.isToBeSimulated(time);
+                    isZoneSimulated = zone.isToBeSimulated(time, step);
                     if isZoneSimulated
                         zone.simulate();
                         zone.updateGrid(obj.grid);
@@ -131,7 +131,7 @@ batteries, while columns corresponds to time steps.
                 
                 for i = 1:obj.numberOfZones
                     zone = obj.zones{i};
-                    isZoneSimulated = zone.isToBeSimulated(time);
+                    isZoneSimulated = zone.isToBeSimulated(time, step);
                     if isZoneSimulated
                         zone.update(obj.grid);
                         zone.saveResult();
