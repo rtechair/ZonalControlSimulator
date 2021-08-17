@@ -1,5 +1,9 @@
 classdef ZoneEvolution < handle
-    
+% ZoneEvolution aims at representing the evolution of the zone during the simulation.
+% The associate mathematical model is based on the paper:
+%'Modeling the Partial Renewable Power Curtailment for Transmission Network Management'[1].
+%
+% [1] https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
     
     properties (SetAccess = protected, GetAccess = protected)
         state
