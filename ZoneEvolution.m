@@ -119,35 +119,55 @@ classdef ZoneEvolution < handle
         end
         
         function updateState(obj)
-            appliedControlCurt = obj.queueControlCurt(:,1);
-            appliedControlBatt = obj.queueControlBatt(:,1);
-            
+            % energyBattery requires powerBattery, thus the former must be
+            % updated prior to the latter
+            obj.updateEnergyBattery();
+            obj.updatePowerAvailable();
+            obj.updatePowerGeneration();
+            obj.updatePowerCurtailment();
+            obj.updatePowerBattery();
+        end
+        
+        function updateEnergyBattery(obj)
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
             % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
+            appliedControlBatt = obj.queueControlBatt(:,1);
             oldPowerBattery = obj.state.getPowerBattery();
             oldEnergyBattery = obj.state.getEnergyBattery();
             newEnergyBattery = oldEnergyBattery ...
                 - obj.battConstPowerReduc * (oldPowerBattery + appliedControlBatt);
             obj.state.setEnergyBattery(newEnergyBattery);
-            
+        end
+        
+        function updatePowerAvailable(obj)
             % PA += DeltaPA
             oldPowerAvailable = obj.state.getPowerAvailable();
             newPowerAvailable = oldPowerAvailable + obj.disturbancePowerAvailable;
             obj.state.setPowerAvailable(newPowerAvailable);
-               
+        end
+        
+        function updatePowerGeneration(obj)
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
+            appliedControlCurt = obj.queueControlCurt(:,1);
             oldPowerGeneration = obj.state.getPowerGeneration();
             newPowerGeneration = oldPowerGeneration + obj.disturbancePowerGeneration ...
                 - appliedControlCurt;
             obj.state.setPowerGeneration(newPowerGeneration);
-            
+        end
+        
+        function updatePowerCurtailment(obj)
             % PC += DeltaPC(k - delayCurt)
+            appliedControlCurt = obj.queueControlCurt(:,1);
             oldPowerCurtailment = obj.state.getPowerCurtailment();
             newPowerCurtailment = oldPowerCurtailment + appliedControlCurt;
             obj.state.setPowerCurtailment(newPowerCurtailment);
-            
+        end
+        
+        function updatePowerBattery(obj)
             % PB += DeltaPB(k - delayBatt)
+            oldPowerBattery = obj.state.getPowerBattery();
+            appliedControlBatt = obj.queueControlBatt(:,1);
             newPowerBattery = oldPowerBattery - appliedControlBatt;
             obj.state.setPowerBattery(newPowerBattery);
         end
