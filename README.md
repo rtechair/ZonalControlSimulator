@@ -26,28 +26,39 @@ controller  time series   controller  time series
 
 
 The Current use case of the simulation is:
-- The electrical grid is based on the basecase 'case6468rte_zoneVGandVTV.m'.
-- The studied zone is: zone VG, which is defined in 'zoneVG.json' and caracterized in the basecase.
+- simulate the zones and the electrical grid over the time period.
 - A controller, here a simple limiter, determines the controls to take on the zone:
-	if the power flow on a branch within the zone is too high, the limiter orders to curtail the production on all generators within the zone
-	if the power flows of all branches are too low, the limiter orders to increase the production on all generators within the zone
-	else, no control taken
-- The time series of power available is provided by 'tauxDeChargeMTJLMA2juillet2018.txt'
-- The telecommunications have no delay
-- The topology of zone VG is displayed
-- results of controls taken, informations of generators, branch power flows and disturbance of powers transiting through the zone are displayed.
+	if the power flow on a branch within the zone is too high, the limiter orders to curtail the production on all generators within the zone.
+	if the power flows of all branches are too low, the limiter orders to increase the production on all generators within the zone.
+	else, no control taken.
+- the transmission of information through the telecommunications between the controller and the zone is delayed, in both directions.
+- the transmission of information through the telecommunication from the time series to the zone is not delayed.
+- the different zones do not have a common 'control cycle' (frequency of update), the transmission simulator handles the asynchronous scheluding of the zones.
+
+Regarding the results of the simulation, for each zone is displayed :
+
+- the topology
+- the power flows
+- the state elements of generators
+- the control and disturbances of generators
+- the disturbance of transit power
+
+Because the limiter takes no action on the batteries, no information regarding the batteries is currently displayed.
+
+Regarding the setting of the simulation, it is mostly based on 3 types of data, all in json files:
+- the simulation setting, with 'simulation.json':
+	- the basecase: e.g. "case6468rte_zone_VG_VTV_BLA.m"
+	- the duration of the simulation
+	- the time step of the global simulator, called 'window'
+	- the studied zones: e.g. VG, VTV, BLA
+- the setting of the studied zones, each requires a json file of the form = 'zone[zoneName].json', where [zoneName] can be :VG, VTV, BLA. e.g. 'zoneVG.json'.
+- the setting of the limiter of the studied zones, each requires a json file of the form = 'limiter[zoneName].json', where [zoneName] can be: VG, VTV, BLA, e.g. 'zoneBLA.json'.
+
+Miscellaneous information:
+- The time series of power available is provided by 'tauxDeChargeMTJLMA2juillet2018.txt'.
+It is the same for each generator, an offset is defined per generator in the setting of the zone.
 
 
-% TODO, the following is no more true, now it is done with JSON files.
-To customize a simulation, currently one can modify the scripts with 'Input' in the name:
-- the script containing the zone's data, e.g. for zone VG: 'loadInputZoneVG.m'
-- the script containing the limiter's parameters, e.g. for zone VG: 'loadInputLimiterZoneVG.m'
+Regarding future zones to analyze, one should check the associate buses, branches, generators and batteries already exist in the current matpower case. Otherwise, the matpower case requires to be modified with the use of the class 'BasecaseModification'.
 
-Regarding future zones to analyze, one should check the associate buses, branches, generators and batteries already exist in the current matpower case. Otherwise, the matpower case requires to be modified.
-
-New functionalities are tested first on zone VG, correct functioning of zone VTV is not ensured
-
-
-
-
-
+Precedent works were mostly tested on zone VG, now present and future works will be tested on all 3 zones: VG, VTV and BLA.
