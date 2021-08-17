@@ -1,5 +1,19 @@
 classdef ZoneTopology < handle
-    
+% ZoneTopology aims at informing the zone's topology.
+%
+% Numerical information corresponds to the information contained in the
+% 'electricalGrid' object supplied in the constructor.
+% Id = Identity
+% Idx = Index, i.e. the row of the element in the electricalGrid.
+%
+% A zone is defined by its buses, its branches, its generators and its
+% batteries.
+% Mind the distinction between online and offline generators and batteries.
+% some generators or batteries can be offline, thus are not taken into
+% account for the simulation.
+%
+% A zone is connected to the rest of the electricalGrid through its border.
+% The border is defined by its buses and its branches.
     
     properties (SetAccess = protected, GetAccess = protected)
         name
