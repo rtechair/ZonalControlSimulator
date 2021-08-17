@@ -1,5 +1,8 @@
 classdef BasecaseModification < BasecaseOverview
-   
+% Allows to modify the basecase. See 'BasecaseOverview' before.
+% This class and its parent class are meant to prepare a matpowercase for a simulation.
+% This class is not used during the simulation.
+
     methods
        
         function obj = BasecaseModification(filenameBasecase)
