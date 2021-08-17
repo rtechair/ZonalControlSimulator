@@ -1,20 +1,6 @@
 classdef (Abstract) Controller < handle
-    
-    properties (Abstract)
-        % StateOfZone
-        % DisturbanceTransit
-        %{
-        QueueCurtControlsNotYetApplied
-        QueueBatteryControlsNotYetApplied
-        %}
-        % ControlOfZone
-        %DelayBattery
-        %DelayCurtailment
-        
-        % BranchFlowLimit
-        
-    end
-    
+% Act as an interface between the simulator and the future controllers
+
     methods (Abstract)
         
         computeControl(stateOfZone, disturbanceTransit);
