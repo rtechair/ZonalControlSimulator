@@ -1,6 +1,12 @@
 classdef ElectricalGrid < handle
-   
-    properties (SetAccess = protected, GetAccess = protected)
+% Encapsulate both external and internal matpowercases. See 'BasecaseOverview' first. The external matpowercase is called simply 'matpowercase'
+% The internal matpowercase is the external matpowercase but with:
+%   - generators off removed
+%   - isolated islands removed
+%   - bus id modified such that the order of bus id is strictly increasing and consecutive.
+% Matpower's function 'runpf' operates on the internal matpowercase but returns an updated external matpowercase.
+% As a consequence it is important to have mappings to know where each information is from the external to the internal matpowercase, or vice-versa.
+    properties (SetAccess = protected)
         matpowercase
         internalMatpowercase % used by matpower 'runpf' function
         
@@ -32,6 +38,20 @@ classdef ElectricalGrid < handle
             obj.setMatpowerOption();       
         end
         
+        %% GETTER
+        function struct = getInternalMatpowercase(obj)
+            struct = obj.internalMatpowercase;
+        end
+        
+        function value = getMapBus_id_e2i(obj)
+            value = obj.mapBus_id_e2i;
+        end
+        
+        function value = getMapGenOn_idx_e2i(obj)
+            value = obj.mapGenOn_idx_e2i;
+        end
+        
+        %% OTHER
         function [branchZoneIdx, branchBorderIdx] = getInnerAndBorderBranchIdx(obj, busId)
             % Given a zone with its buses id, return the branch indices
             % from the matpowercase of: the branches within the zone (both end buses in zone)
