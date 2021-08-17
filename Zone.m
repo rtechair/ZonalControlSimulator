@@ -1,5 +1,17 @@
 classdef Zone < handle
-   
+% Zone is an aggregate class of the following objects:
+% - the 3 telecommunications involved in the zone:
+%        - zone->controller
+%        - controller->zone
+%        - time series->zone
+% - the topology of the zone
+% - the evolution of the zone over the time of the simulation
+% - the time series which dictates what is the available power for the
+% generators
+% - the controller
+% - the result of the simulation
+% - other elements required for the simulation
+
     properties (SetAccess = protected, GetAccess = protected)
        name
        setting
@@ -242,9 +254,16 @@ classdef Zone < handle
             obj.zoneEvolution.dropOldestControl();
         end
         
-        function boolean = isToBeSimulated(obj, currentTime)
-            % TODO: THIS IS INCORRECT
-            boolean = mod(currentTime, obj.setting.controlCycle) == 0;
+        function boolean = isToBeSimulated(obj, currentTime, timeStep)
+            previousTime = currentTime - timeStep;
+            controlCycle = obj.setting.controlCycle;
+            
+            % Iterations are defined by the euclidian division:
+            % time = iterations * controlCycle + remainder, with 0 <= remainder < controlCycle
+            previousIteration = floor(previousTime / controlCycle);
+            currentIteration = floor(currentTime / controlCycle);
+            
+            boolean = currentIteration > previousIteration;
         end
         
         function simulate(obj)
