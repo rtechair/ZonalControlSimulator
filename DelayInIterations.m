@@ -1,5 +1,6 @@
 classdef DelayInIterations < handle
-   
+% Compute the delays which are supplied in seconds,
+% to their associate values in number of iterations
     properties (SetAccess = immutable, GetAccess = protected)
         delayCurt
         delayBatt
