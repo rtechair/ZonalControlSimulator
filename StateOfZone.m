@@ -1,9 +1,9 @@
 classdef StateOfZone < handle
     
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
        powerFlow        % Fij
        powerCurtailment % PC
-       powerBattery     % PB
+       powerBattery     % PB, if PB > 0, the battery is used. if PB < 0, the battery is recharged.
        energyBattery    % EB
        powerGeneration  % PG
        powerAvailable   % PA
