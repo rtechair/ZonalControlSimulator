@@ -22,9 +22,9 @@ classdef MathematicalModel < handle
       operatorState                 % A
       operatorControlCurtailment    % Bc
       operatorControlBattery        % Bb
-      operatorDisturbanceAvailable  % Da
-      operatorDisturbanceGeneration % Dg
-      operatorDisturbanceTransit    % Dt
+      operatorDisturbancePowerAvailable  % Da
+      operatorDisturbancePowerGeneration % Dg
+      operatorDisturbancePowerTransit    % Dt
       
       injectionShiftFactor % ISF      
       ISFreduced % currently not working, cf. method 'setISFreduced'
@@ -65,9 +65,9 @@ classdef MathematicalModel < handle
             obj.setOperatorState();
             obj.setoperatorControlCurtailment();
             obj.setoperatorControlBattery();
-            obj.setoperatorDisturbanceAvailable();
-            obj.setOperatorDisturbanceGeneration();
-            obj.setOperatorDisturbanceTransit();
+            obj.setoperatorDisturbancePowerAvailable();
+            obj.setOperatorDisturbancePowerGeneration();
+            obj.setOperatorDisturbancePowerTransit();
         end
         
         function setNumberOfElements(obj)
@@ -165,42 +165,42 @@ classdef MathematicalModel < handle
             obj.operatorControlBattery(rangeRow, :) = - diag(obj.battConstPowerReduc);
         end
         
-        function setoperatorDisturbanceAvailable(obj)
-            obj.operatorDisturbanceAvailable = zeros(obj.numberOfStateVariables, obj.numberOfGen);
+        function setoperatorDisturbancePowerAvailable(obj)
+            obj.operatorDisturbancePowerAvailable = zeros(obj.numberOfStateVariables, obj.numberOfGen);
             startRow = obj.numberOfStateVariables - obj.numberOfGen + 1;
             rangeRow = startRow : obj.numberOfStateVariables;
-            obj.operatorDisturbanceAvailable(rangeRow, :) = eye(obj.numberOfGen);
+            obj.operatorDisturbancePowerAvailable(rangeRow, :) = eye(obj.numberOfGen);
         end
         
-        function setOperatorDisturbanceGeneration(obj)
-            obj.operatorDisturbanceGeneration = zeros(obj.numberOfStateVariables, obj.numberOfGen);
+        function setOperatorDisturbancePowerGeneration(obj)
+            obj.operatorDisturbancePowerGeneration = zeros(obj.numberOfStateVariables, obj.numberOfGen);
             start = obj.numberOfStateVariables - 2*obj.numberOfGen + 1;
             rangeRow = start : start + obj.numberOfGen - 1;
-            obj.operatorDisturbanceGeneration(rangeRow, :) = eye(obj.numberOfGen);
+            obj.operatorDisturbancePowerGeneration(rangeRow, :) = eye(obj.numberOfGen);
             busOfGen = obj.internalMatpowercase.gen(obj.internalGenIdx, 1);
-            obj.operatorDisturbanceGeneration(1:obj.numberOfBranches, :) = ...
+            obj.operatorDisturbancePowerGeneration(1:obj.numberOfBranches, :) = ...
                 obj.injectionShiftFactor(obj.internalBranchIdx, busOfGen);
         end
         
-        function setOperatorDisturbanceTransit(obj)
-            obj.operatorDisturbanceTransit = zeros(obj.numberOfStateVariables, obj.numberOfBuses);
-            obj.operatorDisturbanceTransit(1: obj.numberOfBranches, :) = ...
+        function setOperatorDisturbancePowerTransit(obj)
+            obj.operatorDisturbancePowerTransit = zeros(obj.numberOfStateVariables, obj.numberOfBuses);
+            obj.operatorDisturbancePowerTransit(1: obj.numberOfBranches, :) = ...
                 obj.injectionShiftFactor(obj.internalBranchIdx, obj.internalBusId);
         end
         
         function saveOperators(obj, filename)
-            OperatorState = obj.operatorState;                                  % A
-            OperatorControlCurtailment = obj.operatorControlCurtailment;        % Bc
-            OperatorControlBattery = obj.operatorControlBattery;                % Bb
-            OperatorDisturbanceGeneration = obj.operatorDisturbanceGeneration;  % Dg
-            OperatorDisturbanceTransit = obj.operatorDisturbanceTransit;        % Dt
-            OperatorDisturbanceAvailable = obj.operatorDisturbanceAvailable;    % Da
-            save(filename, 'OperatorState', ...                 % A
-                          'OperatorControlCurtailment', ...     % Bc
-                          'OperatorControlBattery', ...         % Bb
-                          'OperatorDisturbanceGeneration', ...  % Dg
-                          'OperatorDisturbanceTransit', ...     % Dt
-                          'OperatorDisturbanceAvailable')       % Da
+            OperatorState = obj.operatorState;                                            % A
+            OperatorControlCurtailment = obj.operatorControlCurtailment;                  % Bc
+            OperatorControlBattery = obj.operatorControlBattery;                          % Bb
+            OperatorDisturbancePowerGeneration = obj.operatorDisturbancePowerGeneration;  % Dg
+            OperatorDisturbancePowerTransit = obj.operatorDisturbancePowerTransit;        % Dt
+            OperatorDisturbancePowerAvailable = obj.operatorDisturbancePowerAvailable;    % Da
+            save(filename,'OperatorState', ...                       % A
+                          'OperatorControlCurtailment', ...          % Bc
+                          'OperatorControlBattery', ...              % Bb
+                          'OperatorDisturbancePowerGeneration', ...  % Dg
+                          'OperatorDisturbancePowerTransit', ...     % Dt
+                          'OperatorDisturbancePowerAvailable')       % Da
             message = ['The operators of the mathematical model are save in file: ' filename];
             disp(message)
         end
