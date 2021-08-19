@@ -5,7 +5,7 @@ classdef ZoneEvolution < handle
 %
 % [1] https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
     
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
         state
         
         % When received from the telecom, the controls are delayed before applied, thus the queues

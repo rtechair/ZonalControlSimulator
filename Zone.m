@@ -12,7 +12,7 @@ classdef Zone < handle
 % - the result of the simulation
 % - other elements required for the simulation
 
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
        name
        setting
        delayInIterations
