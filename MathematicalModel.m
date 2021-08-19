@@ -192,16 +192,16 @@ classdef MathematicalModel < handle
             OperatorState = obj.operatorState;                          % A
             OperatorControlCurt = obj.operatorControlCurt;              % Bc
             OperatorControlBatt = obj.operatorControlBatt;              % Bb
-            OperatorDisturbAvailable = obj.operatorDisturbAvailable;    % Da
             OperatorDisturbGeneration = obj.operatorDisturbGeneration;  % Dg
-            OperatorDisturbTransit = obj.operatorDisturbGeneration;     % Dt
+            OperatorDisturbTransit = obj.operatorDisturbTransit;        % Dt
+            OperatorDisturbAvailable = obj.operatorDisturbAvailable;    % Da
             save(filename, 'OperatorState', ...            % A
                           'OperatorControlCurt', ...       % Bc
                           'OperatorControlBatt', ...       % Bb
-                          'OperatorDisturbAvailable', ...  % Da
                           'OperatorDisturbGeneration', ... % Dg
-                          'OperatorDisturbTransit')        % Dt
-            message = ['Operators of the mathematical model are save in file: ' filename];
+                          'OperatorDisturbTransit', ...    % Dt
+                          'OperatorDisturbAvailable')      % Da
+            message = ['The operators of the mathematical model are save in file: ' filename];
             disp(message)
         end
  
