@@ -1,6 +1,11 @@
 classdef MathematicalModel < handle
 %   To obtain the operators / matrices for the dynamic mathematical model
 %   of a zone.
+%
+%   Beware the arguments of the constructor are internal
+%   elements from the internal matpowercase! This is due to makePTDF
+%   executes on the internal matpowercase.
+%
 %  The mathematical model is based on the paper:
 % 'Modeling the Partial Renewable Power Curtailment for Transmission Network Management'[1].
 %  Beware, x includes the power available PA! It is not displayed as such in the paper.
@@ -184,18 +189,20 @@ classdef MathematicalModel < handle
         end
         
         function saveOperators(obj, filename)
-            operatorState = obj.operatorState;                          % A
-            operatorControlCurt = obj.operatorControlCurt;              % Bc
-            operatorControlBatt = obj.operatorControlBatt;              % Bb
-            operatorDisturbAvailable = obj.operatorDisturbAvailable;    % Da
-            operatorDisturbGeneration = obj.operatorDisturbGeneration;  % Dg
-            operatorDisturbTransit = obj.operatorDisturbGeneration;     % Dt
-            save(filename, 'operatorState', ...            % A
-                          'operatorControlCurt', ...       % Bc
-                          'operatorControlBatt', ...       % Bb
-                          'operatorDisturbAvailable', ...  % Da
-                          'operatorDisturbGeneration', ... % Dg
-                          'operatorDisturbTransit')        % Dt
+            OperatorState = obj.operatorState;                          % A
+            OperatorControlCurt = obj.operatorControlCurt;              % Bc
+            OperatorControlBatt = obj.operatorControlBatt;              % Bb
+            OperatorDisturbAvailable = obj.operatorDisturbAvailable;    % Da
+            OperatorDisturbGeneration = obj.operatorDisturbGeneration;  % Dg
+            OperatorDisturbTransit = obj.operatorDisturbGeneration;     % Dt
+            save(filename, 'OperatorState', ...            % A
+                          'OperatorControlCurt', ...       % Bc
+                          'OperatorControlBatt', ...       % Bb
+                          'OperatorDisturbAvailable', ...  % Da
+                          'OperatorDisturbGeneration', ... % Dg
+                          'OperatorDisturbTransit')        % Dt
+            message = ['Operators of the mathematical model are save in file: ' filename];
+            disp(message)
         end
  
     end
