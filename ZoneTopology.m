@@ -15,7 +15,7 @@ classdef ZoneTopology < handle
 % A zone is connected to the rest of the electricalGrid through its border.
 % The border is defined by its buses and its branches.
     
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
         name
         
         busId

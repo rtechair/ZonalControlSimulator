@@ -24,8 +24,8 @@ classdef ElectricalGrid < handle
     
     methods
         
-        function obj = ElectricalGrid(filenameBasecase)            
-            obj.matpowercase = loadcase(filenameBasecase);
+        function obj = ElectricalGrid(basecaseFilename)
+            obj.matpowercase = loadcase(basecaseFilename);
             
             obj.internalMatpowercase = ext2int(obj.matpowercase);
 
@@ -35,10 +35,14 @@ classdef ElectricalGrid < handle
             obj.setMapGenOn_idx_e2i();
             obj.setMapGenOn_idx_i2e();
             
-            obj.setMatpowerOption();       
+            obj.setMatpowerOption();
         end
         
         %% GETTER
+        function struct = getMatpowercase(obj)
+            struct = obj.matpowercase;
+        end
+        
         function struct = getInternalMatpowercase(obj)
             struct = obj.internalMatpowercase;
         end
@@ -252,6 +256,10 @@ classdef ElectricalGrid < handle
         
         function powerTransit = getPowerTransitBusTo(obj, branchIdx)
             powerTransit = obj.resultPowerFlow.branch(branchIdx, 16);
+        end
+        
+        function replaceExternalByInternalMatpowercase(obj)
+            obj.matpowercase = obj.internalMatpowercase;
         end
 
     end
