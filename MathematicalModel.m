@@ -19,12 +19,12 @@ classdef MathematicalModel < handle
       
       internalMatpowercase  
         
-      operatorState             % A
-      operatorControlCurt       % Bc
-      operatorControlBatt       % Bb
-      operatorDisturbAvailable  % Da
-      operatorDisturbGeneration % Dg
-      operatorDisturbTransit    % Dt
+      operatorState                 % A
+      operatorControlCurtailment    % Bc
+      operatorControlBattery        % Bb
+      operatorDisturbanceAvailable  % Da
+      operatorDisturbanceGeneration % Dg
+      operatorDisturbanceTransit    % Dt
       
       injectionShiftFactor % ISF      
       ISFreduced % currently not working, cf. method 'setISFreduced'
@@ -63,11 +63,11 @@ classdef MathematicalModel < handle
             obj.setInjectionShiftFactor();
             
             obj.setOperatorState();
-            obj.setOperatorControlCurt();
-            obj.setOperatorControlBatt();
-            obj.setOperatorDisturbAvailable();
-            obj.setOperatorDisturbGeneration();
-            obj.setOperatorDisturbTransit();
+            obj.setoperatorControlCurtailment();
+            obj.setoperatorControlBattery();
+            obj.setoperatorDisturbanceAvailable();
+            obj.setOperatorDisturbanceGeneration();
+            obj.setOperatorDisturbanceTransit();
         end
         
         function setNumberOfElements(obj)
@@ -125,82 +125,82 @@ classdef MathematicalModel < handle
             obj.operatorState(rangeRow, rangeCol) = - diag(obj.battConstPowerReduc);
         end
         
-        function setOperatorControlCurt(obj)
-            obj.operatorControlCurt = zeros(obj.numberOfStateVariables, obj.numberOfGen);
+        function setoperatorControlCurtailment(obj)
+            obj.operatorControlCurtailment = zeros(obj.numberOfStateVariables, obj.numberOfGen);
             
             %F(k+1) -= diag(ISF)*DeltaPC(k-delayCurt)
             busOfGen = obj.internalMatpowercase.gen(obj.internalGenIdx, 1);
             rangeRow = 1:obj.numberOfBranches;
-            obj.operatorControlCurt(rangeRow, :) = ...
+            obj.operatorControlCurtailment(rangeRow, :) = ...
                 - obj.injectionShiftFactor(obj.internalBranchIdx, busOfGen);
             
             % PC(k+1) += DeltaPC(k-delayCurt)
             startRow = obj.numberOfBranches + 1;
             rangeRow = startRow : startRow + obj.numberOfGen - 1;
-            obj.operatorControlCurt(rangeRow, :) = eye(obj.numberOfGen);
+            obj.operatorControlCurtailment(rangeRow, :) = eye(obj.numberOfGen);
             
             % PG(k+1) -= DeltaPC(k-delayCurt)
             startRow = obj.numberOfBranches + obj.numberOfGen + 2*obj.numberOfBatt + 1;
             rangeRow = startRow : startRow + obj.numberOfGen - 1;
-            obj.operatorControlCurt( rangeRow, :) = - eye(obj.numberOfGen);
+            obj.operatorControlCurtailment( rangeRow, :) = - eye(obj.numberOfGen);
         end
         
-        function setOperatorControlBatt(obj)
-            obj.operatorControlBatt = zeros(obj.numberOfStateVariables, obj.numberOfBatt);
+        function setoperatorControlBattery(obj)
+            obj.operatorControlBattery = zeros(obj.numberOfStateVariables, obj.numberOfBatt);
             
             % F(k+1) += diag(ptdf)*DeltaPb(k-delayBatt), i.e. matrix Mb in the paper
             busOfBatt = obj.internalMatpowercase.gen(obj.internalBattIdx, 1);
             rangeRow = 1:obj.numberOfBranches;
-            obj.operatorControlBatt(rangeRow, :) = ...
+            obj.operatorControlBattery(rangeRow, :) = ...
                 obj.injectionShiftFactor(obj.internalBranchIdx, busOfBatt);
             
             % PB(k+1) += DeltaPB(k-delayBatt), i.e. identity matrix
             startRow = obj.numberOfBranches + obj.numberOfGen + 1;
             rangeRow = startRow : startRow + obj.numberOfBatt - 1;
-            obj.operatorControlBatt(rangeRow, :) = eye(obj.numberOfBatt);
+            obj.operatorControlBattery(rangeRow, :) = eye(obj.numberOfBatt);
             
             % EB(k+1) -= T*diag(cb)*DeltaPB(k-delayBatt), i.e. matrix -Ab in the paper
             startRow = obj.numberOfBranches + obj.numberOfGen + obj.numberOfBatt + 1;
             rangeRow = startRow : startRow + obj.numberOfBatt - 1;
-            obj.operatorControlBatt(rangeRow, :) = - diag(obj.battConstPowerReduc);
+            obj.operatorControlBattery(rangeRow, :) = - diag(obj.battConstPowerReduc);
         end
         
-        function setOperatorDisturbAvailable(obj)
-            obj.operatorDisturbAvailable = zeros(obj.numberOfStateVariables, obj.numberOfGen);
+        function setoperatorDisturbanceAvailable(obj)
+            obj.operatorDisturbanceAvailable = zeros(obj.numberOfStateVariables, obj.numberOfGen);
             startRow = obj.numberOfStateVariables - obj.numberOfGen + 1;
             rangeRow = startRow : obj.numberOfStateVariables;
-            obj.operatorDisturbAvailable(rangeRow, :) = eye(obj.numberOfGen);
+            obj.operatorDisturbanceAvailable(rangeRow, :) = eye(obj.numberOfGen);
         end
         
-        function setOperatorDisturbGeneration(obj)
-            obj.operatorDisturbGeneration = zeros(obj.numberOfStateVariables, obj.numberOfGen);
+        function setOperatorDisturbanceGeneration(obj)
+            obj.operatorDisturbanceGeneration = zeros(obj.numberOfStateVariables, obj.numberOfGen);
             start = obj.numberOfStateVariables - 2*obj.numberOfGen + 1;
             rangeRow = start : start + obj.numberOfGen - 1;
-            obj.operatorDisturbGeneration(rangeRow, :) = eye(obj.numberOfGen);
+            obj.operatorDisturbanceGeneration(rangeRow, :) = eye(obj.numberOfGen);
             busOfGen = obj.internalMatpowercase.gen(obj.internalGenIdx, 1);
-            obj.operatorDisturbGeneration(1:obj.numberOfBranches, :) = ...
+            obj.operatorDisturbanceGeneration(1:obj.numberOfBranches, :) = ...
                 obj.injectionShiftFactor(obj.internalBranchIdx, busOfGen);
         end
         
-        function setOperatorDisturbTransit(obj)
-            obj.operatorDisturbTransit = zeros(obj.numberOfStateVariables, obj.numberOfBuses);
-            obj.operatorDisturbTransit(1: obj.numberOfBranches, :) = ...
+        function setOperatorDisturbanceTransit(obj)
+            obj.operatorDisturbanceTransit = zeros(obj.numberOfStateVariables, obj.numberOfBuses);
+            obj.operatorDisturbanceTransit(1: obj.numberOfBranches, :) = ...
                 obj.injectionShiftFactor(obj.internalBranchIdx, obj.internalBusId);
         end
         
         function saveOperators(obj, filename)
-            OperatorState = obj.operatorState;                          % A
-            OperatorControlCurt = obj.operatorControlCurt;              % Bc
-            OperatorControlBatt = obj.operatorControlBatt;              % Bb
-            OperatorDisturbGeneration = obj.operatorDisturbGeneration;  % Dg
-            OperatorDisturbTransit = obj.operatorDisturbTransit;        % Dt
-            OperatorDisturbAvailable = obj.operatorDisturbAvailable;    % Da
-            save(filename, 'OperatorState', ...            % A
-                          'OperatorControlCurt', ...       % Bc
-                          'OperatorControlBatt', ...       % Bb
-                          'OperatorDisturbGeneration', ... % Dg
-                          'OperatorDisturbTransit', ...    % Dt
-                          'OperatorDisturbAvailable')      % Da
+            OperatorState = obj.operatorState;                                  % A
+            OperatorControlCurtailment = obj.operatorControlCurtailment;        % Bc
+            OperatorControlBattery = obj.operatorControlBattery;                % Bb
+            OperatorDisturbanceGeneration = obj.operatorDisturbanceGeneration;  % Dg
+            OperatorDisturbanceTransit = obj.operatorDisturbanceTransit;        % Dt
+            OperatorDisturbanceAvailable = obj.operatorDisturbanceAvailable;    % Da
+            save(filename, 'OperatorState', ...                 % A
+                          'OperatorControlCurtailment', ...     % Bc
+                          'OperatorControlBattery', ...         % Bb
+                          'OperatorDisturbanceGeneration', ...  % Dg
+                          'OperatorDisturbanceTransit', ...     % Dt
+                          'OperatorDisturbanceAvailable')       % Da
             message = ['The operators of the mathematical model are save in file: ' filename];
             disp(message)
         end
