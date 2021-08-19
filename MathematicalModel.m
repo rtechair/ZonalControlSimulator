@@ -189,18 +189,18 @@ classdef MathematicalModel < handle
         end
         
         function saveOperators(obj, filename)
-            OperatorState = obj.operatorState;                                            % A
-            OperatorControlCurtailment = obj.operatorControlCurtailment;                  % Bc
-            OperatorControlBattery = obj.operatorControlBattery;                          % Bb
-            OperatorDisturbancePowerGeneration = obj.operatorDisturbancePowerGeneration;  % Dg
-            OperatorDisturbancePowerTransit = obj.operatorDisturbancePowerTransit;        % Dt
-            OperatorDisturbancePowerAvailable = obj.operatorDisturbancePowerAvailable;    % Da
-            save(filename,'OperatorState', ...                       % A
-                          'OperatorControlCurtailment', ...          % Bc
-                          'OperatorControlBattery', ...              % Bb
-                          'OperatorDisturbancePowerGeneration', ...  % Dg
-                          'OperatorDisturbancePowerTransit', ...     % Dt
-                          'OperatorDisturbancePowerAvailable')       % Da
+            operatorState = obj.operatorState;                                            % A
+            operatorControlCurtailment = obj.operatorControlCurtailment;                  % Bc
+            operatorControlBattery = obj.operatorControlBattery;                          % Bb
+            operatorDisturbancePowerGeneration = obj.operatorDisturbancePowerGeneration;  % Dg
+            operatorDisturbancePowerTransit = obj.operatorDisturbancePowerTransit;        % Dt
+            operatorDisturbancePowerAvailable = obj.operatorDisturbancePowerAvailable;    % Da
+            save(filename,'operatorState', ...                       % A
+                          'operatorControlCurtailment', ...          % Bc
+                          'operatorControlBattery', ...              % Bb
+                          'operatorDisturbancePowerGeneration', ...  % Dg
+                          'operatorDisturbancePowerTransit', ...     % Dt
+                          'operatorDisturbancePowerAvailable')       % Da
             message = ['The operators of the mathematical model are save in file: ' filename];
             disp(message)
         end
