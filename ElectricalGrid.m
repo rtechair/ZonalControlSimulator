@@ -213,6 +213,14 @@ classdef ElectricalGrid < handle
             maxGen = obj.matpowercase.gen(genIdx, 9);
         end
         
+        function value = getMaxPowerBattery(obj,battIdx)
+            value = obj.getMaxPowerGeneration(battIdx);
+        end
+        
+        function value = getMinPowerBattery(obj, battIdx)
+            value = obj.matpowercase.gen(battIdx, 10);
+        end
+        
         function [numberOfBuses, numberOfBranches, ...
                   numberOfGenNotBatt, numberOfBatt] = getMatpowerCaseDimensions(obj)
             numberOfBuses = size(obj.matpowercase.bus,1);
