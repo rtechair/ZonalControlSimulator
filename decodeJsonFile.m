@@ -1,7 +1,5 @@
 function struct = decodeJsonFile(jsonFilename)
-    arguments
-       jsonFilename {mustBeFile}
-    end    
+    % Function based on:
     % https://stackoverflow.com/questions/42136291/reading-json-object-in-matlab
     fileId = fopen(jsonFilename, 'r');
     text = fread(fileId, '*char').';
