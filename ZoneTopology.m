@@ -27,6 +27,8 @@ classdef ZoneTopology < handle
         branchBorderIdx
         
         maxPowerGeneration
+        maxPowerBattery % if PowerBattery > 0, it consumes the battery
+        minPowerBattery % if PowerBattery < 0, it charges the battery
         
         numberOfBuses
         numberOfBranches
@@ -51,6 +53,8 @@ classdef ZoneTopology < handle
             obj.setBattOnIdx(electricalGrid);
             
             obj.setMaxPowerGeneration(electricalGrid);
+            obj.setMaxPowerBattery(electricalGrid);
+            obj.setMinPowerBattery(electricalGrid);
                         
             obj.setNumberOfElements();
         end
@@ -74,6 +78,14 @@ classdef ZoneTopology < handle
         
         function value = getMaxPowerGeneration(obj)
             value = obj.maxPowerGeneration;
+        end
+        
+        function value = getMaxPowerBattery(obj)
+            value = obj.maxPowerBattery;
+        end
+        
+        function value = getMinPowerBattery(obj)
+            value = obj.minPowerBattery;
         end
         
         function value = getNumberOfBuses(obj)
@@ -209,6 +221,16 @@ classdef ZoneTopology < handle
         
         function setMaxPowerGeneration(obj, electricalGrid)
            obj.maxPowerGeneration = electricalGrid.getMaxPowerGeneration(obj.genOnIdx); 
+        end
+        
+        function setMaxPowerBattery(obj, electricalGrid)
+            % The maximum power battery injection is the same as the
+            % maximum power generation
+            obj.maxPowerBattery = electricalGrid.getMaxPowerBattery(obj.battOnIdx);
+        end
+        
+        function setMinPowerBattery(obj, electricalGrid)
+            obj.minPowerBattery = electricalGrid.getMinPowerBattery(obj.battOnIdx);
         end
         
         function setNumberOfElements(obj)                     
