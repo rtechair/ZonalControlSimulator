@@ -305,5 +305,9 @@ classdef Zone < handle
             obj.result.plotDisturbanceTransit();
         end
         
+        %% GETTER
+        function object = getZoneEvolution(obj)
+            object = obj.zoneEvolution;
+        end
     end
 end
