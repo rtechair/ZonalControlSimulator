@@ -176,5 +176,14 @@ batteries, while columns corresponds to time steps.
                 obj.zones{i}.plotResult(obj.grid);
             end
         end
+        
+        %% GETTER
+        function value = getNumberOfZones(obj)
+            value = obj.numberOfZones;
+        end
+        
+        function cell = getZones(obj)
+            cell = obj.zones;
+        end
     end
 end
