@@ -21,7 +21,6 @@ batteries, while columns corresponds to time steps.
        zones
        
        durationSimulation
-       windowSimulation
     end
    
     methods
@@ -33,7 +32,6 @@ batteries, while columns corresponds to time steps.
             % the following lines are the old code
             obj.simulationSetting = decodeJsonFile(simulationFilename);
             obj.durationSimulation = obj.simulationSetting.durationInSeconds;
-            obj.windowSimulation = obj.simulationSetting.windowInSeconds;
             
             obj.setZoneName();
             
@@ -81,7 +79,7 @@ batteries, while columns corresponds to time steps.
         end
         
         function runSimulation(obj)
-            step = obj.windowSimulation;
+            step = obj.settingSimulation.getWindow();
             start = step;
             duration = obj.durationSimulation;
             
