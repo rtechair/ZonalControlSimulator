@@ -10,6 +10,7 @@ classdef SettingSimulation < handle
         duration
         window % i.e. the time step of the simulation
         zoneName
+        numberOfZones
     end
     
     methods
@@ -21,6 +22,7 @@ classdef SettingSimulation < handle
             obj.setDuration();
             obj.setWindow();
             obj.setZoneName();
+            obj.setNumberOfZones();
         end
         
         %% SETTER
@@ -46,6 +48,10 @@ classdef SettingSimulation < handle
            obj.zoneName = struct2cell(obj.settings.Zone);
         end
         
+        function setNumberOfZones(obj)
+            obj.numberOfZones = size(obj.zoneName,1);
+        end
+        
         %% GETTER
         function string = getBasecase(obj)
             string = obj.basecase;
@@ -61,6 +67,10 @@ classdef SettingSimulation < handle
         
         function cell = getZoneName(obj)
             cell = obj.zoneName;
+        end
+        
+        function value = getNumberOfZones(obj)
+            value = obj.numberOfZones;
         end
     end
 end
