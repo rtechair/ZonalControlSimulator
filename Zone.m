@@ -275,7 +275,7 @@ classdef Zone < handle
         function simulate(obj)
             obj.controller.computeControl();
             obj.controller.saveControl(obj.result);
-            obj.transmitDataController2Zone()
+            obj.transmitDataController2Zone();
             obj.transmitDataTimeSeries2Zone();
             obj.zoneEvolution.computeDisturbancePowerGeneration();
             obj.zoneEvolution.updateState();
