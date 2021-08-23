@@ -11,7 +11,7 @@ batteries, while columns corresponds to time steps.
  
 [1] https://matpower.org/docs/ref/
 %}
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
        grid
        simulationSetting
        zoneName
@@ -35,11 +35,6 @@ batteries, while columns corresponds to time steps.
             obj.setZones();
             
             obj.initialize();
-            
-            obj.runSimulation();
-            
-            obj.plotZonesTopology();
-            obj.plotZonesResult();
         end
         
         function setZoneName(obj)
