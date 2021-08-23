@@ -28,6 +28,7 @@ batteries, while columns corresponds to time steps.
         function obj = TransmissionSimulation(simulationFilename)
             %% set elements
             settingSimulation = SettingSimulation(simulationFilename);
+            obj.numberOfZones = settingSimulation.getNumberOfZones();
             
             % the following lines are the old code
             obj.simulationSetting = decodeJsonFile(simulationFilename);
@@ -35,7 +36,7 @@ batteries, while columns corresponds to time steps.
             obj.windowSimulation = obj.simulationSetting.windowInSeconds;
             
             obj.setZoneName();
-            obj.setNumberOfZones();
+            
             obj.setGrid();
             obj.setZones();
             
@@ -47,10 +48,6 @@ batteries, while columns corresponds to time steps.
             % A matrix merges char arrays into a single char array, which
             % would concatenate the zone names, which is not the desired behavior.
            obj.zoneName = struct2cell(obj.simulationSetting.Zone);
-        end
-        
-        function setNumberOfZones(obj)
-            obj.numberOfZones = size(obj.zoneName,1);
         end
         
         function setGrid(obj)
