@@ -19,19 +19,16 @@ batteries, while columns corresponds to time steps.
        zoneName
        numberOfZones
        zones
-       
-       durationSimulation
     end
    
     methods
         function obj = TransmissionSimulation(simulationFilename)
             %% set elements
-            settingSimulation = SettingSimulation(simulationFilename);
-            obj.numberOfZones = settingSimulation.getNumberOfZones();
+            obj.settingSimulation = SettingSimulation(simulationFilename);
+            obj.numberOfZones = obj.settingSimulation.getNumberOfZones();
             
             % the following lines are the old code
             obj.simulationSetting = decodeJsonFile(simulationFilename);
-            obj.durationSimulation = obj.simulationSetting.durationInSeconds;
             
             obj.setZoneName();
             
@@ -54,9 +51,10 @@ batteries, while columns corresponds to time steps.
         
         function setZones(obj)
             obj.zones = cell(obj.numberOfZones,1);
+            duration = obj.settingSimulation.getDuration();
             for i = 1:obj.numberOfZones
                 name = obj.zoneName{i};
-                obj.zones{i} = Zone(name, obj.grid, obj.durationSimulation);
+                obj.zones{i} = Zone(name, obj.grid, duration);
             end
         end
         
@@ -81,7 +79,7 @@ batteries, while columns corresponds to time steps.
         function runSimulation(obj)
             step = obj.settingSimulation.getWindow();
             start = step;
-            duration = obj.durationSimulation;
+            duration = obj.settingSimulation.getDuration();
             
             for time = start:step:duration
                 for i = 1:obj.numberOfZones
