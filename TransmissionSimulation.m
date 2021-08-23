@@ -12,8 +12,10 @@ batteries, while columns corresponds to time steps.
 [1] https://matpower.org/docs/ref/
 %}
     properties (SetAccess = protected)
+       settingSimulation
+       
        grid
-       simulationSetting
+       simulationSetting % previous
        zoneName
        numberOfZones
        zones
@@ -23,9 +25,12 @@ batteries, while columns corresponds to time steps.
     end
    
     methods
-        function obj = TransmissionSimulation(filenameSimulation)
+        function obj = TransmissionSimulation(simulationFilename)
             %% set elements
-            obj.simulationSetting = decodeJsonFile(filenameSimulation);
+            settingSimulation = SettingSimulation(simulationFilename);
+            
+            % the following lines are the old code
+            obj.simulationSetting = decodeJsonFile(simulationFilename);
             obj.durationSimulation = obj.simulationSetting.durationInSeconds;
             obj.windowSimulation = obj.simulationSetting.windowInSeconds;
             
