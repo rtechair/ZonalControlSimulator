@@ -16,7 +16,6 @@ batteries, while columns corresponds to time steps.
        
        grid
        simulationSetting % previous
-       zoneName
        numberOfZones
        zones
     end
@@ -30,19 +29,10 @@ batteries, while columns corresponds to time steps.
             % the following lines are the old code
             obj.simulationSetting = decodeJsonFile(simulationFilename);
             
-            obj.setZoneName();
-            
             obj.setGrid();
             obj.setZones();
             
             obj.initialize();
-        end
-        
-        function setZoneName(obj)
-            % the 'cell' data structure is used instead of 'matrix'.
-            % A matrix merges char arrays into a single char array, which
-            % would concatenate the zone names, which is not the desired behavior.
-           obj.zoneName = struct2cell(obj.simulationSetting.Zone);
         end
         
         function setGrid(obj)
@@ -52,8 +42,9 @@ batteries, while columns corresponds to time steps.
         function setZones(obj)
             obj.zones = cell(obj.numberOfZones,1);
             duration = obj.settingSimulation.getDuration();
+            zoneNames = obj.settingSimulation.getZoneName();
             for i = 1:obj.numberOfZones
-                name = obj.zoneName{i};
+                name = zoneNames{i};
                 obj.zones{i} = Zone(name, obj.grid, duration);
             end
         end
