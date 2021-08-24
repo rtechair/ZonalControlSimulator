@@ -15,7 +15,6 @@ batteries, while columns corresponds to time steps.
        settingSimulation
        
        grid
-       simulationSetting % previous
        numberOfZones
        zones
     end
@@ -27,7 +26,6 @@ batteries, while columns corresponds to time steps.
             obj.numberOfZones = obj.settingSimulation.getNumberOfZones();
             
             % the following lines are the old code
-            obj.simulationSetting = decodeJsonFile(simulationFilename);
             
             obj.setGrid();
             obj.setZones();
@@ -36,7 +34,8 @@ batteries, while columns corresponds to time steps.
         end
         
         function setGrid(obj)
-            obj.grid = ElectricalGrid(obj.simulationSetting.basecase);
+            basecase = obj.settingSimulation.getBasecase();
+            obj.grid = ElectricalGrid(basecase);
         end
         
         function setZones(obj)
