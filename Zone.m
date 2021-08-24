@@ -83,20 +83,8 @@ classdef Zone < handle
         end
         
         function setTelecom(obj)
-            delayTimeSeries2Zone = obj.delayInIterations.getDelayTimeSeries2Zone();
-            delayController2Zone = obj.delayInIterations.getDelayController2Zone();
-            delayZone2Controller = obj.delayInIterations.getDelayZone2Controller();
-            
-            numberOfBuses = obj.topology.getNumberOfBuses();
-            numberOfBranches = obj.topology.getNumberOfBranches();
-            numberOfGenOn = obj.topology.getNumberOfGenOn();
-            numberOfBattOn = obj.topology.getNumberOfBattOn();
-            
-            obj.telecomTimeSeries2Zone = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
-            obj.telecomController2Zone = TelecomController2Zone(...
-                numberOfGenOn, numberOfBattOn, delayController2Zone);
-            obj.telecomZone2Controller = TelecomZone2Controller(...
-                numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, delayZone2Controller);
+            [obj.telecomTimeSeries2Zone, obj.telecomController2Zone, obj.telecomZone2Controller] = ...
+                getTelecom(obj.topology, obj.delayInIterations);
         end
         
         function setResult(obj, duration)
