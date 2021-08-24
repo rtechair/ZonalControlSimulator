@@ -100,30 +100,8 @@ classdef Zone < handle
         end
         
         function setResult(obj, duration)
-            controlCycle = obj.setting.getcontrolCycleInSeconds();
-            numberOfBuses = obj.topology.getNumberOfBuses();
-            numberOfBranches = obj.topology.getNumberOfBranches();
-            numberOfGenOn = obj.topology.getNumberOfGenOn();
-            numberOfBattOn = obj.topology.getNumberOfBattOn();
-            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
-            branchFlowLimit = obj.setting.getBranchFlowLimit();
-            
-            busId = obj.topology.getBusId();
-            branchIdx = obj.topology.getBranchIdx();
-            genOnIdx = obj.topology.getGenOnIdx();
-            battOnIdx = obj.topology.getBattOnIdx();
-            
-            delayCurt = obj.delayInIterations.getDelayCurt();
-            delayBatt = obj.delayInIterations.getDelayBatt();
-            delayTimeSeries2Zone = obj.delayInIterations.getDelayTimeSeries2Zone();
-            delayController2Zone = obj.delayInIterations.getDelayController2Zone();
-            delayZone2Controller = obj.delayInIterations.getDelayZone2Controller();
-            
-            obj.result = ResultGraphic(obj.name, duration, controlCycle,...
-                numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
-                maxPowerGeneration, branchFlowLimit, ...
-                busId, branchIdx, genOnIdx, battOnIdx, delayCurt, delayBatt, ...
-                delayTimeSeries2Zone, delayController2Zone, delayZone2Controller);
+            obj.result = getResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
+                obj.name);
         end
         
         % WARNING: the following function is for the limiter,
