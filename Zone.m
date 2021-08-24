@@ -65,18 +65,7 @@ classdef Zone < handle
         end
         
         function setDelayInIterations(obj)
-            controlCycle = obj.setting.getcontrolCycleInSeconds();
-            delayCurtInSeconds = obj.setting.getDelayCurtInSeconds();
-            delayBattInSeconds = obj.setting.getDelayBattInSeconds();
-            delayTimeSeries2ZoneInSeconds = obj.setting.getDelayTimeSeries2ZoneInSeconds;
-            delayController2ZoneInSeconds = obj.setting.getDelayController2ZoneInSeconds;
-            delayZone2ControllerInSeconds = obj.setting.getDelayZone2ControllerInSeconds;
-            
-            obj.delayInIterations = DelayInIterations(...
-                controlCycle, delayCurtInSeconds, delayBattInSeconds, ...
-                delayTimeSeries2ZoneInSeconds, ...
-                delayController2ZoneInSeconds, ...
-                delayZone2ControllerInSeconds);
+            obj.delayInIterations = getDelayInIterations(obj.setting);
             
         end
         
