@@ -1,5 +1,7 @@
 classdef SimulationSetting < handle
 % Read and interpret the JSON file into an object to get the parameters of the simulation.
+% when the configuration of the JSON file is modified, the setters
+% need to be modify as well to depict the changes.
 
     properties (SetAccess = protected)
         %% All settings are in the property 'settings'. The Setter methods
@@ -26,9 +28,6 @@ classdef SimulationSetting < handle
         end
         
         %% SETTER
-        % when the configuration of the JSON file is modified, the setters
-        % need to be modify as well to depict the changes.
-        
         function setBasecase(obj)
             obj.basecase = obj.settings.basecase;
         end
