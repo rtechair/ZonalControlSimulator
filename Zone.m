@@ -259,7 +259,7 @@ classdef Zone < handle
             obj.zoneEvolution.dropOldestControl();
         end
         
-        function boolean = isToBeSimulated(obj, currentTime, timeStep)
+        function boolean = isItTimeToUpdate(obj, currentTime, timeStep)
             previousTime = currentTime - timeStep;
             controlCycle = obj.setting.getcontrolCycleInSeconds();
             

@@ -119,8 +119,8 @@ classdef TransmissionSimulation < handle
             for time = start:step:duration
                 for i = 1:obj.numberOfZones
                     zone = obj.zones{i};
-                    isZoneSimulated = zone.isToBeSimulated(time, step);
-                    if isZoneSimulated
+                    updateZone = zone.isItTimeToUpdate(time, step);
+                    if updateZone
                         zone.simulate();
                         zone.updateGrid(obj.grid);
                     end
@@ -130,8 +130,8 @@ classdef TransmissionSimulation < handle
                 
                 for i = 1:obj.numberOfZones
                     zone = obj.zones{i};
-                    isZoneSimulated = zone.isToBeSimulated(time, step);
-                    if isZoneSimulated
+                    updateZone = zone.isItTimeToUpdate(time, step);
+                    if updateZone
                         zone.update(obj.grid);
                         zone.saveResult();
                         zone.prepareForNextStep();
