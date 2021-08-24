@@ -1,4 +1,4 @@
-classdef TimeSeriesRenewableEnergy < handle
+classdef TimeSeries < handle
    
     properties (SetAccess = protected, GetAccess = protected)
         ProfilePowerAvailable
@@ -16,7 +16,7 @@ classdef TimeSeriesRenewableEnergy < handle
     
     methods
         
-        function obj = TimeSeriesRenewableEnergy(filenameWindChargingRate, ...
+        function obj = TimeSeries(filenameWindChargingRate, ...
                 startGenInSeconds, controlCycle, ...
                 durationSimulation, maxPowerGeneration, numberOfGen)
             obj.startGenIteration = floor(startGenInSeconds / controlCycle);

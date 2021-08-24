@@ -75,14 +75,7 @@ classdef Zone < handle
         end
         
         function setTimeSeries(obj, duration)
-            timeSeriesFilename = obj.setting.getTimeSeriesFilename();
-            startGenInSeconds = obj.setting.getStartGenInSeconds();
-            controlCycle = obj.setting.getcontrolCycleInSeconds();
-            
-            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
-            numberOfGenOn = obj.topology.getNumberOfGenOn();
-            obj.timeSeries = TimeSeriesRenewableEnergy(...
-                timeSeriesFilename, startGenInSeconds, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
+            obj.timeSeries = getTimeSeries(obj.setting, obj.topology, duration);
         end
         
         function setZoneEvolution(obj)
