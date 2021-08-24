@@ -12,7 +12,7 @@ batteries, while columns corresponds to time steps.
 [1] https://matpower.org/docs/ref/
 %}
     properties (SetAccess = protected)
-       settingSimulation
+       simulationSetting
        
        grid
        numberOfZones
@@ -22,10 +22,8 @@ batteries, while columns corresponds to time steps.
     methods
         function obj = TransmissionSimulation(simulationFilename)
             %% set elements
-            obj.settingSimulation = SettingSimulation(simulationFilename);
-            obj.numberOfZones = obj.settingSimulation.getNumberOfZones();
-            
-            % the following lines are the old code
+            obj.simulationSetting = SimulationSetting(simulationFilename);
+            obj.numberOfZones = obj.simulationSetting.getNumberOfZones();
             
             obj.setGrid();
             obj.setZones();
@@ -34,14 +32,14 @@ batteries, while columns corresponds to time steps.
         end
         
         function setGrid(obj)
-            basecase = obj.settingSimulation.getBasecase();
+            basecase = obj.simulationSetting.getBasecase();
             obj.grid = ElectricalGrid(basecase);
         end
         
         function setZones(obj)
             obj.zones = cell(obj.numberOfZones,1);
-            duration = obj.settingSimulation.getDuration();
-            zoneNames = obj.settingSimulation.getZoneName();
+            duration = obj.simulationSetting.getDuration();
+            zoneNames = obj.simulationSetting.getZoneName();
             for i = 1:obj.numberOfZones
                 name = zoneNames{i};
                 obj.zones{i} = Zone(name, obj.grid, duration);
@@ -67,9 +65,9 @@ batteries, while columns corresponds to time steps.
         end
         
         function runSimulation(obj)
-            step = obj.settingSimulation.getWindow();
+            step = obj.simulationSetting.getWindow();
             start = step;
-            duration = obj.settingSimulation.getDuration();
+            duration = obj.simulationSetting.getDuration();
             
             for time = start:step:duration
                 for i = 1:obj.numberOfZones

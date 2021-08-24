@@ -1,4 +1,4 @@
-classdef SettingSimulation < handle
+classdef SimulationSetting < handle
 % Read and interpret the JSON file into an object to get the parameters of the simulation.
 
     properties (SetAccess = protected)
@@ -15,7 +15,7 @@ classdef SettingSimulation < handle
     
     methods
         
-        function obj = SettingSimulation(simulationFilename)
+        function obj = SimulationSetting(simulationFilename)
             obj.settings = decodeJsonFile(simulationFilename);
             
             obj.setBasecase();
