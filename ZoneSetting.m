@@ -8,7 +8,7 @@ classdef ZoneSetting < handle
         
         busId
         branchFlowLimit
-        controlCycle % i.e. the time step of the zone
+        controlCycleInSeconds % i.e. the time step of the zone
         
         timeSeriesFilename
         startGenInSeconds
@@ -28,7 +28,7 @@ classdef ZoneSetting < handle
             
             obj.setBusId();
             obj.setBranchFlowLimit();
-            obj.setControlCycle();
+            obj.setcontrolCycleInSeconds();
             
             obj.setTimeSeriesFilename();
             obj.setStartGenInSeconds();
@@ -53,8 +53,8 @@ classdef ZoneSetting < handle
             obj.branchFlowLimit = obj.settings.branchFlowLimit;
         end
         
-        function setControlCycle(obj)
-            obj.controlCycle = obj.settings.controlCycle;
+        function setcontrolCycleInSeconds(obj)
+            obj.controlCycleInSeconds = obj.settings.controlCycleInSeconds;
         end
         
         function setTimeSeriesFilename(obj)
@@ -104,8 +104,8 @@ classdef ZoneSetting < handle
             value = obj.branchFlowLimit;
         end
         
-        function value = getControlCycle(obj)
-            value = obj.controlCycle;
+        function value = getcontrolCycleInSeconds(obj)
+            value = obj.controlCycleInSeconds;
         end
         
         function value = getTimeSeriesFilename(obj)

@@ -12,7 +12,7 @@
         "startSelected": 2
     },
     "batteryConstantPowerReduction": 0.001,
-    "controlCycle": 15,
+    "controlCycleInSeconds": 15,
     "DelayInSeconds":
     {
         "curtailment": 45,

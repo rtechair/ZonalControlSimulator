@@ -65,7 +65,7 @@ classdef Zone < handle
         end
         
         function setDelayInIterations(obj)
-            controlCycle = obj.setting.getControlCycle();
+            controlCycle = obj.setting.getcontrolCycleInSeconds();
             delayCurtInSeconds = obj.setting.getDelayCurtInSeconds();
             delayBattInSeconds = obj.setting.getDelayBattInSeconds();
             delayTimeSeries2ZoneInSeconds = obj.setting.getDelayTimeSeries2ZoneInSeconds;
@@ -88,7 +88,7 @@ classdef Zone < handle
         function setTimeSeries(obj, duration)
             timeSeriesFilename = obj.setting.getTimeSeriesFilename();
             startGenInSeconds = obj.setting.getStartGenInSeconds();
-            controlCycle = obj.setting.getControlCycle();
+            controlCycle = obj.setting.getcontrolCycleInSeconds();
             
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             numberOfGenOn = obj.topology.getNumberOfGenOn();
@@ -130,7 +130,7 @@ classdef Zone < handle
         end
         
         function setResult(obj, duration)
-            controlCycle = obj.setting.getControlCycle();
+            controlCycle = obj.setting.getcontrolCycleInSeconds();
             numberOfBuses = obj.topology.getNumberOfBuses();
             numberOfBranches = obj.topology.getNumberOfBranches();
             numberOfGenOn = obj.topology.getNumberOfGenOn();
@@ -261,7 +261,7 @@ classdef Zone < handle
         
         function boolean = isToBeSimulated(obj, currentTime, timeStep)
             previousTime = currentTime - timeStep;
-            controlCycle = obj.setting.getControlCycle();
+            controlCycle = obj.setting.getcontrolCycleInSeconds();
             
             % Iterations are defined by the euclidian division:
             % time = iterations * controlCycle + remainder, with 0 <= remainder < controlCycle
