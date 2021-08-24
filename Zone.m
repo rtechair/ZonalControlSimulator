@@ -25,6 +25,7 @@ classdef Zone < handle
     properties (SetAccess = protected)
        name
        setting
+       
        delayInIterations
        topology
        zoneEvolution
@@ -56,7 +57,7 @@ classdef Zone < handle
         
         function setSetting(obj)
             filename = obj.getFilename();
-            obj.setting = decodeJsonFile(filename);
+            obj.setting = ZoneSetting(filename);
         end
         
         function zoneFilename = getFilename(obj)
@@ -64,13 +65,13 @@ classdef Zone < handle
         end
         
         function setDelayInIterations(obj)
-            controlCycle = obj.setting.controlCycle;
-            delayInSeconds = obj.setting.DelayInSeconds;
-            delayCurtInSeconds = delayInSeconds.curtailment;
-            delayBattInSeconds = delayInSeconds.battery;
-            delayTimeSeries2ZoneInSeconds = delayInSeconds.Telecom.timeSeries2Zone;
-            delayController2ZoneInSeconds = delayInSeconds.Telecom.controller2Zone;
-            delayZone2ControllerInSeconds = delayInSeconds.Telecom.zone2Controller;
+            controlCycle = obj.setting.getControlCycle();
+            delayCurtInSeconds = obj.setting.getDelayCurtInSeconds();
+            delayBattInSeconds = obj.setting.getDelayBattInSeconds();
+            delayTimeSeries2ZoneInSeconds = obj.setting.getDelayTimeSeries2ZoneInSeconds;
+            delayController2ZoneInSeconds = obj.setting.getDelayController2ZoneInSeconds;
+            delayZone2ControllerInSeconds = obj.setting.getDelayZone2ControllerInSeconds;
+            
             obj.delayInIterations = DelayInIterations(...
                 controlCycle, delayCurtInSeconds, delayBattInSeconds, ...
                 delayTimeSeries2ZoneInSeconds, ...
@@ -80,23 +81,19 @@ classdef Zone < handle
         end
         
         function setTopology(obj, electricalGrid)
-           busId = obj.setting.busId;
+           busId = obj.setting.getBusId();
            obj.topology = ZoneTopology(obj.name, busId, electricalGrid);
         end
         
         function setTimeSeries(obj, duration)
-            filename = obj.setting.TimeSeries.filename;
+            timeSeriesFilename = obj.setting.getTimeSeriesFilename();
+            startGenInSeconds = obj.setting.getStartGenInSeconds();
+            controlCycle = obj.setting.getControlCycle();
             
-            % Analyze the section of the json file regarding the TimeSeries setting
-            timeSeriesSetting = obj.setting.TimeSeries;
-            startPossibility = struct2cell(timeSeriesSetting.StartPossibilityForGeneratorInSeconds);
-            startSelected = timeSeriesSetting.startSelected;
-            start = startPossibility{startSelected};
-            controlCycle = obj.setting.controlCycle;
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             numberOfGenOn = obj.topology.getNumberOfGenOn();
             obj.timeSeries = TimeSeriesRenewableEnergy(...
-                filename, start, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
+                timeSeriesFilename, startGenInSeconds, controlCycle, duration, maxPowerGeneration, numberOfGenOn);
         end
         
         function setZoneEvolution(obj)
@@ -109,10 +106,10 @@ classdef Zone < handle
             delayBatt = obj.delayInIterations.getDelayBatt();
             
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
-            battConstPowerReduc = obj.setting.batteryConstantPowerReduction;
-
+            batteryConstantPowerReduction = obj.setting.getBatteryConstantPowerReduction();
+            
             obj.zoneEvolution = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
-                delayCurt, delayBatt, maxPowerGeneration, battConstPowerReduc);
+                delayCurt, delayBatt, maxPowerGeneration, batteryConstantPowerReduction);
         end
         
         function setTelecom(obj)
@@ -133,13 +130,13 @@ classdef Zone < handle
         end
         
         function setResult(obj, duration)
-            controlCycle = obj.setting.controlCycle;
+            controlCycle = obj.setting.getControlCycle();
             numberOfBuses = obj.topology.getNumberOfBuses();
             numberOfBranches = obj.topology.getNumberOfBranches();
             numberOfGenOn = obj.topology.getNumberOfGenOn();
             numberOfBattOn = obj.topology.getNumberOfBattOn();
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
-            branchFlowLimit = obj.setting.branchFlowLimit;
+            branchFlowLimit = obj.setting.getBranchFlowLimit();
             
             busId = obj.topology.getBusId();
             branchIdx = obj.topology.getBranchIdx();
@@ -173,16 +170,14 @@ classdef Zone < handle
         % WARNING: actually this function sets a limiter as the controller
         % TODO: handle the case when it is not the limiter
         function setController(obj)
-            branchFlowLimit = obj.setting.branchFlowLimit;
-            
+            branchFlowLimit = obj.setting.getBranchFlowLimit();
             numberOfBattOn = obj.topology.getNumberOfBattOn();
             increasingEchelon = obj.controllerSetting.IncreaseCurtPercentEchelon;
             decreasingEchelon = obj.controllerSetting.DecreaseCurtPercentEchelon;
             lowerThreshold = obj.controllerSetting.LowerThresholdPercent;
             upperThreshold = obj.controllerSetting.UpperThresholdPercent;
-            controlCycle = obj.setting.controlCycle;
-            % cautious, here the delay is in iterations!
-            delayCurt = obj.setting.DelayInSeconds.curtailment / controlCycle;
+            
+            delayCurt = obj.delayInIterations.getDelayCurt();
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             
             obj.controller = Limiter(branchFlowLimit, numberOfBattOn, ...
@@ -266,7 +261,7 @@ classdef Zone < handle
         
         function boolean = isToBeSimulated(obj, currentTime, timeStep)
             previousTime = currentTime - timeStep;
-            controlCycle = obj.setting.controlCycle;
+            controlCycle = obj.setting.getControlCycle();
             
             % Iterations are defined by the euclidian division:
             % time = iterations * controlCycle + remainder, with 0 <= remainder < controlCycle
