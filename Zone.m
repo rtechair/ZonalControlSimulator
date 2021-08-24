@@ -79,19 +79,7 @@ classdef Zone < handle
         end
         
         function setZoneEvolution(obj)
-            numberOfBuses = obj.topology.getNumberOfBuses();
-            numberOfBranches = obj.topology.getNumberOfBranches();
-            numberOfGenOn = obj.topology.getNumberOfGenOn();
-            numberOfBattOn = obj.topology.getNumberOfBattOn();
-
-            delayCurt = obj.delayInIterations.getDelayCurt();
-            delayBatt = obj.delayInIterations.getDelayBatt();
-            
-            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
-            batteryConstantPowerReduction = obj.setting.getBatteryConstantPowerReduction();
-            
-            obj.zoneEvolution = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
-                delayCurt, delayBatt, maxPowerGeneration, batteryConstantPowerReduction);
+            obj.zoneEvolution = getZoneEvolution(obj.topology, obj.delayInIterations, obj.setting);
         end
         
         function setTelecom(obj)

@@ -1,0 +1,14 @@
+function object = getZoneEvolution(zoneTopology, delayInIterations, zoneSetting)
+    numberOfBuses = zoneTopology.getNumberOfBuses();
+    numberOfBranches = zoneTopology.getNumberOfBranches();
+    numberOfGenOn = zoneTopology.getNumberOfGenOn();
+    numberOfBattOn = zoneTopology.getNumberOfBattOn();
+
+    delayCurt = delayInIterations.getDelayCurt();
+    delayBatt = delayInIterations.getDelayBatt();
+
+    maxPowerGeneration = zoneTopology.getMaxPowerGeneration();
+    batteryConstantPowerReduction = zoneSetting.getBatteryConstantPowerReduction();
+    object = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
+                delayCurt, delayBatt, maxPowerGeneration, batteryConstantPowerReduction);
+end
