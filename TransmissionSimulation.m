@@ -1,16 +1,6 @@
 classdef TransmissionSimulation < handle
 % Act as the global simulator of transmission
 
-%{
-In this project, column vectors are used instead of row vectors, e.g.
-busId, branchIdx, zoneEvolution's properties, etc.
-The reason is for consistency with column vectors obtained from Matpower
-functions [1].
-Hence, rows corresponds to elements, such as buses, branches, generators and
-batteries, while columns corresponds to time steps.
- 
-[1] https://matpower.org/docs/ref/
-%}
     properties (SetAccess = protected)
        simulationSetting
        
@@ -30,7 +20,10 @@ batteries, while columns corresponds to time steps.
             
             obj.initialize();
         end
-        
+    end
+    
+    methods (Access = protected)
+        %% CONSTRUCTOR METHODS
         function setGrid(obj)
             basecase = obj.simulationSetting.getBasecase();
             obj.grid = ElectricalGrid(basecase);
@@ -47,6 +40,9 @@ batteries, while columns corresponds to time steps.
         end
         
         function initialize(obj)
+            % Beware the following methods apply their actions to all the
+            % zones, no matter their control cycle. They should not be used during the simulation,
+            % as the zones might not share the same control cyle.
             obj.initializeZonesPowerAvailable();
             obj.initializeZonesPowerGeneration();
             
@@ -62,35 +58,6 @@ batteries, while columns corresponds to time steps.
             obj.saveZonesState();
             
             obj.prepareZonesForNextStep();
-        end
-        
-        function runSimulation(obj)
-            step = obj.simulationSetting.getWindow();
-            start = step;
-            duration = obj.simulationSetting.getDuration();
-            
-            for time = start:step:duration
-                for i = 1:obj.numberOfZones
-                    zone = obj.zones{i};
-                    isZoneSimulated = zone.isToBeSimulated(time, step);
-                    if isZoneSimulated
-                        zone.simulate();
-                        zone.updateGrid(obj.grid);
-                    end
-                end
-                
-                obj.grid.runPowerFlow()
-                
-                for i = 1:obj.numberOfZones
-                    zone = obj.zones{i};
-                    isZoneSimulated = zone.isToBeSimulated(time, step);
-                    if isZoneSimulated
-                        zone.update(obj.grid);
-                        zone.saveResult();
-                        zone.prepareForNextStep()
-                    end
-                end
-            end
         end
         
         function initializeZonesPowerAvailable(obj)
@@ -123,12 +90,6 @@ batteries, while columns corresponds to time steps.
             end
         end
         
-        function dropZonesOldestPowerTransit(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.dropOldestPowerTransit();
-            end
-        end
-        
         function saveZonesState(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.saveState();
@@ -136,21 +97,50 @@ batteries, while columns corresponds to time steps.
         end
         
         function transmitDataZone2Controller(obj)
-            % Warning, this method transmits data for all zones, regardless
-            % of their control cycles. Thus, be cautious
             for i = 1:obj.numberOfZones
                 obj.zones{i}.transmitDataZone2Controller();
             end
         end
         
         function prepareZonesForNextStep(obj)
-            % Warning, this method transmits data for all zones, regardless
-            % of their control cycles. Thus, be cautious
             for i = 1:obj.numberOfZones
                 obj.zones{i}.prepareForNextStep();
             end
         end
+    end
+    
+    methods
+        %% SIMULATION
+        function runSimulation(obj)
+            step = obj.simulationSetting.getWindow();
+            start = step;
+            duration = obj.simulationSetting.getDuration();
+            
+            for time = start:step:duration
+                for i = 1:obj.numberOfZones
+                    zone = obj.zones{i};
+                    isZoneSimulated = zone.isToBeSimulated(time, step);
+                    if isZoneSimulated
+                        zone.simulate();
+                        zone.updateGrid(obj.grid);
+                    end
+                end
+                
+                obj.grid.runPowerFlow();
+                
+                for i = 1:obj.numberOfZones
+                    zone = obj.zones{i};
+                    isZoneSimulated = zone.isToBeSimulated(time, step);
+                    if isZoneSimulated
+                        zone.update(obj.grid);
+                        zone.saveResult();
+                        zone.prepareForNextStep();
+                    end
+                end
+            end
+        end
         
+        %% PLOT
         function plotZonesTopology(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.plotTopology(obj.grid);
