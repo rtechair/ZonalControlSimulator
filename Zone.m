@@ -79,7 +79,7 @@ classdef Zone < handle
         end
         
         function setZoneEvolution(obj)
-            obj.zoneEvolution = getZoneEvolution(obj.topology, obj.delayInIterations, obj.setting);
+            obj.zoneEvolution = getZoneEvolution(obj.setting, obj.topology, obj.delayInIterations);
         end
         
         function setTelecom(obj)

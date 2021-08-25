@@ -1,4 +1,9 @@
-function object = getZoneEvolution(zoneTopology, delayInIterations, zoneSetting)
+function object = getZoneEvolution(zoneSetting, zoneTopology, delayInIterations)
+    arguments
+        zoneSetting ZoneSetting
+        zoneTopology ZoneTopology
+        delayInIterations DelayInIterations
+    end
     numberOfBuses = zoneTopology.getNumberOfBuses();
     numberOfBranches = zoneTopology.getNumberOfBranches();
     numberOfGenOn = zoneTopology.getNumberOfGenOn();

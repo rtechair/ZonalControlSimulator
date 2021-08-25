@@ -1,4 +1,11 @@
 function object = getResult(zoneSetting, zoneTopology, delayInIterations, duration, name)
+    arguments
+        zoneSetting ZoneSetting
+        zoneTopology ZoneTopology
+        delayInIterations DelayInIterations
+        duration double
+        name {mustBeText(name)}
+    end
     controlCycle = zoneSetting.getcontrolCycleInSeconds();
     numberOfBuses = zoneTopology.getNumberOfBuses();
     numberOfBranches = zoneTopology.getNumberOfBranches();
