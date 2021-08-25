@@ -1,4 +1,4 @@
-function object = getZoneEvolution(zoneSetting, zoneTopology, delayInIterations)
+function object = buildZoneEvolution(zoneSetting, zoneTopology, delayInIterations)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology

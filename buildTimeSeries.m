@@ -1,4 +1,4 @@
-function object = getTimeSeries(zoneSetting, zoneTopology, simulationDuration)
+function object = buildTimeSeries(zoneSetting, zoneTopology, simulationDuration)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology

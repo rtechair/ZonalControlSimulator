@@ -1,4 +1,4 @@
-function object = getResult(zoneSetting, zoneTopology, delayInIterations, duration, name)
+function object = buildResult(zoneSetting, zoneTopology, delayInIterations, duration, name)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology

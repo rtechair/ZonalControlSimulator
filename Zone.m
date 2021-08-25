@@ -65,7 +65,7 @@ classdef Zone < handle
         end
         
         function setDelayInIterations(obj)
-            obj.delayInIterations = getDelayInIterations(obj.setting);
+            obj.delayInIterations = buildDelayInIterations(obj.setting);
             
         end
         
@@ -75,20 +75,20 @@ classdef Zone < handle
         end
         
         function setTimeSeries(obj, duration)
-            obj.timeSeries = getTimeSeries(obj.setting, obj.topology, duration);
+            obj.timeSeries = buildTimeSeries(obj.setting, obj.topology, duration);
         end
         
         function setZoneEvolution(obj)
-            obj.zoneEvolution = getZoneEvolution(obj.setting, obj.topology, obj.delayInIterations);
+            obj.zoneEvolution = buildZoneEvolution(obj.setting, obj.topology, obj.delayInIterations);
         end
         
         function setTelecom(obj)
             [obj.telecomTimeSeries2Zone, obj.telecomController2Zone, obj.telecomZone2Controller] = ...
-                getTelecom(obj.topology, obj.delayInIterations);
+                buildTelecom(obj.topology, obj.delayInIterations);
         end
         
         function setResult(obj, duration)
-            obj.result = getResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
+            obj.result = buildResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
                 obj.name);
         end
         

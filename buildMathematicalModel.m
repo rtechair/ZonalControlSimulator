@@ -1,4 +1,4 @@
-function object = getMathematicalModel(basecaseFilename, zoneName)
+function object = buildMathematicalModel(basecaseFilename, zoneName)
 % Get the MathematicalModel of a zone.
 
 % This function:

@@ -1,4 +1,4 @@
-function object = getDelayInIterations(zoneSetting)
+function object = buildDelayInIterations(zoneSetting)
     arguments
         zoneSetting ZoneSetting
     end
