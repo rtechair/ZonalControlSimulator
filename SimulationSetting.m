@@ -4,8 +4,8 @@ classdef SimulationSetting < handle
 % need to be modify as well to depict the changes.
 
     properties (SetAccess = protected)
-        %% All settings are in the property 'settings'. The Setter methods
-        %% extract the parameters into the other properties.        
+        % All parameters from the JSON file are in the property 'settings'. The Setter methods
+        % extract the parameters into the other properties.
         settings
         
         basecase

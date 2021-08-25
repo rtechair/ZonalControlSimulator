@@ -4,6 +4,8 @@ classdef ZoneSetting < handle
 % need to be modify as well to depict the changes.
     
     properties (SetAccess = protected)
+        % All parameters from the JSON file are in the property 'settings'. The Setter methods
+        % extract the parameters into the other properties.
         settings
         
         busId
