@@ -1,14 +1,42 @@
+## Introduction
+
 This project is based on Alessio Iovine's code and the paper "Modeling the Partial Renewable Power Curtailment for Transmission Network Management"
 HAL Id: hal-0300444
 available at: https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
 
 Specifically, the paper describes a mathematical model, which approximates linearly the dynamic of a zone within a electrical grid. Real power flows of the electrical grid is computed using Matpower, while controllers supervising the studied zones will use the mathematical model to take actions.
- 
-The code requires:
+
+## Installation
+
+### Requirements
 - Matlab, version R2019b at least
 - Matpower: available at https://matpower.org/
 
-Transmission simulator:
+### Download the project
+in the repository where you want to install the project:
+
+*With Git*
+```
+git clone https://github.com/gganetlepage/MatpowerTech
+```
+*Else*
+
+In https://github.com/gganetlepage/MatpowerTech, click the green button 'code', download zip and extract it.
+
+### Set up search paths for matlab
+If you work on this project through the `main` file, no action is needed. 
+
+However, if you intend to work with matlab in a different repository and call the transmission simulator, then the search paths of matlab need to be updated:
+1) open matlab in the repository of the simulator
+2) In the command window, type:
+```
+addpath(genpath(pwd))
+rmpath(genpath([pwd filesep '.git'])) % remove useless .git paths, which are intrinsic to git
+savepath % might need to run matlab as admin to be valid
+```
+
+
+## Simulator of transmission
 The intent is to study the power flows of specific zones, by simulating the electrical grid containing the zones. 
 Zones are made of buses, i.e. nodes, and branches, i.e. edges. On some buses, there are generators, and possibly batteries. 
 There is one controller per zone, which takes decisions on generators and batteries within its zone. The decisions are partial curtailments for generators and battery injections. 
