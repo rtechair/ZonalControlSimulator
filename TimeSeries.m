@@ -1,14 +1,14 @@
 classdef TimeSeries < handle
    
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
+        windChargingRate
         ProfilePowerAvailable
         ProfileDisturbancePowerAvailable
         step
-        discretizedWindChargingRate
     end
     
-    properties (SetAccess = immutable, GetAccess = protected)
-        startGenIteration
+    properties (SetAccess = immutable)
+        startGen
         numberOfIterations
         maxPowerGeneration
         numberOfGen
@@ -19,19 +19,18 @@ classdef TimeSeries < handle
         function obj = TimeSeries(filenameWindChargingRate, ...
                 startGenInSeconds, controlCycle, ...
                 durationSimulation, maxPowerGeneration, numberOfGen)
-            obj.startGenIteration = floor(startGenInSeconds / controlCycle);
+            obj.startGen = startGenInSeconds;
             obj.numberOfIterations = floor(durationSimulation / controlCycle);
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.numberOfGen = numberOfGen;
             
             % step starts at 0 because of initialization, later updated to 1 to start the simulation
             obj.step = 0;
-
-            obj.setDiscretizedWindChargingRate(filenameWindChargingRate, controlCycle);
             
-            obj.checkInitialIterationCorrectness()
+            obj.setWindChargingRate(filenameWindChargingRate);
+            obj.checkInitialIterationCorrectness(controlCycle)
             
-            obj.setProfilePowerAvailable();
+            obj.setProfilePowerAvailable(controlCycle);
             obj.setProfileDisturbancePowerAvailable();
         end
         
@@ -55,23 +54,21 @@ classdef TimeSeries < handle
     
     methods (Access = protected)
        
-       function setDiscretizedWindChargingRate(obj, filenameWindChargingRate, controlCycle)
-           % the apostrophe is to obtain a row vector, such that columns represent the time
-           rateInRealTime = table2array(readtable(filenameWindChargingRate))';
-           numberOfSamples = size(rateInRealTime,2);
-           discretTime = 1:  controlCycle : numberOfSamples;
-           obj.discretizedWindChargingRate = rateInRealTime(discretTime);           
-       end
         
-       function setProfilePowerAvailable(obj)
-           obj.ProfilePowerAvailable = zeros(obj.numberOfGen, obj.numberOfIterations + 1);
-           for gen = 1:obj.numberOfGen
-               start = obj.startGenIteration(gen);
-               range = start : start + obj.numberOfIterations;
-               windRate = obj.discretizedWindChargingRate(1,range);
-               maxGen = obj.maxPowerGeneration(gen,1);
-               obj.ProfilePowerAvailable(gen,:) = maxGen * windRate;
+        function setWindChargingRate(obj, filenameWindChargingRate)
+           % the apostrophe is to obtain a row vector, such that columns represent the time
+           obj.windChargingRate = table2array(readtable(filenameWindChargingRate))';
+        end
+        
+       function setProfilePowerAvailable(obj, controlCycle)
+           genWindRate = zeros(obj.numberOfGen, obj.numberOfIterations + 1);
+           for i = 1:obj.numberOfGen
+               start = obj.startGen(i);
+               last = start + obj.numberOfIterations*controlCycle;
+               range = start : controlCycle : last;
+               genWindRate(i,:) = obj.windChargingRate(1, range);
            end
+           obj.ProfilePowerAvailable = obj.maxPowerGeneration .* genWindRate;
        end
        
        function setProfileDisturbancePowerAvailable(obj)
@@ -82,12 +79,13 @@ classdef TimeSeries < handle
            end
        end
        
-       function checkInitialIterationCorrectness(obj)
-           numberOfSamples = size(obj.discretizedWindChargingRate,2);
-           maxStartingIterationPossible = numberOfSamples - obj.numberOfIterations;
-           isThereAnyStartOfGenTooLate = any(obj.startGenIteration > maxStartingIterationPossible);
+       function checkInitialIterationCorrectness(obj, controlCycle)
+           sampleDuration = size(obj.windChargingRate,2);
+           % the following '-1' is due to the initialization step
+           maxStartingTimeForGen = sampleDuration - 1 - controlCycle*obj.numberOfIterations;
+           isThereAnyStartOfGenTooLate = any(obj.startGen > maxStartingTimeForGen);
            if isThereAnyStartOfGenTooLate
-                obj.errorStartingIterationExceedsMax(maxStartingIterationPossible)
+                obj.errorStartingIterationExceedsMax(maxStartingTimeForGen)
            end
        end
        
