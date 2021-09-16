@@ -74,5 +74,9 @@ classdef StateOfZone < handle
             obj.powerGeneration = min(obj.powerAvailable, maxPowerGeneration);
         end
         
+        function updatePowerBattery(obj, controlBattery)
+            obj.powerBattery = obj.powerBattery + controlBattery;
+        end
+        
     end
 end

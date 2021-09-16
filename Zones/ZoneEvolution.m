@@ -166,10 +166,8 @@ classdef ZoneEvolution < handle
         
         function updatePowerBattery(obj)
             % PB += DeltaPB(k - delayBatt)
-            oldPowerBattery = obj.state.getPowerBattery();
             appliedControlBatt = obj.queueControlBatt(:,1);
-            newPowerBattery = oldPowerBattery - appliedControlBatt;
-            obj.state.setPowerBattery(newPowerBattery);
+            obj.state.updatePowerBattery(appliedControlBatt);
         end
         
         function setInitialPowerAvailable(obj, timeSeries)
@@ -178,6 +176,7 @@ classdef ZoneEvolution < handle
         end
         
         function setInitialPowerGeneration(obj)
+            % DEPRECATED
             powerAvailable = obj.state.getPowerAvailable();
             initialPowerGeneration = min(powerAvailable, obj.maxPowerGeneration);
             obj.state.setPowerGeneration(initialPowerGeneration);
