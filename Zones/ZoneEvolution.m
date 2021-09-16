@@ -133,11 +133,7 @@ classdef ZoneEvolution < handle
             % updated prior to the latter
             % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
             appliedControlBatt = obj.queueControlBatt(:,1);
-            oldPowerBattery = obj.state.getPowerBattery();
-            oldEnergyBattery = obj.state.getEnergyBattery();
-            newEnergyBattery = oldEnergyBattery ...
-                - obj.battConstPowerReduc * (oldPowerBattery + appliedControlBatt);
-            obj.state.setEnergyBattery(newEnergyBattery);
+            obj.state.updateEnergyBattery(appliedControlBatt, obj.battConstPowerReduc);
         end
         
         function updatePowerAvailable(obj)

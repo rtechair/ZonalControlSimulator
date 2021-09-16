@@ -74,6 +74,14 @@ classdef StateOfZone < handle
             obj.powerGeneration = min(obj.powerAvailable, maxPowerGeneration);
         end
         
+        function updateEnergyBattery(obj, controlBattery, battConstPowerReduc)
+            % energyBattery requires powerBattery, thus the former must be
+            % updated prior to the latter
+            % EB += -cb * ( PB + appliedDeltaPB )
+            obj.energyBattery = obj.energyBattery ...
+                - battConstPowerReduc * (obj.powerBattery + controlBattery);
+        end
+        
         function updatePowerGeneration(obj, disturbancePowerGeneration, controlCurtailment)
             % PG += DeltaPG - appliedDeltaPC
             obj.powerGeneration = obj.powerGeneration + disturbancePowerGeneration ...

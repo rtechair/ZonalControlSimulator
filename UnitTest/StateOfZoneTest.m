@@ -81,6 +81,20 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
           testCase.verifyEqual(actValue, expValue);
        end
        
+       function updateEnergyBattery(testCase)
+           initialEnergyBattery = [2 2]';
+           initialPowerBattery = [1 1]';
+           testCase.state.setEnergyBattery(initialEnergyBattery);
+           testCase.state.setPowerBattery(initialPowerBattery);
+           controlBattery = [1 -1]';
+           battConstPowerReduc = 1;
+           
+           testCase.state.updateEnergyBattery(controlBattery, battConstPowerReduc);
+           actValue = testCase.state.getEnergyBattery();
+           expValue = initialEnergyBattery ...
+               - battConstPowerReduc * ( initialPowerBattery + controlBattery);
+           testCase.verifyEqual(actValue, expValue);
+       end
    end    
     
 end
