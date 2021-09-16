@@ -16,15 +16,15 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
             - 5 nodes
             - 4 branches
             - 3 generators
-            - 1 battery
+            - 2 battery
 
-            Gen1 ------- Batt ------- node ------ Gen2
+            Gen1 ------- Batt1 ------- node ------ Gen2+Batt2
                            |
                          Gen3
             %}
             testCase.numberOfBranches = 4;
             testCase.numberOfGenerators = 3;
-            testCase.numberOfBatteries = 1;
+            testCase.numberOfBatteries = 2;
         end
         
         function createState(testCase)
@@ -36,25 +36,25 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
     end
     
    methods(Test)
-       function initialPowerGenerationIsPowerAvailable(testCase)
-           initialPowerAvailable = 1;
+       function initialPowerGeneration(testCase)
+           initialPowerAvailable = [1 2 3]';
            testCase.state.setPowerAvailable(initialPowerAvailable);
-           maxPowerGeneration = 2;
+           maxPowerGeneration = [2 2 2]';
            testCase.state.setInitialPowerGeneration(maxPowerGeneration);
            
            actValue = testCase.state.getPowerGeneration();
-           expValue = initialPowerAvailable;
+           expValue = [1 2 2]';
            testCase.verifyEqual(actValue, expValue);
        end
        
-       function initialPowerGenerationIsMaxPowerGeneration(testCase)
-           initialPowerAvailable = 2;
-           testCase.state.setPowerAvailable(initialPowerAvailable);
-           maxPowerGeneration = 1;
-           testCase.state.setInitialPowerGeneration(maxPowerGeneration);
+       function updatePowerBattery(testCase)
+           initialPowerBattery = [3 2]';
+           testCase.state.setPowerBattery(initialPowerBattery);
+           controlBattery = [-1 1]';
+           testCase.state.updatePowerBattery(controlBattery);
            
-           actValue = testCase.state.getPowerGeneration();
-           expValue = maxPowerGeneration;
+           actValue = testCase.state.getPowerBattery();
+           expValue = initialPowerBattery + controlBattery;
            testCase.verifyEqual(actValue, expValue);
        end
        
