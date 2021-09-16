@@ -150,10 +150,7 @@ classdef ZoneEvolution < handle
         function updatePowerGeneration(obj)
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
             appliedControlCurt = obj.queueControlCurt(:,1);
-            oldPowerGeneration = obj.state.getPowerGeneration();
-            newPowerGeneration = oldPowerGeneration + obj.disturbancePowerGeneration ...
-                - appliedControlCurt;
-            obj.state.setPowerGeneration(newPowerGeneration);
+            obj.state.updatePowerGeneration(obj.disturbancePowerGeneration, appliedControlCurt);
         end
         
         function updatePowerCurtailment(obj)

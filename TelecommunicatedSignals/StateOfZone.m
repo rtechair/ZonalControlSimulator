@@ -74,6 +74,12 @@ classdef StateOfZone < handle
             obj.powerGeneration = min(obj.powerAvailable, maxPowerGeneration);
         end
         
+        function updatePowerGeneration(obj, disturbancePowerGeneration, controlCurtailment)
+            % PG += DeltaPG - appliedDeltaPC
+            obj.powerGeneration = obj.powerGeneration + disturbancePowerGeneration ...
+                - controlCurtailment;
+        end
+        
         function updatePowerCurtailment(obj, controlCurtailment)
             % PC += appliedDeltaPC
             obj.powerCurtailment = obj.powerCurtailment + controlCurtailment;

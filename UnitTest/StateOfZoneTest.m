@@ -40,8 +40,8 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
            initialPowerAvailable = [1 2 3]';
            testCase.state.setPowerAvailable(initialPowerAvailable);
            maxPowerGeneration = [2 2 2]';
-           testCase.state.setInitialPowerGeneration(maxPowerGeneration);
            
+           testCase.state.setInitialPowerGeneration(maxPowerGeneration);
            actValue = testCase.state.getPowerGeneration();
            expValue = [1 2 2]';
            testCase.verifyEqual(actValue, expValue);
@@ -51,8 +51,8 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
            initialPowerBattery = [3 2]';
            testCase.state.setPowerBattery(initialPowerBattery);
            controlBattery = [-1 1]';
-           testCase.state.updatePowerBattery(controlBattery);
            
+           testCase.state.updatePowerBattery(controlBattery);
            actValue = testCase.state.getPowerBattery();
            expValue = initialPowerBattery + controlBattery;
            testCase.verifyEqual(actValue, expValue);
@@ -62,11 +62,23 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
            initialPowerCurtailment = [2 2 2]';
            testCase.state.setPowerCurtailment(initialPowerCurtailment);
            controlCurtailment = [-1 1 0]';
-           testCase.state.updatePowerCurtailment(controlCurtailment);
            
+           testCase.state.updatePowerCurtailment(controlCurtailment);
            actValue = testCase.state.getPowerCurtailment();
            expValue = initialPowerCurtailment + controlCurtailment;
            testCase.verifyEqual(actValue, expValue);
+       end
+       
+       function updatePowerGeneration(testCase)
+          initialPowerGeneration = [2 2 2]';
+          testCase.state.setPowerGeneration(initialPowerGeneration);
+          disturbancePowerGeneration = [2 2 0]';
+          controlCurtailment = [-1 1 2]';
+          
+          testCase.state.updatePowerGeneration(disturbancePowerGeneration, controlCurtailment);
+          actValue = testCase.state.getPowerGeneration();
+          expValue = initialPowerGeneration + disturbancePowerGeneration - controlCurtailment;
+          testCase.verifyEqual(actValue, expValue);
        end
        
    end    
