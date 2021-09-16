@@ -58,6 +58,17 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
            testCase.verifyEqual(actValue, expValue);
        end
        
+       function updatePowerCurtailment(testCase)
+           initialPowerCurtailment = [2 2 2]';
+           testCase.state.setPowerCurtailment(initialPowerCurtailment);
+           controlCurtailment = [-1 1 0]';
+           testCase.state.updatePowerCurtailment(controlCurtailment);
+           
+           actValue = testCase.state.getPowerCurtailment();
+           expValue = initialPowerCurtailment + controlCurtailment;
+           testCase.verifyEqual(actValue, expValue);
+       end
+       
    end    
     
 end

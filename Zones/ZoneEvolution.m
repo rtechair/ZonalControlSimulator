@@ -159,9 +159,7 @@ classdef ZoneEvolution < handle
         function updatePowerCurtailment(obj)
             % PC += DeltaPC(k - delayCurt)
             appliedControlCurt = obj.queueControlCurt(:,1);
-            oldPowerCurtailment = obj.state.getPowerCurtailment();
-            newPowerCurtailment = oldPowerCurtailment + appliedControlCurt;
-            obj.state.setPowerCurtailment(newPowerCurtailment);
+            obj.state.updatePowerCurtailment(appliedControlCurt);
         end
         
         function updatePowerBattery(obj)
