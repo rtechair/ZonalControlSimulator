@@ -19,7 +19,7 @@ classdef ZoneEvolution < handle
         disturbancePowerAvailable
     end
     
-    properties (SetAccess = immutable, GetAccess = protected)
+    properties (SetAccess = immutable)
        maxPowerGeneration
        
        %{

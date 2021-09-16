@@ -19,6 +19,7 @@ classdef StateOfZone < handle
             obj.powerAvailable = zeros(numberOfGenerators, 1);
         end
         
+        %% Getter
         function value = getPowerFlow(obj)
             value = obj.powerFlow;
         end
@@ -43,6 +44,7 @@ classdef StateOfZone < handle
             value = obj.powerAvailable;
         end
         
+        %% Setter
         function setPowerFlow(obj, value)
             obj.powerFlow = value;
         end
@@ -65,6 +67,11 @@ classdef StateOfZone < handle
         
         function setPowerAvailable(obj, value)
             obj.powerAvailable = value;
+        end
+        
+        %% Evolution
+        function setInitialPowerGeneration(obj, maxPowerGeneration)
+            obj.powerGeneration = min(obj.powerAvailable, maxPowerGeneration);
         end
         
     end
