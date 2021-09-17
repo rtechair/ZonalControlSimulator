@@ -165,12 +165,6 @@ classdef ZoneEvolution < handle
         end
         
         function setInitialPowerGeneration(obj)
-            % DEPRECATED
-            %{
-            powerAvailable = obj.state.getPowerAvailable();
-            initialPowerGeneration = min(powerAvailable, obj.maxPowerGeneration);
-            obj.state.setPowerGeneration(initialPowerGeneration);
-            %}
             obj.state.setInitialPowerGeneration(obj.maxPowerGeneration);
         end
     end
