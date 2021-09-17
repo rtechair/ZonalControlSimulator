@@ -82,6 +82,11 @@ classdef StateOfZone < handle
                 - battConstPowerReduc * (obj.powerBattery + controlBattery);
         end
         
+        function updatePowerAvailable(obj, disturbancePowerAvailable)
+            % PA += DeltaPA
+            obj.powerAvailable = obj.powerAvailable + disturbancePowerAvailable;
+        end
+        
         function updatePowerGeneration(obj, disturbancePowerGeneration, controlCurtailment)
             % PG += DeltaPG - appliedDeltaPC
             obj.powerGeneration = obj.powerGeneration + disturbancePowerGeneration ...

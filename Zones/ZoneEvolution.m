@@ -138,9 +138,7 @@ classdef ZoneEvolution < handle
         
         function updatePowerAvailable(obj)
             % PA += DeltaPA
-            oldPowerAvailable = obj.state.getPowerAvailable();
-            newPowerAvailable = oldPowerAvailable + obj.disturbancePowerAvailable;
-            obj.state.setPowerAvailable(newPowerAvailable);
+            obj.state.updatePowerAvailable(obj.disturbancePowerAvailable);
         end
         
         function updatePowerGeneration(obj)
@@ -168,9 +166,12 @@ classdef ZoneEvolution < handle
         
         function setInitialPowerGeneration(obj)
             % DEPRECATED
+            %{
             powerAvailable = obj.state.getPowerAvailable();
             initialPowerGeneration = min(powerAvailable, obj.maxPowerGeneration);
             obj.state.setPowerGeneration(initialPowerGeneration);
+            %}
+            obj.state.setInitialPowerGeneration(obj.maxPowerGeneration);
         end
     end
     

@@ -95,6 +95,17 @@ classdef StateOfZoneTest < matlab.unittest.TestCase
                - battConstPowerReduc * ( initialPowerBattery + controlBattery);
            testCase.verifyEqual(actValue, expValue);
        end
+       
+       function updatePowerAvailable(testCase)
+           initialPowerAvailable = [5 5 5]';
+           testCase.state.setPowerAvailable(initialPowerAvailable);
+           disturbancePowerAvailable = [3 0 -3]';
+           
+           testCase.state.updatePowerAvailable(disturbancePowerAvailable);
+           actValue = testCase.state.getPowerAvailable();
+           expValue = initialPowerAvailable + disturbancePowerAvailable;
+           testCase.verifyEqual(actValue, expValue);
+       end
    end    
     
 end
