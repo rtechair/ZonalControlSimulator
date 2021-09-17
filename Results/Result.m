@@ -1,6 +1,6 @@
 classdef Result < handle
    
-    properties (SetAccess = protected, GetAccess = protected)
+    properties (SetAccess = protected)
         % State
         powerBranchFlow         % Fij
         powerCurtailment        % PC
@@ -23,7 +23,7 @@ classdef Result < handle
         branchFlowLimit  % maxFij
     end
     
-    properties ( SetAccess = immutable, GetAccess = protected)
+    properties ( SetAccess = immutable)
         zoneName
         controlCycle
         numberOfIterations

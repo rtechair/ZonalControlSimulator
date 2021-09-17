@@ -28,6 +28,8 @@ classdef ZoneEvolution < handle
         T * C_n^B in the battery energy equation
         %}
        battConstPowerReduc
+       delayCurt
+       delayBatt
     end
     
     methods
@@ -36,13 +38,14 @@ classdef ZoneEvolution < handle
                 delayCurt, delayBatt, maxPowerGeneration, battConstPowerReduc)
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.battConstPowerReduc = battConstPowerReduc;
-            
+            obj.delayCurt = delayCurt;
+            obj.delayBatt = delayBatt;
             % blank state
             obj.state = StateOfZone(numberOfBranches, numberOfGenOn, numberOfBattOn);
             
             % blank queues
-            obj.queueControlCurt = zeros(numberOfGenOn, delayCurt);
-            obj.queueControlBatt = zeros(numberOfBattOn, delayBatt);
+            obj.queueControlCurt = [zeros(numberOfGenOn, delayCurt) NaN(numberOfGenOn, 1)];
+            obj.queueControlBatt = [zeros(numberOfBattOn, delayBatt) NaN(numberOfBattOn, 1)];
             
             obj.queuePowerTransit = zeros(numberOfBuses,1);
             
@@ -62,8 +65,8 @@ classdef ZoneEvolution < handle
         
         function receiveControl(obj, controlOfZone)
             % the telecommunication from controller to zone, transmits objects, not values directly
-            obj.queueControlCurt(:,end+1) = controlOfZone.getControlCurtailment();
-            obj.queueControlBatt(:,end+1) = controlOfZone.getControlBattery();
+            obj.queueControlCurt(:,obj.delayCurt+1) = controlOfZone.getControlCurtailment();
+            obj.queueControlBatt(:,obj.delayBatt+1) = controlOfZone.getControlBattery();
         end
         
         function dropOldestControl(obj)
