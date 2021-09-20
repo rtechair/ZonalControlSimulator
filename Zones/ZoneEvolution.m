@@ -75,7 +75,7 @@ classdef ZoneEvolution < handle
         end
         
         function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
-            obj.queuePowerTransit(:,end+1) = ...
+            obj.queuePowerTransit(:,2) = ...
                 electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
         end
                 
