@@ -70,15 +70,15 @@ classdef ZoneEvolution < handle
         end
         
         function dropOldestControl(obj)
-            obj.queueControlCurt = obj.queueControlCurt(:, 2:end);
-            obj.queueControlBatt = obj.queueControlBatt(:, 2:end);
+            obj.queueControlCurt = obj.queueControlCurt(:, 2:obj.delayCurt+1);
+            obj.queueControlBatt = obj.queueControlBatt(:, 2:obj.delayBatt+1);
         end
         
         function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
             obj.queuePowerTransit(:,2) = ...
                 electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
         end
-                
+        
         function updateDisturbancePowerTransit(obj)
             obj.disturbancePowerTransit = obj.queuePowerTransit(:,2) - obj.queuePowerTransit(:,1);
         end
