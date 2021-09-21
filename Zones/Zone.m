@@ -167,10 +167,6 @@ classdef Zone < handle
             electricalGrid.updateBattInjection(battOnIdx, powerBattery);
         end
         
-        function dropOldestPowerTransit(obj)
-            obj.zoneEvolution.dropOldestPowerTransit();
-        end
-        
         function saveState(obj)
             obj.zoneEvolution.saveState(obj.result);
         end
@@ -190,8 +186,13 @@ classdef Zone < handle
         function prepareForNextStep(obj)
             obj.timeSeries.prepareForNextStep();
             obj.result.prepareForNextStep();
-            
+        end
+        
+        function dropOldestPowerTransit(obj)
             obj.zoneEvolution.dropOldestPowerTransit();
+        end
+        
+        function dropOldestControl(obj)
             obj.zoneEvolution.dropOldestControl();
         end
         

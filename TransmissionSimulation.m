@@ -58,6 +58,7 @@ classdef TransmissionSimulation < handle
             obj.saveZonesState();
             
             obj.prepareZonesForNextStep();
+            obj.dropZonesOldestPowerTransit();
         end
         
         function initializeZonesPowerAvailable(obj)
@@ -107,6 +108,12 @@ classdef TransmissionSimulation < handle
                 obj.zones{i}.prepareForNextStep();
             end
         end
+        
+        function dropZonesOldestPowerTransit(obj)
+            for i= 1:obj.numberOfZones
+                obj.zones{i}.dropOldestPowerTransit();
+            end
+        end
     end
     
     methods
@@ -135,6 +142,8 @@ classdef TransmissionSimulation < handle
                         zone.update(obj.grid);
                         zone.saveResult();
                         zone.prepareForNextStep();
+                        zone.dropOldestPowerTransit();
+                        zone.dropOldestControl();
                     end
                 end
             end
