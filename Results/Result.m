@@ -79,21 +79,21 @@ classdef Result < handle
             obj.step = 0; % 0, i.e. initialization before the actual simulation
             
             % State
-            obj.powerBranchFlow = zeros(numberOfBranches, obj.numberOfIterations + 1);
-            obj.powerCurtailment = zeros(numberOfGenerators, obj.numberOfIterations + 1);
-            obj.powerBattery = zeros(numberOfBatteries, obj.numberOfIterations + 1);
-            obj.energyBattery = zeros(numberOfBatteries, obj.numberOfIterations + 1);
-            obj.powerGeneration = zeros(numberOfGenerators, obj.numberOfIterations + 1);
-            obj.powerAvailable = zeros(numberOfGenerators, obj.numberOfIterations + 1);
+            obj.powerBranchFlow = NaN(numberOfBranches, obj.numberOfIterations + 1);
+            obj.powerCurtailment = NaN(numberOfGenerators, obj.numberOfIterations + 1);
+            obj.powerBattery = NaN(numberOfBatteries, obj.numberOfIterations + 1);
+            obj.energyBattery = NaN(numberOfBatteries, obj.numberOfIterations + 1);
+            obj.powerGeneration = NaN(numberOfGenerators, obj.numberOfIterations + 1);
+            obj.powerAvailable = NaN(numberOfGenerators, obj.numberOfIterations + 1);
             
             % Control
-            obj.controlCurtailment = zeros(numberOfGenerators, obj.numberOfIterations);
-            obj.controlBattery = zeros(numberOfBatteries, obj.numberOfIterations);
+            obj.controlCurtailment = NaN(numberOfGenerators, obj.numberOfIterations);
+            obj.controlBattery = NaN(numberOfBatteries, obj.numberOfIterations);
             
             % Disturbance 
-            obj.disturbanceTransit = zeros(numberOfBuses, obj.numberOfIterations);
-            obj.disturbanceGeneration = zeros(numberOfGenerators, obj.numberOfIterations);
-            obj.disturbanceAvailable = zeros(numberOfGenerators, obj.numberOfIterations);
+            obj.disturbanceTransit = NaN(numberOfBuses, obj.numberOfIterations);
+            obj.disturbanceGeneration = NaN(numberOfGenerators, obj.numberOfIterations);
+            obj.disturbanceAvailable = NaN(numberOfGenerators, obj.numberOfIterations);
         end
         
         
