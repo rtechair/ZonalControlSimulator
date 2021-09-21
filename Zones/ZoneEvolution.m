@@ -47,7 +47,7 @@ classdef ZoneEvolution < handle
             obj.queueControlCurt = [zeros(numberOfGenOn, delayCurt) NaN(numberOfGenOn, 1)];
             obj.queueControlBatt = [zeros(numberOfBattOn, delayBatt) NaN(numberOfBattOn, 1)];
             
-            obj.queuePowerTransit = zeros(numberOfBuses,1);
+            obj.queuePowerTransit = zeros(numberOfBuses,2);
             
             % blank transit disturbance
             obj.disturbancePowerTransit = zeros(numberOfBuses, 1);
