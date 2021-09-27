@@ -28,8 +28,7 @@ classdef TimeSeries < handle
             end
             obj.numberOfGen = size(maxPowerGeneration,1);
             
-            % step starts at 0 because of initialization, later updated to 1 to start the simulation
-            obj.step = 0; % TODO USELESS, it is a design flow in the simulation algorithm. TODO: later remove this part
+            obj.step = 1; % TODO, adapt the code in the other classes as the time series starts now at time 1
             
             obj.setChargingRate(chargingRateFilename);
             
