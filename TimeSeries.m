@@ -32,9 +32,11 @@ classdef TimeSeries < handle
             
             obj.setChargingRate(chargingRateFilename);
             
-            obj.checkInitialIterationCorrectness(windowSimulation)
+            obj.checkInitialIterationCorrectness(windowSimulation);
             
-            obj.setProfilePowerAvailable(windowSimulation);
+            obj.setOffsetChargingRate(windowSimulation);
+            
+            obj.setProfilePowerAvailable();
             obj.setProfileDisturbancePowerAvailable();
         end
         
@@ -59,7 +61,7 @@ classdef TimeSeries < handle
            obj.chargingRate = table2array(readtable(filenameChargingRate))';
         end
         
-        function setOffsetChargingRate(obj)
+        function setOffsetChargingRate(obj, windowSimulation)
             obj.offsetChargingRate = NaN(obj.numberOfGen, obj.numberOfIterations+1);
             for i = 1:obj.numberOfGen
                start = obj.genStart(i);
