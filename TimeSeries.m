@@ -43,14 +43,8 @@ classdef TimeSeries < handle
             value = obj.ProfilePowerAvailable(:,1);
         end
         
-        % TODO: when the telecommunication is removed, this method needs to
-        % change
-        function object = getDisturbancePowerAvailable(obj)
-            % The telecommunication needs an object, not a matrix of the
-            % value. Thus, the method returns an object wrapping the value
-            % of the disturbance power available
-            value = obj.getDisturbancePowerAvailableValue();
-            object = DisturbancePowerAvailable(value);
+        function value = getDisturbancePowerAvailable(obj)
+            value = obj.ProfileDisturbancePowerAvailable(:,obj.step);
         end
         
        function goToNextStep(obj)
@@ -105,10 +99,7 @@ classdef TimeSeries < handle
         error(message)
        end
        
-       % TODO: the name should be changed
-       function value = getDisturbancePowerAvailableValue(obj)
-           value = obj.ProfileDisturbancePowerAvailable(:,obj.step);
-       end
+       
        
     end
     
