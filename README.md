@@ -1,8 +1,8 @@
 ## Introduction
 
-This project is based on Alessio Iovine's code and the paper "Modeling the Partial Renewable Power Curtailment for Transmission Network Management"
-HAL Id: hal-0300444
-available at: https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
+This project is based on Alessio Iovine's code and the paper "Modeling the Partial Renewable Power Curtailment for Transmission Network Management":
+DOI: 10.1109/PowerTech46648.2021.9494993 https://ieeexplore.ieee.org/abstract/document/9494993; alternatively:
+HAL Id: hal-0300444 https://hal-centralesupelec.archives-ouvertes.fr/hal-03004441v2/document
 
 Specifically, the paper describes a mathematical model, which approximates linearly the dynamic of a zone within a electrical grid. Real power flows of the electrical grid is computed using Matpower, while controllers supervising the studied zones will use the mathematical model to take actions.
 
@@ -17,11 +17,11 @@ in the repository where you want to install the project:
 
 *With Git*
 ```
-git clone https://github.com/gganetlepage/MatpowerTech
+git clone https://github.com/rtechair/ZonalControlSimulator
 ```
 *Else*
 
-In https://github.com/gganetlepage/MatpowerTech, click the green button 'code', download zip and extract it.
+In https://github.com/rtechair/ZonalControlSimulator, click the green button 'code', download zip and extract it.
 
 ### Set up search paths for matlab
 If you work on this project through the `main` file, no action is needed. 
