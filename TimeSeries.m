@@ -60,9 +60,9 @@ classdef TimeSeries < handle
     
     methods (Access = protected)
        
-        function setChargingRate(obj, filenameChargingRate)
+        function setChargingRate(obj, chargingRateFilename)
            % the apostrophe is to obtain a row vector, such that columns represent the time
-           obj.chargingRate = table2array(readtable(filenameChargingRate))';
+           obj.chargingRate = table2array(readtable(chargingRateFilename))';
         end
         
         function setOffsetChargingRate(obj, windowSimulation)

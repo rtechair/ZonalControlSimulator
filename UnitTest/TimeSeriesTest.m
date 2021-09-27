@@ -15,23 +15,11 @@ classdef TimeSeriesTest < matlab.unittest.TestCase
     
     methods(TestMethodSetup)
         function parametrizeProperties(testCase)
-            %{      
-            Consider there are 3 generators.
-            Gen1 starts at time 10 sec
-            Gen2 starts at time 20 sec
-            Gen3 starts at time 30 sec
-            The window of the simulation is 1 sec
-            The duration is 100 sec
-            The maximal generation for each generator is respectively:
-            - 20 MW
-            - 30 MW
-            - 40 Mw
-            %}
             testCase.chargingRateFilename = 'tauxDeChargeMTJLMA2juillet2018.txt';
             testCase.windowSimulation = 5;
             testCase.durationSimulation = 600;
             testCase.maxPowerGeneration = [20 30 40]';
-            testCase.genStart = [1 200 500]';
+            testCase.genStart = [1 200 500]'; % i.e. [0.181818182000000 0.363636364000000 0.136363636000000]
         end
         
         function createState(testCase)
@@ -46,9 +34,28 @@ classdef TimeSeriesTest < matlab.unittest.TestCase
             expValue = [0.181818182000000 0.363636364000000 0.136363636000000]' .* testCase.maxPowerGeneration;
             testCase.verifyEqual(actValue, expValue);
         end
+        
+        function disturbanceAfter40Steps(testCase)
+            for k =1:40
+                testCase.timeSeries.goToNextStep();
+            end
+            actValue = testCase.timeSeries.getDisturbancePowerAvailable();
+            % 705: 0.136363636000000
+            % 700: 0.136363636000000
+            % 405: 0.212090448000000
+            % 400: 0.227272727000000
+            % 206: 0.363636364000000
+            % 201: 0.363636364000000
+            followingState = [0.363636364000000 0.212090448000000 0.136363636000000]';
+            previousState = [0.363636364000000 0.227272727000000 0.136363636000000]';
+            expValue = (followingState - previousState) .* testCase.maxPowerGeneration;
+            testCase.verifyEqual(actValue, expValue, "AbsTol",0.0001);
+        end
     end
     
     %{
+    % Parameterized test:
+    % https://www.mathworks.com/help/matlab/matlab_prog/create-basic-parameterized-test.html
     properties
         chargingRateFilename
         %timeSeries
