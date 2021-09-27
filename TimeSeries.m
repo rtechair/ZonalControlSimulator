@@ -12,21 +12,26 @@ classdef TimeSeries < handle
         genStart
         numberOfIterations
         maxPowerGeneration
-        numberOfGen
     end
     
     methods
         % TODO, adapt the build function too
         function obj = TimeSeries(chargingRateFilename, windowSimulation, ...
                 durationSimulation, maxPowerGeneration, genStart)
-            obj.genStart = genStart;
-            obj.numberOfIterations = floor(durationSimulation / windowSimulation);
-            obj.maxPowerGeneration = maxPowerGeneration;
-            
+            arguments
+                chargingRateFilename char
+                windowSimulation (1,1) int64
+                durationSimulation (1,1) int64
+                maxPowerGeneration (:,1) double
+                genStart (:,1) int64
+            end
             if size(maxPowerGeneration,1) ~= size(genStart,1)
                 error('sizes of maxPowerGeneration and genStart are different')
             end
-            obj.numberOfGen = size(maxPowerGeneration,1);
+            
+            obj.genStart = genStart;
+            obj.numberOfIterations = floor(durationSimulation / windowSimulation);
+            obj.maxPowerGeneration = maxPowerGeneration;
             
             obj.step = 1; % TODO, adapt the code in the other classes as the time series starts now at time 1
             
@@ -61,8 +66,9 @@ classdef TimeSeries < handle
         end
         
         function setOffsetChargingRate(obj, windowSimulation)
-            obj.offsetChargingRate = NaN(obj.numberOfGen, obj.numberOfIterations+1);
-            for i = 1:obj.numberOfGen
+            numberOfGen = size(obj.maxPowerGeneration,1);
+            obj.offsetChargingRate = NaN(numberOfGen, obj.numberOfIterations+1);
+            for i = 1:numberOfGen
                start = obj.genStart(i);
                last = start + obj.numberOfIterations*windowSimulation;
                range = start : windowSimulation : last;
