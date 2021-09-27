@@ -3,8 +3,8 @@ classdef TimeSeries < handle
     properties (SetAccess = protected)
         chargingRate
         offsetChargingRate
-        ProfilePowerAvailable
-        ProfileDisturbancePowerAvailable
+        profilePowerAvailable
+        profileDisturbancePowerAvailable
         step
     end
     
@@ -41,17 +41,16 @@ classdef TimeSeries < handle
         end
         
         function value = getInitialPowerAvailable(obj)
-            value = obj.ProfilePowerAvailable(:,1);
+            value = obj.profilePowerAvailable(:,1);
         end
         
         function value = getDisturbancePowerAvailable(obj)
-            value = obj.ProfileDisturbancePowerAvailable(:,obj.step);
+            value = obj.profileDisturbancePowerAvailable(:,obj.step);
         end
         
        function goToNextStep(obj)
             obj.step = obj.step + 1;
-       end 
-        
+       end
     end
     
     methods (Access = protected)
@@ -72,15 +71,12 @@ classdef TimeSeries < handle
         end
         
        function setProfilePowerAvailable(obj)
-           obj.ProfilePowerAvailable = obj.maxPowerGeneration .* obj.offsetChargingRate;
+           obj.profilePowerAvailable = obj.maxPowerGeneration .* obj.offsetChargingRate;
        end
        
        function setProfileDisturbancePowerAvailable(obj)
-           obj.ProfileDisturbancePowerAvailable = NaN(obj.numberOfGen, obj.numberOfIterations);
-           for time = 1:obj.numberOfIterations
-               obj.ProfileDisturbancePowerAvailable(:,time) = obj.ProfilePowerAvailable(:, time+1) ...
-                   - obj.ProfilePowerAvailable(:, time);
-           end
+           obj.profileDisturbancePowerAvailable = ...
+               obj.profilePowerAvailable(:,2:end) - obj.profilePowerAvailable(:,1:end-1);
        end
        
        function checkInitialIterationCorrectness(obj, windowSimulation)
