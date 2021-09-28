@@ -16,12 +16,12 @@ classdef TimeSeries < handle
     
     methods
         % TODO, adapt the build function too
-        function obj = TimeSeries(chargingRateFilename, windowSimulation, ...
-                durationSimulation, maxPowerGeneration, genStart)
+        function obj = TimeSeries(chargingRateFilename, simulationWindow, ...
+                simulationDuration, maxPowerGeneration, genStart)
             arguments
                 chargingRateFilename char
-                windowSimulation (1,1) int64
-                durationSimulation (1,1) int64
+                simulationWindow (1,1) int64
+                simulationDuration (1,1) int64
                 maxPowerGeneration (:,1) double
                 genStart (:,1) int64
             end
@@ -30,16 +30,16 @@ classdef TimeSeries < handle
             end
             
             obj.genStart = genStart;
-            obj.numberOfIterations = floor(durationSimulation / windowSimulation);
+            obj.numberOfIterations = floor(simulationDuration / simulationWindow);
             obj.maxPowerGeneration = maxPowerGeneration;
             
             obj.step = 1; % TODO, adapt the code in the other classes as the time series starts now at time 1
             
             obj.setChargingRate(chargingRateFilename);
             
-            obj.checkInitialIterationCorrectness(windowSimulation);
+            obj.checkInitialIterationCorrectness(simulationWindow);
             
-            obj.setOffsetChargingRate(windowSimulation);
+            obj.setOffsetChargingRate(simulationWindow);
             
             obj.setProfilePowerAvailable();
             obj.setProfileDisturbancePowerAvailable();
