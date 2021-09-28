@@ -1,15 +1,16 @@
-function object = buildTimeSeries(zoneSetting, zoneTopology, simulationDuration)
+function object = buildTimeSeries(zoneSetting, zoneTopology,...
+    simulationWindow, simulationDuration)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology
+        simulationWindow double
         simulationDuration double
     end
-    timeSeriesFilename = zoneSetting.getTimeSeriesFilename();
-    startGenInSeconds = zoneSetting.getStartGenInSeconds();
-    controlCycle = zoneSetting.getcontrolCycleInSeconds();
-
+    chargingRateFilename = zoneSetting.getTimeSeriesFilename();
+    genStart = zoneSetting.getStartGenInSeconds();
+    
     maxPowerGeneration = zoneTopology.getMaxPowerGeneration();
-    numberOfGenOn = zoneTopology.getNumberOfGenOn();
-    object = TimeSeries(timeSeriesFilename, startGenInSeconds, controlCycle, ...
-        simulationDuration, maxPowerGeneration, numberOfGenOn);
+
+    object = TimeSeries(chargingRateFilename, simulationWindow, ...
+                simulationDuration, maxPowerGeneration, genStart);
 end
