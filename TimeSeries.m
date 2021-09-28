@@ -15,7 +15,6 @@ classdef TimeSeries < handle
     end
     
     methods
-        % TODO, adapt the build function too
         function obj = TimeSeries(chargingRateFilename, simulationWindow, ...
                 simulationDuration, maxPowerGeneration, genStart)
             arguments
@@ -25,22 +24,16 @@ classdef TimeSeries < handle
                 maxPowerGeneration (:,1) double
                 genStart (:,1) int64
             end
-            if size(maxPowerGeneration,1) ~= size(genStart,1)
-                error('sizes of maxPowerGeneration and genStart are different')
-            end
+            obj.mustBeEqualSizes(maxPowerGeneration, genStart);
             
             obj.genStart = genStart;
             obj.numberOfIterations = floor(simulationDuration / simulationWindow);
-            obj.maxPowerGeneration = maxPowerGeneration;
-            
-            obj.step = 1; % TODO, adapt the code in the other classes as the time series starts now at time 1
+            obj.maxPowerGeneration = maxPowerGeneration;            
+            obj.step = 1;
             
             obj.setChargingRate(chargingRateFilename);
-            
-            obj.checkInitialIterationCorrectness(simulationWindow);
-            
+            obj.mustGenStartNotExceedMax(simulationWindow);            
             obj.setOffsetChargingRate(simulationWindow);
-            
             obj.setProfilePowerAvailable();
             obj.setProfileDisturbancePowerAvailable();
         end
@@ -56,6 +49,7 @@ classdef TimeSeries < handle
        function goToNextStep(obj)
             obj.step = obj.step + 1;
        end
+       
     end
     
     methods (Access = protected)
@@ -65,13 +59,13 @@ classdef TimeSeries < handle
            obj.chargingRate = table2array(readtable(chargingRateFilename))';
         end
         
-        function setOffsetChargingRate(obj, windowSimulation)
+        function setOffsetChargingRate(obj, simulationWindow)
             numberOfGen = size(obj.maxPowerGeneration,1);
             obj.offsetChargingRate = NaN(numberOfGen, obj.numberOfIterations+1);
             for i = 1:numberOfGen
                start = obj.genStart(i);
-               last = start + obj.numberOfIterations*windowSimulation;
-               range = start : windowSimulation : last;
+               last = start + obj.numberOfIterations*simulationWindow;
+               range = start : simulationWindow : last;
                obj.offsetChargingRate(i,:) = obj.chargingRate(1, range);
            end
         end
@@ -85,24 +79,34 @@ classdef TimeSeries < handle
                obj.profilePowerAvailable(:,2:end) - obj.profilePowerAvailable(:,1:end-1);
        end
        
-       function checkInitialIterationCorrectness(obj, windowSimulation)
-           sampleDuration = size(obj.chargingRate,2);
-           % the following '-1' is due to the initialization step
-           maxStartingTimeForGen = sampleDuration - 1 - windowSimulation*obj.numberOfIterations;
-           isThereAnyStartOfGenTooLate = any(obj.genStart > maxStartingTimeForGen);
-           if isThereAnyStartOfGenTooLate
-                obj.errorStartingIterationExceedsMax(maxStartingTimeForGen)
+       function mustGenStartNotExceedMax(obj, simulationWindow)
+           [boolean, latestStart] = obj.isAnyStartOverMaxPossible(simulationWindow);
+           if boolean
+               message = ['the starting time of the generators are too late.'...
+                ' Make sure it is <=' num2str(latestStart) ' in the associate JSON file.'];
+                error(message)
            end
        end
        
-       function errorStartingIterationExceedsMax(obj, upperBound)
-           message = ['the starting iterations chosen for time series of the generators exceeds ' ...
-            'the max discrete range, check in the JSON file, that the selected starts for generators are < ' ...
-            num2str(upperBound) ', in the load data zone script'];
-        error(message)
+       function [boolean, latestStart] = isAnyStartOverMaxPossible(obj, simulationWindow)
+           % chargingRate and numberOfIterations need to be set prior to this method
+           arguments
+               obj
+               simulationWindow {mustBePositive, mustBeInteger}
+           end
+           mustBeNonempty(obj.chargingRate)
+           
+           sampleDuration = size(obj.chargingRate,2);
+           latestStart = sampleDuration - obj.numberOfIterations*simulationWindow;
+           boolean = any(obj.genStart > latestStart);
        end
        
-       
+       function mustBeEqualSizes(obj, maxPowerGeneration, genStart)
+           isSizeDifferent = size(maxPowerGeneration,1) ~= size(genStart,1);
+           if isSizeDifferent
+               error('sizes of maxPowerGeneration and genStart are different')
+           end
+       end
        
     end
     
