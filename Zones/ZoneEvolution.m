@@ -57,10 +57,8 @@ classdef ZoneEvolution < handle
             object = obj.state;
         end
         
-        
-        function receiveDisturbancePowerAvailable(obj, objectDisturbancePowerAvailable)
-            % the telecommunication from time series to zone, transmits objects, not values directly
-            obj.disturbancePowerAvailable = objectDisturbancePowerAvailable.getValue();
+        function receiveDisturbancePowerAvailable(obj, value)
+            obj.disturbancePowerAvailable = value;
         end
         
         function receiveControl(obj, controlOfZone)

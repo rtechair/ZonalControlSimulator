@@ -32,7 +32,6 @@ classdef Zone < handle
        
        telecomZone2Controller
        telecomController2Zone
-       telecomTimeSeries2Zone
        
        controllerSetting
        controller
@@ -83,7 +82,7 @@ classdef Zone < handle
         end
         
         function setTelecom(obj)
-            [obj.telecomTimeSeries2Zone, obj.telecomController2Zone, obj.telecomZone2Controller] = ...
+            [obj.telecomController2Zone, obj.telecomZone2Controller] = ...
                 buildTelecom(obj.topology, obj.delayInIterations);
         end
         
@@ -176,7 +175,8 @@ classdef Zone < handle
         end
         
         function transmitDataTimeSeries2Zone(obj)
-            obj.telecomTimeSeries2Zone.transmitData(obj.timeSeries, obj.zoneEvolution);
+            disturbancePowerAvailable = obj.timeSeries.getDisturbancePowerAvailable();
+            obj.zoneEvolution.receiveDisturbancePowerAvailable(disturbancePowerAvailable);
         end
         
         function transmitDataZone2Controller(obj)
