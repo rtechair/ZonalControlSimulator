@@ -42,12 +42,12 @@ classdef Zone < handle
     end
     
     methods
-        function obj = Zone(name, electricalGrid, duration)
+        function obj = Zone(name, electricalGrid, simulationWindow, duration)
             obj.name = name;
             obj.setSetting();
             obj.setDelayInIterations();
             obj.setTopology(electricalGrid);
-            obj.setTimeSeries(duration);
+            obj.setTimeSeries(simulationWindow, duration);
             obj.setZoneEvolution();
             obj.setTelecom();
             obj.setResult(duration);
@@ -74,8 +74,8 @@ classdef Zone < handle
            obj.topology = ZoneTopology(obj.name, busId, electricalGrid);
         end
         
-        function setTimeSeries(obj, duration)
-            obj.timeSeries = buildTimeSeries(obj.setting, obj.topology, duration);
+        function setTimeSeries(obj, window, duration)
+            obj.timeSeries = buildTimeSeries(obj.setting, obj.topology, window, duration);
         end
         
         function setZoneEvolution(obj)
@@ -184,7 +184,11 @@ classdef Zone < handle
         end
         
         function prepareForNextStep(obj)
-            obj.timeSeries.prepareForNextStep();
+            obj.timeSeries.goToNextStep();
+            obj.result.prepareForNextStep();
+        end
+        
+        function prepareResultForNextStep(obj)
             obj.result.prepareForNextStep();
         end
         

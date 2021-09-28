@@ -31,11 +31,12 @@ classdef TransmissionSimulation < handle
         
         function setZones(obj)
             obj.zones = cell(obj.numberOfZones,1);
+            window = obj.simulationSetting.getWindow();
             duration = obj.simulationSetting.getDuration();
             zoneNames = obj.simulationSetting.getZoneName();
             for i = 1:obj.numberOfZones
                 name = zoneNames{i};
-                obj.zones{i} = Zone(name, obj.grid, duration);
+                obj.zones{i} = Zone(name, obj.grid, window, duration);
             end
         end
         
@@ -57,7 +58,7 @@ classdef TransmissionSimulation < handle
             obj.transmitDataZone2Controller();
             obj.saveZonesState();
             
-            obj.prepareZonesForNextStep();
+            obj.prepareZonesForFirstStep();
             obj.dropZonesOldestPowerTransit();
         end
         
@@ -106,6 +107,12 @@ classdef TransmissionSimulation < handle
         function prepareZonesForNextStep(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.prepareForNextStep();
+            end
+        end
+        
+        function prepareZonesForFirstStep(obj)
+            for i = 1:obj.numberOfZones
+                obj.zones{i}.prepareResultForNextStep();
             end
         end
         
