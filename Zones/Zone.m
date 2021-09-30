@@ -42,6 +42,12 @@ classdef Zone < handle
     
     methods
         function obj = Zone(name, electricalGrid, simulationWindow, duration)
+            arguments
+                name char
+                electricalGrid
+                simulationWindow int64
+                duration int64
+            end
             obj.name = name;
             obj.setSetting();
             obj.setDelayInIterations();
