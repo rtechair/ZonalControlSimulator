@@ -52,6 +52,28 @@ classdef TimeSeries < handle
             obj.step = obj.step + 1;
        end
        
+       function figPowerAvailable = plotProfilePowerAvailable(obj)
+           % TODO: add optional argument with the index of each generator,
+           % s.t. the plot displays what generator is concerned with each
+           % plot
+           simulationDuration = size(obj.profilePowerAvailable,2);
+           time = 1:simulationDuration;
+
+           figName = 'Power Available (PA) of all gens of a zone';
+           figPowerAvailable = figure('Name', figName, 'NumberTitle', 'off', ...
+               'WindowState', 'maximize');
+           xlegend = 'duration of the simulation';
+           xlabel(xlegend)
+           ylegend = 'Power Available in [MW]';
+           ylabel(ylegend);
+           hold on;
+
+           numberOfGen = size(obj.profilePowerAvailable,1);
+           for k = 1:numberOfGen
+               stairs(time, obj.profilePowerAvailable(k,:));
+           end
+       end
+       
     end
     
     methods (Access = protected)
