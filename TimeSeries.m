@@ -10,6 +10,7 @@ classdef TimeSeries < handle
     
     properties (SetAccess = immutable)
         genStart
+        simulationWindow
         numberOfIterations
         maxPowerGeneration
     end
@@ -27,13 +28,14 @@ classdef TimeSeries < handle
             obj.mustBeEqualSizes(maxPowerGeneration, genStart);
             
             obj.genStart = genStart;
+            obj.simulationWindow = simulationWindow;
             obj.numberOfIterations = floor(simulationDuration / simulationWindow);
-            obj.maxPowerGeneration = maxPowerGeneration;            
+            obj.maxPowerGeneration = maxPowerGeneration;
             obj.step = 1;
             
             obj.setChargingRate(chargingRateFilename);
-            obj.mustGenStartNotExceedMax(simulationWindow);            
-            obj.setOffsetChargingRate(simulationWindow);
+            obj.mustGenStartNotExceedMax();
+            obj.setOffsetChargingRate();
             obj.setProfilePowerAvailable();
             obj.setProfileDisturbancePowerAvailable();
         end
@@ -59,13 +61,13 @@ classdef TimeSeries < handle
            obj.chargingRate = table2array(readtable(chargingRateFilename))';
         end
         
-        function setOffsetChargingRate(obj, simulationWindow)
+        function setOffsetChargingRate(obj)
             numberOfGen = size(obj.maxPowerGeneration,1);
             obj.offsetChargingRate = NaN(numberOfGen, obj.numberOfIterations+1);
             for i = 1:numberOfGen
                start = obj.genStart(i);
-               last = start + obj.numberOfIterations*simulationWindow;
-               range = start : simulationWindow : last;
+               last = start + obj.numberOfIterations*obj.simulationWindow;
+               range = start : obj.simulationWindow : last;
                obj.offsetChargingRate(i,:) = obj.chargingRate(1, range);
            end
         end
@@ -79,8 +81,8 @@ classdef TimeSeries < handle
                obj.profilePowerAvailable(:,2:end) - obj.profilePowerAvailable(:,1:end-1);
        end
        
-       function mustGenStartNotExceedMax(obj, simulationWindow)
-           [boolean, latestStart] = obj.isAnyStartOverMaxPossible(simulationWindow);
+       function mustGenStartNotExceedMax(obj)
+           [boolean, latestStart] = obj.isAnyStartOverMaxPossible();
            if boolean
                message = ['the starting time of the generators are too late.'...
                 ' Make sure it is <=' num2str(latestStart) ' in the associate JSON file.'];
@@ -88,16 +90,12 @@ classdef TimeSeries < handle
            end
        end
        
-       function [boolean, latestStart] = isAnyStartOverMaxPossible(obj, simulationWindow)
-           % chargingRate and numberOfIterations need to be set prior to this method
-           arguments
-               obj
-               simulationWindow {mustBePositive, mustBeInteger}
-           end
+       function [boolean, latestStart] = isAnyStartOverMaxPossible(obj)
+           mustBeNonempty(obj.simulationWindow)
            mustBeNonempty(obj.chargingRate)
            
            sampleDuration = size(obj.chargingRate,2);
-           latestStart = sampleDuration - obj.numberOfIterations*simulationWindow;
+           latestStart = sampleDuration - obj.numberOfIterations*obj.simulationWindow;
            boolean = any(obj.genStart > latestStart);
        end
        
