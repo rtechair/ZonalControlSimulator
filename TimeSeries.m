@@ -44,6 +44,10 @@ classdef TimeSeries < handle
             value = obj.profilePowerAvailable(:,1);
         end
         
+        function value = getPowerAvailable(obj)
+            value = obj.profilePowerAvailable(:, obj.step);
+        end
+        
         function value = getDisturbancePowerAvailable(obj)
             value = obj.profileDisturbancePowerAvailable(:,obj.step);
         end
@@ -71,6 +75,22 @@ classdef TimeSeries < handle
            numberOfGen = size(obj.profilePowerAvailable,1);
            for k = 1:numberOfGen
                stairs(time, obj.profilePowerAvailable(k,:));
+           end
+       end
+       
+       function plotProfileDisturbancePowerAvailable(obj)
+           time = 1:obj.numberOfIterations;
+           figName = 'Profile of Disturbance Power Available (DeltaPA)';
+           figure('Name',figName,'NumberTitle','off','WindowState','maximize');
+           xlegend = 'number of iterations of the simulation';
+           xlabel(xlegend)
+           ylegend = '\DeltaPA';
+           ylabel(ylegend);
+           hold on;
+           
+           numberOfGen = size(obj.profileDisturbancePowerAvailable,1);
+           for k = 1:numberOfGen
+               stairs(time, obj.profileDisturbancePowerAvailable(k,:));
            end
        end
        
