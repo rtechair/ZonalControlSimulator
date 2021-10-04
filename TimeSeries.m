@@ -10,17 +10,17 @@ classdef TimeSeries < handle
     
     properties (SetAccess = immutable)
         genStart
-        simulationWindow
+        samplingTime
         numberOfIterations
         maxPowerGeneration
     end
     
     methods
-        function obj = TimeSeries(chargingRateFilename, simulationWindow, ...
+        function obj = TimeSeries(chargingRateFilename, samplingTime, ...
                 simulationDuration, maxPowerGeneration, genStart)
             arguments
                 chargingRateFilename char
-                simulationWindow (1,1) int64
+                samplingTime (1,1) int64
                 simulationDuration (1,1) int64
                 maxPowerGeneration (:,1) double
                 genStart (:,1) int64
@@ -28,8 +28,8 @@ classdef TimeSeries < handle
             obj.mustBeEqualSizes(maxPowerGeneration, genStart);
             
             obj.genStart = genStart;
-            obj.simulationWindow = simulationWindow;
-            obj.numberOfIterations = floor(simulationDuration / simulationWindow);
+            obj.samplingTime = samplingTime;
+            obj.numberOfIterations = floor(simulationDuration / samplingTime);
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.step = 1;
             
@@ -108,8 +108,8 @@ classdef TimeSeries < handle
             obj.offsetChargingRate = NaN(numberOfGen, obj.numberOfIterations+1);
             for i = 1:numberOfGen
                start = obj.genStart(i);
-               last = start + obj.numberOfIterations*obj.simulationWindow;
-               range = start : obj.simulationWindow : last;
+               last = start + obj.numberOfIterations*obj.samplingTime;
+               range = start : obj.samplingTime : last;
                obj.offsetChargingRate(i,:) = obj.chargingRate(1, range);
            end
         end
@@ -133,11 +133,11 @@ classdef TimeSeries < handle
        end
        
        function [boolean, latestStart] = isAnyStartOverMaxPossible(obj)
-           mustBeNonempty(obj.simulationWindow)
+           mustBeNonempty(obj.samplingTime)
            mustBeNonempty(obj.chargingRate)
            
            sampleDuration = size(obj.chargingRate,2);
-           latestStart = sampleDuration - obj.numberOfIterations*obj.simulationWindow;
+           latestStart = sampleDuration - obj.numberOfIterations*obj.samplingTime;
            boolean = any(obj.genStart > latestStart);
        end
        
