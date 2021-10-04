@@ -130,8 +130,6 @@ classdef ModelEvolution < handle
         end
         
         function updateEnergyBattery(obj)
-            % energyBattery requires powerBattery, thus the former must be
-            % updated prior to the latter
             % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
             appliedControlBatt = obj.queueControlBatt(:,1);
             obj.state.updateEnergyBattery(appliedControlBatt, obj.battConstPowerReduc);
@@ -167,6 +165,22 @@ classdef ModelEvolution < handle
         
         function setInitialPowerGeneration(obj)
             obj.state.setInitialPowerGeneration(obj.maxPowerGeneration);
+        end
+        
+        function value = getPowerBattery(obj)
+            value = obj.state.getPowerBattery();
+        end
+        
+        function value = getPowerCurtailment(obj)
+            value = obj.state.getPowerCurtailment();
+        end
+        
+        function value = getPowerGeneration(obj)
+            value = obj.state.getPowerGeneration();
+        end
+        
+        function setPowerFlow(obj, value)
+            obj.state.setPowerFlow(value);
         end
     end
     
