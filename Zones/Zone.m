@@ -1,9 +1,9 @@
 classdef Zone < handle
 % Zone is an aggregate class of the following objects:
-% - the 3 telecommunications involved in the zone:
+% - the 2 telecommunications involved in the zone:
 %        - zone->controller
 %        - controller->zone
-%        - time series->zone
+% - the direct exchange of data: time series->zone
 % - the topology of the zone
 % - the evolution of the zone over the time of the simulation
 % - the time series which dictates what is the available power for the
@@ -71,7 +71,6 @@ classdef Zone < handle
         
         function setDelayInIterations(obj)
             obj.delayInIterations = buildDelayInIterations(obj.setting);
-            
         end
         
         function setTopology(obj, electricalGrid)
@@ -142,9 +141,14 @@ classdef Zone < handle
         %}
         function updatePowerFlow(obj, electricalGrid)
             branchIdx = obj.topology.getBranchIdx();
-            state = obj.modelEvolution.getState();
             powerFlow = electricalGrid.getPowerFlow(branchIdx);
-            state.setPowerFlow(powerFlow);
+            obj.modelEvolution.setPowerFlow(powerFlow);
+        end
+        
+        function updatePowerFlowSimulation(obj, electricalGrid)
+            branchIdx = obj.topology.getBranchIdx();
+            powerFlow = electricalGrid.getPowerFlow(branchIdx);
+            obj.simulationEvolution.setPowerFlow(powerFlow);
         end
         
         function updatePowerTransit(obj, electricalGrid)
@@ -160,15 +164,19 @@ classdef Zone < handle
         
         function updateGridGeneration(obj, electricalGrid)
             genOnIdx = obj.topology.getGenOnIdx();
-            state = obj.modelEvolution.getState();
-            powerGeneration = state.getPowerGeneration();
+            powerGeneration = obj.modelEvolution.getPowerGeneration();
+            electricalGrid.updateGeneration(genOnIdx, powerGeneration);
+        end
+        
+        function updateGridGenerationSimulation(obj, electricalGrid)
+            genOnIdx = obj.topology.getGenOnIdx();
+            powerGeneration = obj.simulationEvolution.getPowerGeneration();
             electricalGrid.updateGeneration(genOnIdx, powerGeneration);
         end
         
         function updateGridBattInjection(obj, electricalGrid)
             battOnIdx = obj.topology.getBattOnIdx();
-            state = obj.modelEvolution.getState();
-            powerBattery = state.getPowerBattery();
+            powerBattery = obj.modelEvolution.getPowerBattery();
             electricalGrid.updateBattInjection(battOnIdx, powerBattery);
         end
         
