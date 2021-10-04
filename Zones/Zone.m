@@ -13,7 +13,7 @@ classdef Zone < handle
 % - other elements required for the simulation
 %
 % Column vectors are used instead of row vectors, e.g.
-% busId, branchIdx, zoneEvolution's properties, etc.
+% busId, branchIdx, modelEvolution's properties, etc.
 % The reason is for consistency with column vectors obtained from Matpower
 % functions [1].
 % Hence, rows corresponds to elements, such as buses, branches, generators and
@@ -28,7 +28,7 @@ classdef Zone < handle
        
        delayInIterations
        topology
-       zoneEvolution
+       modelEvolution
        
        telecomZone2Controller
        telecomController2Zone
@@ -53,7 +53,7 @@ classdef Zone < handle
             obj.setDelayInIterations();
             obj.setTopology(electricalGrid);
             obj.setTimeSeries(simulationWindow, duration);
-            obj.setZoneEvolution();
+            obj.setModelEvolution();
             obj.setTelecom();
             obj.setResult(duration);
             obj.setControllerSetting();
@@ -83,8 +83,8 @@ classdef Zone < handle
             obj.timeSeries = buildTimeSeries(obj.setting, obj.topology, window, duration);
         end
         
-        function setZoneEvolution(obj)
-            obj.zoneEvolution = buildZoneEvolution(obj.setting, obj.topology, obj.delayInIterations);
+        function setModelEvolution(obj)
+            obj.modelEvolution = buildModelEvolution(obj.setting, obj.topology, obj.delayInIterations);
         end
         
         function setTelecom(obj)
@@ -127,11 +127,11 @@ classdef Zone < handle
         end
         
         function initializePowerAvailable(obj)
-            obj.zoneEvolution.setInitialPowerAvailable(obj.timeSeries);
+            obj.modelEvolution.setInitialPowerAvailable(obj.timeSeries);
         end
         
         function initializePowerGeneration(obj)
-           obj.zoneEvolution.setInitialPowerGeneration();
+           obj.modelEvolution.setInitialPowerGeneration();
         end
         
         %{
@@ -142,7 +142,7 @@ classdef Zone < handle
         %}
         function updatePowerFlow(obj, electricalGrid)
             branchIdx = obj.topology.getBranchIdx();
-            state = obj.zoneEvolution.getState();
+            state = obj.modelEvolution.getState();
             powerFlow = electricalGrid.getPowerFlow(branchIdx);
             state.setPowerFlow(powerFlow);
         end
@@ -150,7 +150,7 @@ classdef Zone < handle
         function updatePowerTransit(obj, electricalGrid)
             busId = obj.topology.getBusId();
             branchBorderIdx = obj.topology.getBranchBorderIdx();
-            obj.zoneEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
+            obj.modelEvolution.updatePowerTransit(electricalGrid, busId, branchBorderIdx);
         end
         
         function updateGrid(obj,electricalGrid)
@@ -160,33 +160,33 @@ classdef Zone < handle
         
         function updateGridGeneration(obj, electricalGrid)
             genOnIdx = obj.topology.getGenOnIdx();
-            state = obj.zoneEvolution.getState();
+            state = obj.modelEvolution.getState();
             powerGeneration = state.getPowerGeneration();
             electricalGrid.updateGeneration(genOnIdx, powerGeneration);
         end
         
         function updateGridBattInjection(obj, electricalGrid)
             battOnIdx = obj.topology.getBattOnIdx();
-            state = obj.zoneEvolution.getState();
+            state = obj.modelEvolution.getState();
             powerBattery = state.getPowerBattery();
             electricalGrid.updateBattInjection(battOnIdx, powerBattery);
         end
         
         function saveState(obj)
-            obj.zoneEvolution.saveState(obj.result);
+            obj.modelEvolution.saveState(obj.result);
         end
         
         function transmitDataController2Zone(obj)
-            obj.telecomController2Zone.transmitData(obj.controller, obj.zoneEvolution);
+            obj.telecomController2Zone.transmitData(obj.controller, obj.modelEvolution);
         end
         
         function transmitDataTimeSeries2Zone(obj)
             disturbancePowerAvailable = obj.timeSeries.getDisturbancePowerAvailable();
-            obj.zoneEvolution.receiveDisturbancePowerAvailable(disturbancePowerAvailable);
+            obj.modelEvolution.receiveDisturbancePowerAvailable(disturbancePowerAvailable);
         end
         
         function transmitDataZone2Controller(obj)
-            obj.telecomZone2Controller.transmitData(obj.zoneEvolution, obj.controller);
+            obj.telecomZone2Controller.transmitData(obj.modelEvolution, obj.controller);
         end
         
         function prepareForNextStep(obj)
@@ -199,11 +199,11 @@ classdef Zone < handle
         end
         
         function dropOldestPowerTransit(obj)
-            obj.zoneEvolution.dropOldestPowerTransit();
+            obj.modelEvolution.dropOldestPowerTransit();
         end
         
         function dropOldestControl(obj)
-            obj.zoneEvolution.dropOldestControl();
+            obj.modelEvolution.dropOldestControl();
         end
         
         function boolean = isItTimeToUpdate(obj, currentTime, timeStep)
@@ -229,21 +229,21 @@ classdef Zone < handle
             obj.controller.saveControl(obj.result);
             obj.transmitDataController2Zone();
             obj.transmitDataTimeSeries2Zone();
-            obj.zoneEvolution.computeDisturbancePowerGeneration();
-            obj.zoneEvolution.updateState();
+            obj.modelEvolution.computeDisturbancePowerGeneration();
+            obj.modelEvolution.updateState();
         end
         
         function update(obj, electricalGrid)
             obj.updatePowerFlow(electricalGrid);
             obj.updatePowerTransit(electricalGrid);
-            obj.zoneEvolution.updateDisturbancePowerTransit();
+            obj.modelEvolution.updateDisturbancePowerTransit();
             
             obj.transmitDataZone2Controller();
         end
         
         function saveResult(obj)
-            obj.zoneEvolution.saveState(obj.result);
-            obj.zoneEvolution.saveDisturbance(obj.result);
+            obj.modelEvolution.saveState(obj.result);
+            obj.modelEvolution.saveDisturbance(obj.result);
         end
         
         function plotTopology(obj, electricalGrid)
@@ -258,8 +258,8 @@ classdef Zone < handle
         end
         
         %% GETTER
-        function object = getZoneEvolution(obj)
-            object = obj.zoneEvolution;
+        function object = getModelEvolution(obj)
+            object = obj.modelEvolution;
         end
     end
 end

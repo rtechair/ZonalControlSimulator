@@ -1,5 +1,5 @@
-classdef ZoneEvolution < handle
-% ZoneEvolution aims at representing the evolution of the zone during the simulation.
+classdef ModelEvolution < handle
+% ModelEvolution aims at representing the evolution of the zone during the simulation.
 % The associate mathematical model is based on the paper:
 %'Modeling the Partial Renewable Power Curtailment for Transmission Network Management'[1].
 %
@@ -34,7 +34,7 @@ classdef ZoneEvolution < handle
     
     methods
        
-        function obj = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
+        function obj = ModelEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn, ...
                 delayCurt, delayBatt, maxPowerGeneration, battConstPowerReduc)
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.battConstPowerReduc = battConstPowerReduc;

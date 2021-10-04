@@ -1,4 +1,4 @@
-function object = buildZoneEvolution(zoneSetting, zoneTopology, delayInIterations)
+function object = buildModelEvolution(zoneSetting, zoneTopology, delayInIterations)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology
@@ -14,6 +14,6 @@ function object = buildZoneEvolution(zoneSetting, zoneTopology, delayInIteration
 
     maxPowerGeneration = zoneTopology.getMaxPowerGeneration();
     batteryConstantPowerReduction = zoneSetting.getBatteryConstantPowerReduction();
-    object = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
+    object = ModelEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
                 delayCurt, delayBatt, maxPowerGeneration, batteryConstantPowerReduction);
 end
