@@ -3,7 +3,6 @@ classdef QueueControl < handle
     properties (SetAccess = protected)
         queueControlCurt
         queueControlBatt
-        
         delayCurt
         delayBatt
     end
