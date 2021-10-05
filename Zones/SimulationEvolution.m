@@ -1,4 +1,4 @@
-classdef simulationEvolution < handle
+classdef SimulationEvolution < handle
     
     properties (SetAccess = protected)
         powerAvailable
@@ -15,7 +15,7 @@ classdef simulationEvolution < handle
     
     methods
             
-        function obj = simulationEvolution(maxPowerGeneration)
+        function obj = SimulationEvolution(maxPowerGeneration)
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.step = 1;
         end
