@@ -16,16 +16,16 @@ classdef QueueControl < handle
             obj.queueControlBatt = [zeros(numberOfBattOn, delayBatt) NaN(numberOfBattOn, 1)];
         end
         
+        function enqueue(obj, controlOfZone)
+            obj.queueControlCurt(:,obj.delayCurt+1) = controlOfZone.getControlCurtailment();
+            obj.queueControlBatt(:,obj.delayBatt+1) = controlOfZone.getControlBattery();
+        end
+        
         function controlToApply = dequeue(obj)
             controlCurtToApply = obj.queueControlCurt(:,1);
             controlBattToApply = obj.queueControlBatt(:,1);
             controlToApply = ControlOfZone(controlCurtToApply, controlBattToApply);
             obj.removeFirst();
-        end
-        
-        function enqueue(obj, controlOfZone)
-            obj.queueControlCurt(:,obj.delayCurt+1) = controlOfZone.getControlCurtailment();
-            obj.queueControlBatt(:,obj.delayBatt+1) = controlOfZone.getControlBattery();
         end
         
         function removeFirst(obj)
