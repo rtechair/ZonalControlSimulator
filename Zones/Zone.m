@@ -28,14 +28,18 @@ classdef Zone < handle
        
        delayInIterations
        topology
+       
        modelEvolution
+       simulationEvolution
        
        telecomZone2Controller
        telecomController2Zone
        
        controllerSetting
        controller
-       timeSeries
+       
+       modelTimeSeries
+       simulationTimeSeries
        
        result
     end
@@ -52,8 +56,13 @@ classdef Zone < handle
             obj.setSetting();
             obj.setDelayInIterations();
             obj.setTopology(electricalGrid);
-            obj.setTimeSeries(simulationWindow, duration);
+            
+            obj.setModelTimeSeries(duration);
+            obj.setSimulationTimeSeries(simulationWindow, duration);
+            
             obj.setModelEvolution();
+            obj.setSimulationEvolution();
+            
             obj.setTelecom();
             obj.setResult(duration);
             obj.setControllerSetting();
@@ -78,12 +87,22 @@ classdef Zone < handle
            obj.topology = ZoneTopology(obj.name, busId, electricalGrid);
         end
         
-        function setTimeSeries(obj, window, duration)
-            obj.timeSeries = buildTimeSeries(obj.setting, obj.topology, window, duration);
+        function setModelTimeSeries(obj, duration)
+            controlCycle = obj.setting.getcontrolCycleInSeconds();
+            obj.modelTimeSeries = buildTimeSeries(obj.setting, obj.topology, controlCycle, duration);
+        end
+        
+        function setSimulationTimeSeries(obj, window, duration)
+            obj.simulationTimeSeries = buildTimeSeries(obj.setting, obj.topology, window, duration);
         end
         
         function setModelEvolution(obj)
             obj.modelEvolution = buildModelEvolution(obj.setting, obj.topology, obj.delayInIterations);
+        end
+        
+        function setSimulationEvolution(obj)
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            obj.simulationEvolution = SimulationEvolution(maxPowerGeneration);
         end
         
         function setTelecom(obj)
@@ -126,7 +145,7 @@ classdef Zone < handle
         end
         
         function initializePowerAvailable(obj)
-            obj.modelEvolution.setInitialPowerAvailable(obj.timeSeries);
+            obj.modelEvolution.setInitialPowerAvailable(obj.modelTimeSeries);
         end
         
         function initializePowerGeneration(obj)
@@ -189,7 +208,7 @@ classdef Zone < handle
         end
         
         function transmitDataTimeSeries2Zone(obj)
-            disturbancePowerAvailable = obj.timeSeries.getDisturbancePowerAvailable();
+            disturbancePowerAvailable = obj.modelTimeSeries.getDisturbancePowerAvailable();
             obj.modelEvolution.receiveDisturbancePowerAvailable(disturbancePowerAvailable);
         end
         
@@ -198,7 +217,7 @@ classdef Zone < handle
         end
         
         function prepareForNextStep(obj)
-            obj.timeSeries.goToNextStep();
+            obj.modelTimeSeries.goToNextStep();
             obj.result.prepareForNextStep();
         end
         
