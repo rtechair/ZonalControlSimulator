@@ -9,8 +9,8 @@ classdef ModelEvolution < handle
         state
         
         controlQueue
-        curtControl
-        battControl
+        controlCurt
+        controlBatt
         
         queuePowerTransit % to compute disturbancePowerTransit
         
@@ -72,13 +72,13 @@ classdef ModelEvolution < handle
         
         function applyControlFromController(obj)
             control = obj.controlQueue.dequeue();
-            obj.curtControl = control.getControlCurtailment();
-            obj.battControl = control.getControlBattery();
+            obj.controlCurt = control.getControlCurtailment();
+            obj.controlBatt = control.getControlBattery();
         end
         
         function noControlToApply(obj)
-            obj.curtControl = zeros(obj.numberOfGenOn,1);
-            obj.battControl = zeros(obj.numberOfBattOn,1);
+            obj.controlCurt = zeros(obj.numberOfGenOn,1);
+            obj.controlBatt = zeros(obj.numberOfBattOn,1);
         end
         
         function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
@@ -122,7 +122,7 @@ classdef ModelEvolution < handle
             powerGeneration = obj.state.getPowerGeneration();
             powerCurtailment = obj.state.getPowerCurtailment();
             
-            f = powerAvailable + obj.disturbancePowerAvailable - powerGeneration + obj.curtControl;
+            f = powerAvailable + obj.disturbancePowerAvailable - powerGeneration + obj.controlCurt;
             g = obj.maxPowerGeneration - powerCurtailment - powerGeneration;
             obj.disturbancePowerGeneration = min(f,g);
         end
@@ -138,28 +138,23 @@ classdef ModelEvolution < handle
         end
         
         function updateEnergyBattery(obj)
-            % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
-            obj.state.updateEnergyBattery(obj.battControl, obj.battConstPowerReduc);
+            obj.state.updateEnergyBattery(obj.controlBatt, obj.battConstPowerReduc);
         end
         
         function updatePowerAvailable(obj)
-            % PA += DeltaPA
             obj.state.updatePowerAvailable(obj.disturbancePowerAvailable);
         end
         
         function updatePowerGeneration(obj)
-            % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
-            obj.state.updatePowerGeneration(obj.disturbancePowerGeneration, obj.curtControl);
+            obj.state.updatePowerGeneration(obj.disturbancePowerGeneration, obj.controlCurt);
         end
         
         function updatePowerCurtailment(obj)
-            % PC += DeltaPC(k - delayCurt)
-            obj.state.updatePowerCurtailment(obj.curtControl);
+            obj.state.updatePowerCurtailment(obj.controlCurt);
         end
         
         function updatePowerBattery(obj)
-            % PB += DeltaPB(k - delayBatt)
-            obj.state.updatePowerBattery(obj.battControl);
+            obj.state.updatePowerBattery(obj.controlBatt);
         end
         
         function setInitialPowerAvailable(obj, timeSeries)
