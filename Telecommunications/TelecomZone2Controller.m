@@ -21,7 +21,7 @@ classdef TelecomZone2Controller < handle
         end
         
         function receiveDisturbancePowerTransit(obj, value)
-            obj.disturbancePowerTransitQueue(obj.delay+1) = value;
+            obj.disturbancePowerTransitQueue(:, obj.delay+1) = value;
         end
         
         function sendState(obj, controller)
