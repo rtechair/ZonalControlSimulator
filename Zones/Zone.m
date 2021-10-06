@@ -260,6 +260,12 @@ classdef Zone < handle
             obj.modelEvolution.updateState();
         end
         
+        function simulateNoControlCycle(obj)
+            obj.transmitDataTimeSeries2Zone();
+            % TODO
+            
+        end
+        
         function update(obj, electricalGrid)
             obj.updatePowerFlow(electricalGrid);
             obj.updatePowerTransit(electricalGrid);

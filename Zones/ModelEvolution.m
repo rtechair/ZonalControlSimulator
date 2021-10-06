@@ -20,8 +20,6 @@ classdef ModelEvolution < handle
     end
     
     properties (SetAccess = immutable)
-       maxPowerGeneration
-       
        %{
         From the paper 'Modeling the Partial Renewable Power Curtailment
         for Transmission Network Management', battConstPowerReduc corresponds to:
@@ -30,6 +28,7 @@ classdef ModelEvolution < handle
        battConstPowerReduc
        delayCurt
        delayBatt
+       maxPowerGeneration
     end
     
     methods
