@@ -233,10 +233,6 @@ classdef Zone < handle
             obj.modelEvolution.dropOldestPowerTransit();
         end
         
-        function dropOldestControl(obj)
-            obj.modelEvolution.dropOldestControl();
-        end
-        
         function boolean = isItTimeToUpdate(obj, currentTime, timeStep)
             previousTime = currentTime - timeStep;
             controlCycle = obj.setting.getcontrolCycleInSeconds();
@@ -259,6 +255,9 @@ classdef Zone < handle
             obj.controller.computeControl();
             obj.controller.saveControl(obj.result);
             obj.transmitDataController2Zone();
+            
+            obj.modelEvolution.applyControlFromController();
+            
             obj.transmitDataTimeSeries2Zone();
             obj.modelEvolution.computeDisturbancePowerGeneration();
             obj.modelEvolution.updateState();

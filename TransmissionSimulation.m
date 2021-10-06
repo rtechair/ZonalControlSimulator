@@ -150,7 +150,6 @@ classdef TransmissionSimulation < handle
                         zone.saveResult();
                         zone.prepareForNextStep();
                         zone.dropOldestPowerTransit();
-                        zone.dropOldestControl();
                     end
                 end
             end

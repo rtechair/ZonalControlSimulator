@@ -12,10 +12,6 @@ classdef ModelEvolution < handle
         curtControl
         battControl
         
-        % When received from the telecom, the controls are delayed before applied, thus the queues
-        queueControlCurt
-        queueControlBatt
-        
         queuePowerTransit % to compute disturbancePowerTransit
         
         disturbancePowerTransit
@@ -56,9 +52,6 @@ classdef ModelEvolution < handle
             % blank queues
             obj.controlQueue = ControlQueue(numberOfGenOn, delayCurt, numberOfBattOn, delayBatt);
             
-            obj.queueControlCurt = [zeros(numberOfGenOn, delayCurt) NaN(numberOfGenOn, 1)];
-            obj.queueControlBatt = [zeros(numberOfBattOn, delayBatt) NaN(numberOfBattOn, 1)];
-            
             obj.queuePowerTransit = zeros(numberOfBuses,2);
             
             % blank transit disturbance
@@ -73,11 +66,11 @@ classdef ModelEvolution < handle
             obj.disturbancePowerAvailable = value;
         end
         
-        function receiveControl2(obj, controlOfZone)
+        function receiveControl(obj, controlOfZone)
             obj.controlQueue.enqueue(controlOfZone);
         end
         
-        function controlToApplyIsFromController(obj)
+        function applyControlFromController(obj)
             control = obj.controlQueue.dequeue();
             obj.curtControl = control.getControlCurtailment();
             obj.battControl = control.getControlBattery();
@@ -86,17 +79,6 @@ classdef ModelEvolution < handle
         function noControlToApply(obj)
             obj.curtControl = zeros(obj.numberOfGenOn,1);
             obj.battControl = zeros(obj.numberOfBattOn,1);
-        end
-        
-        function receiveControl(obj, controlOfZone)
-            % the telecommunication from controller to zone, transmits objects, not values directly
-            obj.queueControlCurt(:,obj.delayCurt+1) = controlOfZone.getControlCurtailment();
-            obj.queueControlBatt(:,obj.delayBatt+1) = controlOfZone.getControlBattery();
-        end
-        
-        function dropOldestControl(obj)
-            obj.queueControlCurt = obj.queueControlCurt(:, 2:obj.delayCurt+1);
-            obj.queueControlBatt = obj.queueControlBatt(:, 2:obj.delayBatt+1);
         end
         
         function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
@@ -138,10 +120,9 @@ classdef ModelEvolution < handle
             % and   g = maxPG - PC      - PG
             powerAvailable = obj.state.getPowerAvailable();
             powerGeneration = obj.state.getPowerGeneration();
-            appliedControlCurt = obj.queueControlCurt(:,1);
             powerCurtailment = obj.state.getPowerCurtailment();
             
-            f = powerAvailable + obj.disturbancePowerAvailable - powerGeneration + appliedControlCurt;
+            f = powerAvailable + obj.disturbancePowerAvailable - powerGeneration + obj.curtControl;
             g = obj.maxPowerGeneration - powerCurtailment - powerGeneration;
             obj.disturbancePowerGeneration = min(f,g);
         end
@@ -158,8 +139,7 @@ classdef ModelEvolution < handle
         
         function updateEnergyBattery(obj)
             % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
-            appliedControlBatt = obj.queueControlBatt(:,1);
-            obj.state.updateEnergyBattery(appliedControlBatt, obj.battConstPowerReduc);
+            obj.state.updateEnergyBattery(obj.battControl, obj.battConstPowerReduc);
         end
         
         function updatePowerAvailable(obj)
@@ -169,20 +149,17 @@ classdef ModelEvolution < handle
         
         function updatePowerGeneration(obj)
             % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
-            appliedControlCurt = obj.queueControlCurt(:,1);
-            obj.state.updatePowerGeneration(obj.disturbancePowerGeneration, appliedControlCurt);
+            obj.state.updatePowerGeneration(obj.disturbancePowerGeneration, obj.curtControl);
         end
         
         function updatePowerCurtailment(obj)
             % PC += DeltaPC(k - delayCurt)
-            appliedControlCurt = obj.queueControlCurt(:,1);
-            obj.state.updatePowerCurtailment(appliedControlCurt);
+            obj.state.updatePowerCurtailment(obj.curtControl);
         end
         
         function updatePowerBattery(obj)
             % PB += DeltaPB(k - delayBatt)
-            appliedControlBatt = obj.queueControlBatt(:,1);
-            obj.state.updatePowerBattery(appliedControlBatt);
+            obj.state.updatePowerBattery(obj.battControl);
         end
         
         function setInitialPowerAvailable(obj, timeSeries)
