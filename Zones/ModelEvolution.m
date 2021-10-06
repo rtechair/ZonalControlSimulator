@@ -8,6 +8,10 @@ classdef ModelEvolution < handle
     properties (SetAccess = protected)
         state
         
+        controlQueue
+        curtControl
+        battControl
+        
         % When received from the telecom, the controls are delayed before applied, thus the queues
         queueControlCurt
         queueControlBatt
@@ -29,6 +33,9 @@ classdef ModelEvolution < handle
        delayCurt
        delayBatt
        maxPowerGeneration
+       
+       numberOfGenOn
+       numberOfBattOn
     end
     
     methods
@@ -39,10 +46,16 @@ classdef ModelEvolution < handle
             obj.battConstPowerReduc = battConstPowerReduc;
             obj.delayCurt = delayCurt;
             obj.delayBatt = delayBatt;
+            
+            obj.numberOfGenOn = numberOfGenOn;
+            obj.numberOfBattOn = numberOfBattOn;
+            
             % blank state
             obj.state = StateOfZone(numberOfBranches, numberOfGenOn, numberOfBattOn);
             
             % blank queues
+            obj.controlQueue = ControlQueue(numberOfGenOn, delayCurt, numberOfBattOn, delayBatt);
+            
             obj.queueControlCurt = [zeros(numberOfGenOn, delayCurt) NaN(numberOfGenOn, 1)];
             obj.queueControlBatt = [zeros(numberOfBattOn, delayBatt) NaN(numberOfBattOn, 1)];
             
@@ -58,6 +71,21 @@ classdef ModelEvolution < handle
         
         function receiveDisturbancePowerAvailable(obj, value)
             obj.disturbancePowerAvailable = value;
+        end
+        
+        function receiveControl2(obj, controlOfZone)
+            obj.controlQueue.enqueue(controlOfZone);
+        end
+        
+        function controlToApplyIsFromController(obj)
+            control = obj.controlQueue.dequeue();
+            obj.curtControl = control.getControlCurtailment();
+            obj.battControl = control.getControlBattery();
+        end
+        
+        function noControlToApply(obj)
+            obj.curtControl = zeros(obj.numberOfGenOn,1);
+            obj.battControl = zeros(obj.numberOfBattOn,1);
         end
         
         function receiveControl(obj, controlOfZone)
