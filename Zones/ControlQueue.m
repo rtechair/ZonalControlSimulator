@@ -1,4 +1,4 @@
-classdef ControlApplicationQueue < handle
+classdef ControlQueue < handle
     
     properties (SetAccess = protected)
         curtControlQueue
@@ -8,7 +8,7 @@ classdef ControlApplicationQueue < handle
     end
     
     methods
-        function obj = ControlApplicationQueue(...
+        function obj = ControlQueue(...
                 numberOfGenOn, curtDelay, numberOfBattOn, battDelay)
             obj.curtDelay = curtDelay;
             obj.battDelay = battDelay;
