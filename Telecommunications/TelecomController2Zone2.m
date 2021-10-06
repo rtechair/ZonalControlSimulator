@@ -15,12 +15,19 @@ classdef TelecomController2Zone2 < handle
         end
         
         function receiveControl(obj, control)
-            obj.controlQueue(obj.delay+1) = control;
+            obj.enqueue(control);
         end
         
-        function sendControl(obj, receiver)
-            sentControl = obj.dequeue();
-            receiver.enqueue(sentControl);
+        function control = sendControl(obj)
+            control = obj.dequeue();
+        end
+        
+    end
+    
+    methods (Access = protected)
+        
+        function enqueue(obj, control)
+            obj.controlQueue(obj.delay+1) = control;
         end
         
         function control = dequeue(obj)
