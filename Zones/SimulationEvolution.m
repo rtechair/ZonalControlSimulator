@@ -41,5 +41,9 @@ classdef SimulationEvolution < handle
             obj.powerFlow = value;
         end
         
+        function receiveControl(obj, control)
+            % useless, simply to comply with methods in class `Zone`
+        end
+        
     end
 end
