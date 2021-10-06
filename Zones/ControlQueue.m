@@ -22,10 +22,17 @@ classdef ControlQueue < handle
         end
         
         function control = dequeue(obj)
+            control = obj.getFirst();
+            obj.removeFirst();
+        end
+        
+    end
+    
+    methods (Access = private)
+        function control = getFirst(obj)
             controlCurt = obj.curtControlQueue(:,1);
             controlBatt = obj.battControlQueue(:,1);
             control = ControlOfZone(controlCurt, controlBatt);
-            obj.removeFirst();
         end
         
         function removeFirst(obj)
@@ -33,4 +40,5 @@ classdef ControlQueue < handle
             obj.battControlQueue = obj.battControlQueue(:, 2:obj.delayBatt+1);
         end
     end
+    
 end
