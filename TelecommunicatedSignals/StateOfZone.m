@@ -78,24 +78,29 @@ classdef StateOfZone < handle
         function updateEnergyBattery(obj, controlBattery, battConstPowerReduc)
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
+            % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
             obj.energyBattery = obj.energyBattery ...
                 - battConstPowerReduc * (obj.powerBattery + controlBattery);
         end
         
         function updatePowerAvailable(obj, disturbancePowerAvailable)
+            % PA += DeltaPA
             obj.powerAvailable = obj.powerAvailable + disturbancePowerAvailable;
         end
         
         function updatePowerGeneration(obj, disturbancePowerGeneration, controlCurtailment)
+            % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
             obj.powerGeneration = obj.powerGeneration ...
                 + disturbancePowerGeneration - controlCurtailment;
         end
         
         function updatePowerCurtailment(obj, controlCurtailment)
+            % PC += DeltaPC(k - delayCurt)
             obj.powerCurtailment = obj.powerCurtailment + controlCurtailment;
         end
         
         function updatePowerBattery(obj, controlBattery)
+            % PB += DeltaPB(k - delayBatt)
             obj.powerBattery = obj.powerBattery + controlBattery;
         end
         
