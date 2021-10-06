@@ -62,6 +62,10 @@ classdef ModelEvolution < handle
             object = obj.state;
         end
         
+        function value = getDisturbancePowerTransit(obj)
+            value = obj.disturbancePowerTransit;
+        end
+        
         function receiveDisturbancePowerAvailable(obj, value)
             obj.disturbancePowerAvailable = value;
         end

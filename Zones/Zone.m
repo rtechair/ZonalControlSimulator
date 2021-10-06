@@ -217,7 +217,14 @@ classdef Zone < handle
         end
         
         function transmitDataZone2Controller(obj)
-            obj.telecomZone2Controller.transmitData(obj.modelEvolution, obj.controller);
+            state = obj.modelEvolution.getState();
+            disturbancePowerTransit = obj.modelEvolution.getDisturbancePowerTransit();
+            
+            obj.telecomZone2Controller.receiveState(state);
+            obj.telecomZone2Controller.receiveDisturbancePowerTransit(disturbancePowerTransit);
+            
+            obj.telecomZone2Controller.sendState(obj.controller);
+            obj.telecomZone2Controller.sendDisturbancePowerTransit(obj.controller);
         end
         
         function prepareForNextStep(obj)
