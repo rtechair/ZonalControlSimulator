@@ -48,6 +48,16 @@ classdef TimeSeries < handle
             value = obj.profilePowerAvailable(:, obj.step);
         end
         
+        function sendDisturbancePowerAvailable(obj, modelEvolution)
+            arguments
+                obj
+                modelEvolution ModelEvolution
+            end
+            disturbancePowerAvailable = obj.getDisturbancePowerAvailable();
+            modelEvolution.receiveDisturbancePowerAvailable(disturbancePowerAvailable);
+            obj.goToNextStep();
+        end
+        
         function value = getDisturbancePowerAvailable(obj)
             value = obj.profileDisturbancePowerAvailable(:,obj.step);
         end
