@@ -102,7 +102,7 @@ classdef ModelEvolution < handle
             obj.controlBatt = control.getControlBattery();
         end
         
-        function noControlToApply(obj)
+        function applyNoControl(obj)
             obj.controlCurt = zeros(obj.numberOfGenOn,1);
             obj.controlBatt = zeros(obj.numberOfBattOn,1);
         end

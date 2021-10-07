@@ -240,6 +240,15 @@ classdef Zone < handle
             obj.modelEvolution.dropOldestPowerTransit();
         end
         
+        function simulateBothCases(obj, currentTime, timeStep)
+            timeForControlCycle = isItTimeToUpdate(currentTime, timeStep)
+            if timeForControlCycle
+                obj.simulate();
+            else
+                obj.simulateNoControlCycle();
+            end
+        end
+        
         function boolean = isItTimeToUpdate(obj, currentTime, timeStep)
             previousTime = currentTime - timeStep;
             controlCycle = obj.setting.getcontrolCycleInSeconds();
@@ -271,9 +280,10 @@ classdef Zone < handle
         end
         
         function simulateNoControlCycle(obj)
+            obj.modelEvolution.appyNoControl();
             obj.transmitDataTimeSeries2Zone();
-            % TODO
-            
+            obj.modelEvolution.computeDisturbancePowerGeneration();
+            obj.modelEvolution.updateState();
         end
         
         function update(obj, electricalGrid)
@@ -282,6 +292,12 @@ classdef Zone < handle
             obj.modelEvolution.updateDisturbancePowerTransit();
             
             obj.transmitDataZone2Controller();
+        end
+        
+        function updateNoControlCycle(obj, electricalGrid)
+            obj.updatePowerFlow(electricalGrid);
+            obj.updatePowerTransit(electricalGrid);
+            obj.modelEvolution.updateDisturbancePowerTransit(); %is it necessary?
         end
         
         function saveResult(obj)
