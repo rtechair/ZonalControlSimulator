@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 %}
+
 classdef ModelEvolution < handle
 % ModelEvolution aims at representing the evolution of the zone during the simulation.
 % The associate mathematical model is based on the paper:
