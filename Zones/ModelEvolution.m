@@ -114,10 +114,6 @@ classdef ModelEvolution < handle
                 obj.disturbancePowerAvailable);
         end
         
-        function object = getStateAndDisturbancePowerTransit(obj)
-            object = StateAndDisturbancePowerTransit(obj.state, obj.disturbancePowerTransit);
-        end
-        
         function computeDisturbancePowerGeneration(obj)
             % DeltaPG = min(f,g)
             % with  f = PA    + DeltaPA - PG + DeltaPC(k - delayCurt)
