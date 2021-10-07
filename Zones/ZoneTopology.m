@@ -242,8 +242,6 @@ classdef ZoneTopology < handle
         end
         
         function setMaxPowerBattery(obj, electricalGrid)
-            % The maximum power battery injection is the same as the
-            % maximum power generation
             obj.maxPowerBattery = electricalGrid.getMaxPowerBattery(obj.battOnIdx);
         end
         

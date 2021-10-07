@@ -105,6 +105,18 @@ classdef Limiter < Controller
             memory.saveControl(controlCurt, obj.controlBatt);
         end
         
+        function receiveState(obj, state)
+            obj.state = state;
+        end
+        
+        function receiveDisturbancePowerTransit(obj, value)
+            obj.disturbancePowerTransit = value;
+        end
+        
+        function receiveFeedback(obj, object)
+            % TODO
+        end
+        
         function receiveStateAndDisturbancePowerTransit(obj, stateAndDisturbancePowerTransit)
             obj.state = stateAndDisturbancePowerTransit.getStateOfZone();
             obj.disturbancePowerTransit = stateAndDisturbancePowerTransit.getDisturbancePowerTransit();

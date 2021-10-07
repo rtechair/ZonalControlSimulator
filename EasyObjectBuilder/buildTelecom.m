@@ -15,22 +15,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 %}
-
-function [telecomTimeSeries2Zone, telecomController2Zone, telecomZone2Controller] = buildTelecom(...
+function [telecomController2Zone, telecomZone2Controller] = buildTelecom(...
     zoneTopology, delayInIterations)
     arguments
         zoneTopology ZoneTopology
         delayInIterations DelayInIterations
     end
-    telecomTimeSeries2Zone = buildTelecomTimeSeries2Zone(zoneTopology, delayInIterations);
     telecomController2Zone = buildTelecomController2Zone(zoneTopology, delayInIterations);
     telecomZone2Controller = buildTelecomZone2Controller(zoneTopology, delayInIterations);
-end
-
-function object = buildTelecomTimeSeries2Zone(zoneTopology, delayInIterations)
-    numberOfGenOn = zoneTopology.getNumberOfGenOn();
-    delayTimeSeries2Zone = delayInIterations.getDelayTimeSeries2Zone();
-    object = TelecomTimeSeries2Zone(numberOfGenOn, delayTimeSeries2Zone);
 end
 
 function object = buildTelecomController2Zone(zoneTopology, delayInIterations)

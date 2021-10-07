@@ -15,19 +15,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 %}
-
-function object = buildTimeSeries(zoneSetting, zoneTopology, simulationDuration)
+function object = buildTimeSeries(zoneSetting, zoneTopology,...
+    samplingTime, simulationDuration)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology
+        samplingTime double
         simulationDuration double
     end
-    timeSeriesFilename = zoneSetting.getTimeSeriesFilename();
-    startGenInSeconds = zoneSetting.getStartGenInSeconds();
-    controlCycle = zoneSetting.getcontrolCycleInSeconds();
-
+    chargingRateFilename = zoneSetting.getTimeSeriesFilename();
+    genStart = zoneSetting.getStartGenInSeconds();
+    
     maxPowerGeneration = zoneTopology.getMaxPowerGeneration();
-    numberOfGenOn = zoneTopology.getNumberOfGenOn();
-    object = TimeSeries(timeSeriesFilename, startGenInSeconds, controlCycle, ...
-        simulationDuration, maxPowerGeneration, numberOfGenOn);
+
+    object = TimeSeries(chargingRateFilename, samplingTime, ...
+                simulationDuration, maxPowerGeneration, genStart);
 end

@@ -89,13 +89,14 @@ classdef StateOfZone < handle
         
         %% Evolution
         function setInitialPowerGeneration(obj, maxPowerGeneration)
-            obj.powerGeneration = min(obj.powerAvailable, maxPowerGeneration);
+            obj.powerGeneration = min(obj.powerAvailable, ...
+                maxPowerGeneration - obj.powerCurtailment);
         end
         
         function updateEnergyBattery(obj, controlBattery, battConstPowerReduc)
             % energyBattery requires powerBattery, thus the former must be
             % updated prior to the latter
-            % EB += -cb * ( PB + appliedDeltaPB )
+            % EB += -cb * ( PB(k) + DeltaPB(k - delayBatt) )
             obj.energyBattery = obj.energyBattery ...
                 - battConstPowerReduc * (obj.powerBattery + controlBattery);
         end
@@ -106,18 +107,18 @@ classdef StateOfZone < handle
         end
         
         function updatePowerGeneration(obj, disturbancePowerGeneration, controlCurtailment)
-            % PG += DeltaPG - appliedDeltaPC
-            obj.powerGeneration = obj.powerGeneration + disturbancePowerGeneration ...
-                - controlCurtailment;
+            % PG += DeltaPG(k) - DeltaPC(k - delayCurt)
+            obj.powerGeneration = obj.powerGeneration ...
+                + disturbancePowerGeneration - controlCurtailment;
         end
         
         function updatePowerCurtailment(obj, controlCurtailment)
-            % PC += appliedDeltaPC
+            % PC += DeltaPC(k - delayCurt)
             obj.powerCurtailment = obj.powerCurtailment + controlCurtailment;
         end
         
         function updatePowerBattery(obj, controlBattery)
-            % PB += appliedDeltaPB
+            % PB += DeltaPB(k - delayBatt)
             obj.powerBattery = obj.powerBattery + controlBattery;
         end
         

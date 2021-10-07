@@ -15,8 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 %}
-
-function object = buildZoneEvolution(zoneSetting, zoneTopology, delayInIterations)
+function object = buildModelEvolution(zoneSetting, zoneTopology, delayInIterations)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology
@@ -32,6 +31,6 @@ function object = buildZoneEvolution(zoneSetting, zoneTopology, delayInIteration
 
     maxPowerGeneration = zoneTopology.getMaxPowerGeneration();
     batteryConstantPowerReduction = zoneSetting.getBatteryConstantPowerReduction();
-    object = ZoneEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
+    object = ModelEvolution(numberOfBuses, numberOfBranches, numberOfGenOn, numberOfBattOn,...
                 delayCurt, delayBatt, maxPowerGeneration, batteryConstantPowerReduction);
 end

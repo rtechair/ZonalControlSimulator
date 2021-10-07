@@ -232,6 +232,7 @@ classdef ElectricalGrid < handle
         end
         
         function value = getMaxPowerBattery(obj,battIdx)
+            % the matpowercase format considers a battery is a generator
             value = obj.getMaxPowerGeneration(battIdx);
         end
         

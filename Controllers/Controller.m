@@ -21,9 +21,13 @@ classdef (Abstract) Controller < handle
 
     methods (Abstract)
         
-        computeControl(stateOfZone, disturbanceTransit);
+        computeControl;
         
-        getControl();
+        getControl;
+        
+        receiveState;
+        
+        receiveDisturbancePowerTransit;
         
     end
     

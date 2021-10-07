@@ -15,27 +15,43 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 %}
-
-classdef TelecomController2Zone < Telecommunication
+classdef TelecomController2Zone < handle
+    
+    properties (SetAccess = protected)
+        controlQueue
+        delay
+    end
     
     methods
-        function obj = TelecomController2Zone(numberOfGen, numberOfBatt, delayTelecom)
-            obj.delay = delayTelecom;
+        function obj = TelecomController2Zone(numberOfGen, numberOfBatt, telecomDelay)
+            obj.delay = telecomDelay;
             blankControlCurtailment = zeros(numberOfGen,1);
             blankControlBattery = zeros(numberOfBatt,1);
-            blankControls(1:delayTelecom) = ControlOfZone(blankControlCurtailment, blankControlBattery);
-            obj.queueData = blankControls;
+            blankControls(1:telecomDelay) = ControlOfZone(blankControlCurtailment, blankControlBattery);
+            obj.controlQueue = blankControls;
         end
+        
+        function receiveControl(obj, control)
+            obj.enqueue(control);
+        end
+        
+        function control = sendControl(obj)
+            control = obj.dequeue();
+        end
+        
     end
     
     methods (Access = protected)
-        function receive(obj, emitter)
-            obj.queueData(end+1) = emitter.getControl();
+        
+        function enqueue(obj, control)
+            obj.controlQueue(obj.delay+1) = control;
         end
         
-        function send(obj, receiver)
-            receiver.receiveControl(obj.queueData(1));
+        function control = dequeue(obj)
+            control = obj.controlQueue(1);
+            obj.controlQueue = obj.controlQueue(2 : obj.delay+1);
         end
+        
     end
     
 end
