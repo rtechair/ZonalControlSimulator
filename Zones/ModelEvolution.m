@@ -52,18 +52,40 @@ classdef ModelEvolution < handle
             % blank queues
             obj.controlQueue = ControlQueue(numberOfGenOn, delayCurt, numberOfBattOn, delayBatt);
             
-            obj.queuePowerTransit = zeros(numberOfBuses,2);
+            obj.queuePowerTransit = NaN(numberOfBuses,2);
             
             % blank transit disturbance
-            obj.disturbancePowerTransit = zeros(numberOfBuses, 1);
+            obj.disturbancePowerTransit = NaN(numberOfBuses, 1);
         end
         
+        %% GETTER
         function object = getState(obj)
             object = obj.state;
         end
         
+        function value = getPowerBattery(obj)
+            value = obj.state.getPowerBattery();
+        end
+        
+        function value = getPowerGeneration(obj)
+            value = obj.state.getPowerGeneration();
+        end
+        
         function value = getDisturbancePowerTransit(obj)
             value = obj.disturbancePowerTransit;
+        end
+        
+        function setInitialPowerAvailable(obj, timeSeries)
+            initialPowerAvailable = timeSeries.getInitialPowerAvailable();
+            obj.state.setPowerAvailable(initialPowerAvailable);
+        end
+        
+        function setInitialPowerGeneration(obj)
+            obj.state.setInitialPowerGeneration(obj.maxPowerGeneration);
+        end
+        
+        function setPowerFlow(obj, value)
+            obj.state.setPowerFlow(value);
         end
         
         function receiveDisturbancePowerAvailable(obj, value)
@@ -83,35 +105,6 @@ classdef ModelEvolution < handle
         function noControlToApply(obj)
             obj.controlCurt = zeros(obj.numberOfGenOn,1);
             obj.controlBatt = zeros(obj.numberOfBattOn,1);
-        end
-        
-        function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
-            obj.queuePowerTransit(:,2) = ...
-                electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
-        end
-        
-        function updateDisturbancePowerTransit(obj)
-            obj.disturbancePowerTransit = obj.queuePowerTransit(:,2) - obj.queuePowerTransit(:,1);
-        end
-        
-        function dropOldestPowerTransit(obj)
-            obj.queuePowerTransit = obj.queuePowerTransit(:,2);
-        end
-        
-        function saveState(obj, memory)
-            memory.saveState(...
-                obj.state.getPowerFlow, ...
-                obj.state.getPowerCurtailment, ...
-                obj.state.getPowerBattery,...
-                obj.state.getEnergyBattery,...
-                obj.state.getPowerGeneration,...
-                obj.state.getPowerAvailable);
-        end
-        
-        function saveDisturbance(obj, memory)
-            memory.saveDisturbance(obj.disturbancePowerTransit,...
-                obj.disturbancePowerGeneration,...
-                obj.disturbancePowerAvailable);
         end
         
         function computeDisturbancePowerGeneration(obj)
@@ -157,29 +150,33 @@ classdef ModelEvolution < handle
             obj.state.updatePowerBattery(obj.controlBatt);
         end
         
-        function setInitialPowerAvailable(obj, timeSeries)
-            initialPowerAvailable = timeSeries.getInitialPowerAvailable();
-            obj.state.setPowerAvailable(initialPowerAvailable);
+        function updatePowerTransit(obj, electricalGrid, zoneBusesId, branchBorderIdx)
+            obj.queuePowerTransit(:,2) = ...
+                electricalGrid.getPowerTransit(zoneBusesId, branchBorderIdx);
         end
         
-        function setInitialPowerGeneration(obj)
-            obj.state.setInitialPowerGeneration(obj.maxPowerGeneration);
+        function updateDisturbancePowerTransit(obj)
+            obj.disturbancePowerTransit = obj.queuePowerTransit(:,2) - obj.queuePowerTransit(:,1);
         end
         
-        function value = getPowerBattery(obj)
-            value = obj.state.getPowerBattery();
+        function dropOldestPowerTransit(obj)
+            obj.queuePowerTransit = obj.queuePowerTransit(:,2);
         end
         
-        function value = getPowerCurtailment(obj)
-            value = obj.state.getPowerCurtailment();
+        function saveState(obj, memory)
+            memory.saveState(...
+                obj.state.getPowerFlow, ...
+                obj.state.getPowerCurtailment, ...
+                obj.state.getPowerBattery,...
+                obj.state.getEnergyBattery,...
+                obj.state.getPowerGeneration,...
+                obj.state.getPowerAvailable);
         end
         
-        function value = getPowerGeneration(obj)
-            value = obj.state.getPowerGeneration();
-        end
-        
-        function setPowerFlow(obj, value)
-            obj.state.setPowerFlow(value);
+        function saveDisturbance(obj, memory)
+            memory.saveDisturbance(obj.disturbancePowerTransit,...
+                obj.disturbancePowerGeneration,...
+                obj.disturbancePowerAvailable);
         end
     end
     
