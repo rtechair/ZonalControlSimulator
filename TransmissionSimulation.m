@@ -167,11 +167,11 @@ classdef TransmissionSimulation < handle
                     if updateZone
                         zone.update(obj.grid);
                         zone.saveResult();
-                        zone.prepareForNextStep();
+                        zone.result.prepareForNextStep();
+                        
                         zone.dropOldestPowerTransit();
                     else
                         zone.updateNoControlCycle(obj.grid);
-                        zone.simulationTimeSeries.goToNextStep();
                     end
                 end
             end

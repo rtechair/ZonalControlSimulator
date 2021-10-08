@@ -232,13 +232,11 @@ classdef Zone < handle
         end
         
         function transmitDataTimeSeries2Model(obj)
-            disturbance = obj.modelTimeSeries.getDisturbancePowerAvailable();
-            obj.modelEvolution.receiveDisturbancePowerAvailable(disturbance);
+            obj.modelTimeSeries.sendDisturbancePowerAvailable(obj.modelEvolution);
         end
         
         function transmitDataTimeSeries2Simulation(obj)
-            disturbance = obj.simulationTimeSeries.getDisturbancePowerAvailable();
-            obj.simulationEvolution.receiveDisturbancePowerAvailable(disturbance);
+            obj.simulationTimeSeries.sendDisturbancePowerAvailable(obj.simulationEvolution);
         end
         
         function transmitDataZone2Controller(obj)
@@ -250,13 +248,6 @@ classdef Zone < handle
             
             obj.telecomZone2Controller.sendState(obj.controller);
             obj.telecomZone2Controller.sendDisturbancePowerTransit(obj.controller);
-        end
-        
-        function prepareForNextStep(obj)
-            % FIXME: temporary method, it will later be deleted
-            obj.simulationTimeSeries.goToNextStep();
-            obj.modelTimeSeries.goToNextStep();
-            obj.result.prepareForNextStep();
         end
         
         function prepareForNextStepSimulation(obj)
@@ -346,8 +337,6 @@ classdef Zone < handle
         
         function updateNoControlCycle(obj, electricalGrid)
             obj.updatePowerFlowSimulation(electricalGrid);
-            obj.updatePowerTransitSimulation(electricalGrid);
-            obj.simulationEvolution.updateDisturbancePowerTransit(); %is it necessary?
         end
         
         function saveResult(obj)
