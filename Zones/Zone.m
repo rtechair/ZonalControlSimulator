@@ -294,7 +294,6 @@ classdef Zone < handle
         
         function simulate(obj)
             obj.controller.computeControl();
-            obj.controller.saveControl(obj.result);
             
             obj.transmitDataController2Zone();
             
@@ -340,12 +339,12 @@ classdef Zone < handle
         
         function saveResult(obj)
             obj.modelEvolution.saveState(obj.result);
+            obj.controller.saveControl(obj.result);
             obj.modelEvolution.saveDisturbance(obj.result);
         end
         
         function saveState(obj)
             % used in the initialization of TransmissionSimulation
-            % currently, only information about the model is saved
             obj.modelEvolution.saveState(obj.result);
         end
         
