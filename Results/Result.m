@@ -125,9 +125,23 @@ classdef Result < handle
             obj.powerAvailable(:, obj.step + 1) = powerAvailable;
         end
         
+        function saveState2(obj, state)
+            obj.powerBranchFlow(:, obj.step + 1) = state.getPowerBranchFlow();
+            obj.powerCurtailment(:, obj.step + 1) = state.getPowerCurtailment();
+            obj.powerBattery(:, obj.step + 1) = state.getPowerBattery();
+            obj.energyBattery(:, obj.step + 1) = state.getEnergyBattery();
+            obj.powerGeneration(:, obj.step + 1) = state.getPowerGeneration();
+            obj.powerAvailable(:, obj.step + 1) = state.getPowerAvailable();
+        end
+        
         function saveControl(obj, controlCurt, controlBatt)
             obj.controlCurtailment(:, obj.step) = controlCurt;
             obj.controlBattery(:, obj.step) = controlBatt;
+        end
+        
+        function saveControl2(obj, control)
+            obj.controlCurtailment(:, obj.step) = control.getControlCurtailment();
+            obj.controlBattery(:, obj.step) = control.getControlBattery();
         end
         
         function saveDisturbance(obj, transit, generation, available)
