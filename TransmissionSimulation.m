@@ -126,12 +126,6 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function prepareZonesForNextStep(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.prepareForNextStep();
-            end
-        end
-        
         function prepareZonesForFirstStep(obj)
             for i = 1:obj.numberOfZones
                 obj.zones{i}.prepareResultForNextStep();
