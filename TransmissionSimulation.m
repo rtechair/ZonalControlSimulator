@@ -147,6 +147,7 @@ classdef TransmissionSimulation < handle
     
     methods
         %% SIMULATION
+        
         function runSimulation(obj)
             step = obj.simulationSetting.getWindow();
             start = step;
@@ -158,36 +159,6 @@ classdef TransmissionSimulation < handle
                     updateZone = zone.isItTimeToUpdate(time, step);
                     if updateZone
                         zone.simulate();
-                        zone.updateGrid(obj.grid);
-                    end
-                end
-                
-                obj.grid.runPowerFlow();
-                
-                for i = 1:obj.numberOfZones
-                    zone = obj.zones{i};
-                    updateZone = zone.isItTimeToUpdate(time, step);
-                    if updateZone
-                        zone.update(obj.grid);
-                        zone.saveResult();
-                        zone.prepareForNextStep();
-                        zone.dropOldestPowerTransit();
-                    end
-                end
-            end
-        end
-        
-        function runSimulation2(obj)
-            step = obj.simulationSetting.getWindow();
-            start = step;
-            duration = obj.simulationSetting.getDuration();
-            
-            for time = start:step:duration
-                for i = 1:obj.numberOfZones
-                    zone = obj.zones{i};
-                    updateZone = zone.isItTimeToUpdate(time, step);
-                    if updateZone
-                        zone.simulate2();
                     else
                         zone.simulateNoControlCycle();
                     end
@@ -200,7 +171,7 @@ classdef TransmissionSimulation < handle
                     zone = obj.zones{i};
                     updateZone = zone.isItTimeToUpdate(time, step);
                     if updateZone
-                        zone.update2(obj.grid);
+                        zone.update(obj.grid);
                         zone.saveResult();
                         zone.prepareForNextStep();
                         zone.dropOldestPowerTransit();

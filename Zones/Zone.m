@@ -302,20 +302,6 @@ classdef Zone < handle
         end
         
         function simulate(obj)
-            % FIXME: need to include both modelEvolution and
-            % simulationEvolution
-            obj.controller.computeControl();
-            obj.controller.saveControl(obj.result);
-            obj.transmitDataController2Zone();
-            
-            obj.modelEvolution.applyControlFromController();
-            
-            obj.transmitDataTimeSeries2Zone();
-            obj.modelEvolution.computeDisturbancePowerGeneration();
-            obj.modelEvolution.updateState();
-        end
-        
-        function simulate2(obj)
             obj.controller.computeControl();
             obj.controller.saveControl(obj.result);
             
@@ -343,15 +329,6 @@ classdef Zone < handle
         end
         
         function update(obj, electricalGrid)
-            % here, both modelEvolution and simulationEvolution
-            obj.updatePowerFlow(electricalGrid);
-            obj.updatePowerTransit(electricalGrid);
-            obj.modelEvolution.updateDisturbancePowerTransit();
-            
-            obj.transmitDataZone2Controller();
-        end
-        
-        function update2(obj, electricalGrid)
             % the following actions need to be done for both 
             % model and simulationEvolution
             obj.updatePowerFlowModel(electricalGrid);
