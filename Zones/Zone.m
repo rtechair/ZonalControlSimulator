@@ -17,19 +17,6 @@ limitations under the License.
 %}
 
 classdef Zone < handle
-% Zone is an aggregate class of the following objects:
-% - the 2 telecommunications involved in the zone:
-%        - zone->controller
-%        - controller->zone
-% - the direct exchange of data: time series->zone
-% - the topology of the zone
-% - the evolution of the zone over the time of the simulation
-% - the time series which dictates what is the available power for the
-% generators
-% - the controller
-% - the result of the simulation
-% - other elements required for the simulation
-%
 % Column vectors are used instead of row vectors, e.g.
 % busId, branchIdx, modelEvolution's properties, etc.
 % The reason is for consistency with column vectors obtained from Matpower
@@ -171,12 +158,6 @@ classdef Zone < handle
             obj.modelEvolution.setInitialPowerGeneration();
         end
         
-        %{
-        The zone sends to the controller all the information about its state,
-        but only one disturbance: the power transiting through the buses.
-        That is why the zone uses an object 'state' but not an object
-        'Disturbance' to store the Power Transit.
-        %}
         function updatePowerFlowModel(obj, electricalGrid)
             branchIdx = obj.topology.getBranchIdx();
             powerFlow = electricalGrid.getPowerFlow(branchIdx);
