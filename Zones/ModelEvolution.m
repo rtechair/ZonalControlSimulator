@@ -106,7 +106,17 @@ classdef ModelEvolution < handle
             obj.state.setPowerFlow(value);
         end
         
+        function receiveDisturbancePowerAvailable2(obj, timeSeries)
+            value = timeSeries.sendDisturbancePowerAvailable();
+            obj.setDisturbancePowerAvailable(obj, value);
+        end
+        
+        function setDisturbancePowerAvailable(obj, value)
+            obj.disturbancePowerAvailable = value;
+        end
+        
         function receiveDisturbancePowerAvailable(obj, value)
+            % FIXME this method should be replaced with method 2
             obj.disturbancePowerAvailable = value;
         end
         

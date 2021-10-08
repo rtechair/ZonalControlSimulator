@@ -100,13 +100,17 @@ classdef TransmissionSimulation < handle
         
         function updateZonesPowerFlow(obj)
            for i = 1:obj.numberOfZones
-               obj.zones{i}.updatePowerFlow(obj.grid);
+               zone = obj.zones{i};
+               zone.updatePowerFlowModel(obj.grid);
+               zone.updatePowerFlowSimulation(obj.grid);
            end
         end
         
         function updateZonesPowerTransit(obj)
             for i = 1:obj.numberOfZones
-                obj.zones{i}.updatePowerTransit(obj.grid);
+                zone = obj.zones{i};
+                zone.updatePowerTransitModel(obj.grid);
+                zone.updatePowerTransitSimulation(obj.grid);
             end
         end
         
@@ -171,6 +175,42 @@ classdef TransmissionSimulation < handle
                     end
                 end
             end
+        end
+        
+        function runSimulation2(obj)
+            step = obj.simulationSetting.getWindow();
+            start = step;
+            duration = obj.simulationSetting.getDuration();
+            
+            for time = start:step:duration
+                for i = 1:obj.numberOfZones
+                    zone = obj.zones{i};
+                    updateZone = zone.isItTimeToUpdate(time, step);
+                    if updateZone
+                        zone.simulate2();
+                    else
+                        zone.simulateNoControlCycle();
+                    end
+                    zone.updateGrid(obj.grid);
+                end
+                
+                obj.grid.runPowerFlow();
+                
+                for i = 1:obj.numberOfZones
+                    zone = obj.zones{i};
+                    updateZone = zone.isItTimeToUpdate(time, step);
+                    if updateZone
+                        zone.update2(obj.grid);
+                        zone.saveResult();
+                        zone.prepareForNextStep();
+                        zone.dropOldestPowerTransit();
+                    else
+                        zone.updateNoControlCycle(obj.grid);
+                        zone.simulationTimeSeries.goToNextStep();
+                    end
+                end
+            end
+
         end
         
         %% PLOT

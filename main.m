@@ -32,7 +32,7 @@ addpath(genpath(filepath));
 %% RUN A SIMULATION
 transmission = TransmissionSimulation('simulation.json');
 
-transmission.runSimulation();
+transmission.runSimulation2();
 
 isTopologyShown = false;
 isResultShown = true;
