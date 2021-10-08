@@ -312,7 +312,6 @@ classdef Zone < handle
         end
         
         function simulateNoControlCycle(obj)
-            % here, only simulationEvolution
             obj.simulationEvolution.applyNoControl();
             obj.transmitDataTimeSeries2Simulation();
             obj.simulationEvolution.computeDisturbancePowerGeneration();
@@ -320,18 +319,18 @@ classdef Zone < handle
         end
         
         function update(obj, electricalGrid)
-            % the following actions need to be done for both 
-            % model and simulationEvolution
             obj.updatePowerFlowModel(electricalGrid);
             obj.updatePowerFlowSimulation(electricalGrid);
             
             obj.updatePowerTransitModel(electricalGrid);
             obj.updatePowerTransitSimulation(electricalGrid);
             
-            % this should be model (and simulation optionally)
             obj.modelEvolution.updateDisturbancePowerTransit();
             obj.simulationEvolution.updateDisturbancePowerTransit();
-            % simulationEvolution only
+            
+            obj.modelEvolution.dropOldestPowerTransit();
+            obj.simulationEvolution.dropOldestPowerTransit();
+            
             obj.transmitDataZone2Controller();
         end
         
