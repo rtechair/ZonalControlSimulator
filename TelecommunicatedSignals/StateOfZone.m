@@ -61,6 +61,16 @@ classdef StateOfZone < handle
         function value = getPowerAvailable(obj)
             value = obj.powerAvailable;
         end
+
+        function vector = getStateAsVector(obj)
+            Fij = obj.powerFlow;
+            PC = obj.powerCurtailment;
+            PB = obj.powerBattery;
+            EB = obj.energyBattery;
+            PG = obj.powerGeneration;
+            PA = obj.powerAvailable;
+            vector = [Fij ; PC ; PB ; EB ; PG ; PA];
+        end
         
         %% Setter
         function setPowerFlow(obj, value)
