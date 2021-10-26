@@ -73,7 +73,9 @@ classdef ModelEvolution < handle
             obj.queuePowerTransit = NaN(numberOfBuses,2);
             
             % blank transit disturbance
-            obj.disturbancePowerTransit = NaN(numberOfBuses, 1);
+            obj.disturbancePowerTransit = zeros(numberOfBuses, 1);
+            
+            obj.disturbancePowerAvailable = zeros(numberOfGenOn, 1);
         end
         
         %% GETTER
