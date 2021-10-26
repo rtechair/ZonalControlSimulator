@@ -29,6 +29,7 @@ classdef (Abstract) Controller < handle
         
         receiveDisturbancePowerTransit;
         
+        receiveDisturbancePowerAvailable;
     end
     
 end

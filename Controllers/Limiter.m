@@ -113,8 +113,8 @@ classdef Limiter < Controller
             obj.disturbancePowerTransit = value;
         end
         
-        function receiveFeedback(obj, object)
-            % TODO
+        function receiveDisturbancePowerAvailable(obj, value)
+            % the limiter does nothing with the disturbance of available power
         end
         
         function receiveStateAndDisturbancePowerTransit(obj, stateAndDisturbancePowerTransit)
