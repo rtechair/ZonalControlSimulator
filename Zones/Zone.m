@@ -242,6 +242,7 @@ classdef Zone < handle
         function dropOldestPowerTransit(obj)
             % FIXME: temporary method, later deleted
             obj.modelEvolution.dropOldestPowerTransit();
+            obj.simulationEvolution.dropOldestPowerTransit();
         end
         
         function simulateBothCases(obj, currentTime, timeStep)
