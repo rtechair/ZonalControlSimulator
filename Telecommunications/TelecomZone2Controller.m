@@ -21,6 +21,7 @@ classdef TelecomZone2Controller < handle
     properties (SetAccess = protected)
         stateQueue
         disturbancePowerTransitQueue
+        disturbancePowerAvailableQueue
         delay
     end
     
@@ -32,6 +33,7 @@ classdef TelecomZone2Controller < handle
             blankStateQueue(1:delayTelecom) = StateOfZone(numberOfBranches, numberOfGen, numberOfBatt);
             obj.stateQueue = blankStateQueue;
             obj.disturbancePowerTransitQueue = zeros(numberOfBuses, delayTelecom);
+            obj.disturbancePowerAvailableQueue = zeros(numberOfGen, delayTelecom);
         end
         
         function receiveState(obj, state)
@@ -60,6 +62,20 @@ classdef TelecomZone2Controller < handle
         function value = dequeueDisturbancePowerTransit(obj)
              value = obj.disturbancePowerTransitQueue(:,1);
              obj.disturbancePowerTransitQueue = obj.disturbancePowerTransitQueue(:, 2:end);
+        end
+        
+        function receiveDisturbancePowerAvailable(obj, disturbance)
+            obj.disturbancePowerAvailableQueue(:, obj.delay+1) = disturbance;
+        end
+        
+        function sendDisturbancePowerAvailable(obj, controller)
+            sentDisturbance = obj.dequeueDisturbancePowerAvailable();
+            controller.receiveDisturbancePowerAvailable(sentDisturbance);
+        end
+        
+        function value = dequeueDisturbancePowerAvailable(obj)
+            value = obj.disturbancePowerAvailableQueue(:,1);
+            obj.disturbancePowerAvailableQueue = obj.disturbancePowerAvailableQueue(:, 2:end);
         end
         
     end
