@@ -93,6 +93,10 @@ classdef ModelEvolution < handle
             value = obj.disturbancePowerTransit;
         end
         
+        function value = getDisturbancePowerAvailable(obj)
+            value = obj.disturbancePowerAvailable;
+        end
+        
         function setInitialPowerAvailable(obj, timeSeries)
             initialPowerAvailable = timeSeries.getInitialPowerAvailable();
             obj.state.setPowerAvailable(initialPowerAvailable);
