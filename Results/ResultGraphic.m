@@ -169,20 +169,22 @@ classdef ResultGraphic < Result
         
         function plotStateAndControlBattery(obj, electricalGrid)
             timeState = 1:obj.numberOfIterations+1;
+            timeControl = 1:obj.numberOfIterations;
             xlegend = 'Number of iterations';
             numberOfRowsOfPlot = ceil(sqrt( obj.numberOfBatt));
             figName = ['Zone ' obj.zoneName ': State of Energy in Battery EB, '...
-               'Control of Battery Injection DeltaPB (DeltaPB > 0 means injection in the battery'];
+               'battery injection PB, PB>0 means consumption of the battery, PB<0 is injection, ' ...
+               'control of Battery Injection DeltaPB'];
             figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             
             for batt = 1:obj.numberOfBatt
                subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, batt);
                hold on;
+               stairs(timeControl, obj.controlBattery(batt,:),'--'); % DeltaPB
                stairs(timeState, obj.powerBattery(batt,:),':'); % PB
                stairs(timeState, obj.energyBattery(batt,:));    % EB
-               timeControl = 1:obj.numberOfIterations;
-               stairs(timeControl, obj.controlBattery(batt,:),'--'); % DeltaPB
-               legend({'PB, EB, DeltaPB'}, 'Location', 'Best')
+
+               legend({'DeltaPB', 'PB', 'EB'}, 'Location', 'Best')
                xlabel(xlegend)
                ylabel('Power [MW]') % TODO: define the unit for energy
                
