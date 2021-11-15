@@ -21,7 +21,7 @@ function object = buildDelayInIterations(zoneSetting)
         zoneSetting ZoneSetting
     end
 % create an object of class 'DelayInIterations' by providing an object of class 'ZoneSetting'
-    controlCycle = zoneSetting.getcontrolCycleInSeconds();
+    controlCycle = zoneSetting.getControlCycleInSeconds();
     delayCurtInSeconds = zoneSetting.getDelayCurtInSeconds();
     delayBattInSeconds = zoneSetting.getDelayBattInSeconds();
     delayTimeSeries2ZoneInSeconds = zoneSetting.getDelayTimeSeries2ZoneInSeconds;

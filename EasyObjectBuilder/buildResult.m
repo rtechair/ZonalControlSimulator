@@ -24,7 +24,7 @@ function object = buildResult(zoneSetting, zoneTopology, delayInIterations, dura
         duration double
         name {mustBeText(name)}
     end
-    controlCycle = zoneSetting.getcontrolCycleInSeconds();
+    controlCycle = zoneSetting.getControlCycleInSeconds();
     numberOfBuses = zoneTopology.getNumberOfBuses();
     numberOfBranches = zoneTopology.getNumberOfBranches();
     numberOfGenOn = zoneTopology.getNumberOfGenOn();

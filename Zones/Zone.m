@@ -93,7 +93,7 @@ classdef Zone < handle
         end
         
         function setModelTimeSeries(obj, duration)
-            controlCycle = obj.setting.getcontrolCycleInSeconds();
+            controlCycle = obj.setting.getControlCycleInSeconds();
             obj.modelTimeSeries = buildTimeSeries(obj.setting, obj.topology, controlCycle, duration);
         end
         
@@ -261,7 +261,7 @@ classdef Zone < handle
         
         function boolean = isItTimeToUpdate(obj, currentTime, timeStep)
             previousTime = currentTime - timeStep;
-            controlCycle = obj.setting.getcontrolCycleInSeconds();
+            controlCycle = obj.setting.getControlCycleInSeconds();
             
             % Iterations are defined by the euclidian division:
             % time = iterations * controlCycle + remainder, with 0 <= remainder < controlCycle

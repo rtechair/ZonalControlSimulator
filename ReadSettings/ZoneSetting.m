@@ -124,7 +124,7 @@ classdef ZoneSetting < handle
             value = obj.branchFlowLimit;
         end
         
-        function value = getcontrolCycleInSeconds(obj)
+        function value = getControlCycleInSeconds(obj)
             value = obj.controlCycleInSeconds;
         end
         
