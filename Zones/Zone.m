@@ -342,6 +342,7 @@ classdef Zone < handle
             obj.result.plotControlAndDisturbanceGen(electricalGrid);
             obj.result.plotStateGen(electricalGrid);
             obj.result.plotDisturbanceTransit();
+            obj.result.plotStateAndControlBattery(electricalGrid);
         end
         
         %% GETTER
