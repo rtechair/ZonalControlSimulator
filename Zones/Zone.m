@@ -70,8 +70,15 @@ classdef Zone < handle
             
             obj.setTelecom();
             obj.setResult(duration);
-            obj.setControllerSetting();
-            obj.setController();
+            
+            isControllerMPC = true;
+            
+            if isControllerMPC
+                obj.setModelPredictiveController();
+            else
+                obj.setControllerSetting();
+                obj.setController();
+            end
         end
         
         function setSetting(obj)
@@ -146,6 +153,30 @@ classdef Zone < handle
             obj.controller = Limiter(branchFlowLimit, numberOfBattOn, ...
                 increasingEchelon, decreasingEchelon, lowerThreshold, upperThreshold, ...
                 delayCurt, maxPowerGeneration);
+        end
+        
+        % WARMING: this is an attempt at an MPC
+        function setModelPredictiveController(obj)
+            delayCurt = obj.delayInIterations.getDelayCurt();
+            delayBatt = obj.delayInIterations.getDelayBatt();
+            controlCycleInSeconds = obj.setting.getControlCycleInSeconds();
+            
+            predictionHorizon = 10;
+            numberOfScenarios = 1;
+            
+            obj.controller = MpcWithUncertainty(obj.name, delayCurt, delayBatt, ...
+                controlCycleInSeconds, predictionHorizon, numberOfScenarios);
+            
+            amplifierQ_ep1 = 10^7;
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 800;
+            flowLimit = obj.setting.getBranchFlowLimit();
+            maxEpsilon = 0.05;
+            
+            obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
+                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
         end
         
         function initializePowerAvailable(obj)
