@@ -4,8 +4,6 @@
 	"windowInSeconds":5,
 	"Zone":
 	{
-		"1": "VG",
-		"2": "VTV",
-		"3": "BLA"
+		"1": "VGsmall"
 	}
 }
