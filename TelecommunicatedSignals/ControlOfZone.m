@@ -20,7 +20,7 @@ classdef ControlOfZone < handle
 % Wrapper class of the 2 controls defined by the controller:
 % the control of the generator curtailments
 % the control of the battery injections
-   properties (SetAccess = protected, GetAccess = protected)
+   properties (SetAccess = protected)
        controlCurtailment
        controlBattery
    end
