@@ -159,12 +159,13 @@ classdef Zone < handle
         function setModelPredictiveController(obj)
             delayCurt = obj.delayInIterations.getDelayCurt();
             delayBatt = obj.delayInIterations.getDelayBatt();
+            delayTelecom = obj.delayInIterations.getDelayController2Zone();
             controlCycleInSeconds = obj.setting.getControlCycleInSeconds();
             
             predictionHorizon = 10;
             numberOfScenarios = 1;
             
-            obj.controller = MpcWithUncertainty(obj.name, delayCurt, delayBatt, ...
+            obj.controller = MpcWithUncertainty(obj.name, delayCurt, delayBatt, delayTelecom, ...
                 controlCycleInSeconds, predictionHorizon, numberOfScenarios);
             
             amplifierQ_ep1 = 10^7;

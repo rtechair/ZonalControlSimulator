@@ -23,6 +23,7 @@ classdef MpcWithUncertaintyTest3 < matlab.unittest.TestCase
         zoneName
         delayCurt
         delayBatt
+        delayTelecom
         controlCycle
         predictionHorizon
         numberOfScenarios
@@ -43,6 +44,7 @@ classdef MpcWithUncertaintyTest3 < matlab.unittest.TestCase
             testCase.zoneName = 'VG';
             testCase.delayCurt = 9;
             testCase.delayBatt = 1;
+            testCase.delayTelecom = 0;
             testCase.controlCycle = 5;
             testCase.predictionHorizon = 10;
             testCase.numberOfScenarios = 1;
@@ -62,7 +64,7 @@ classdef MpcWithUncertaintyTest3 < matlab.unittest.TestCase
     methods(Test)
         function createMpc(testCase)
             testCase.mpc = MpcWithUncertainty(testCase.zoneName,...
-                testCase.delayCurt, testCase.delayBatt,...
+                testCase.delayCurt, testCase.delayBatt, testCase.delayTelecom, ...
                 testCase.controlCycle, testCase.predictionHorizon, ...
                 testCase.numberOfScenarios);
             
@@ -82,7 +84,6 @@ classdef MpcWithUncertaintyTest3 < matlab.unittest.TestCase
         0.387255706979233,0.0293700573064339,0.00751806826892238,0.0353342967822654,0.0478496326640304,0.00112985686683580,0.00108874157551904,0.00116328901896677,0.184844113632701,NaN;...
         4.19050234657760,1.41220713469354,1.24253291405792,1.45850550046232,1.55567249515506,1.18539449470162,0.833754786501928,0,0,NaN]
         
-        
         PA_initial = [57.0000000240000;48.2710659660000;9.09090909000000;65.0023996440000]
         deltaPA = [0;-0.819843120000002;0;1.18421784000000]
         
@@ -93,6 +94,19 @@ classdef MpcWithUncertaintyTest3 < matlab.unittest.TestCase
         %{
         countControls = 90
         PB = [-9.26996637737875]
+        deltaPB(89) = [4.58846695179640e-07]
+        deltaPB(90) = [1.39754453759025e-06]
+        
+        deltaPC(90) =
+        [0.00121221038427849;0.00119646786921499;0.00116328901896677;0.00116974949105486];
+        
+        issue: delays from telecommunication.
+                "Telecom":
+        {
+            "timeSeries2Zone":0,
+            "controller2Zone":20,
+            "zone2Controller":5
+        }
         %}
         
         function zoneVGIteration92LeadingToInfeasibility(testCase)
