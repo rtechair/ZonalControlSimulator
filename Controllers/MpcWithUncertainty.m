@@ -89,7 +89,7 @@ classdef MpcWithUncertainty < Controller
     
     
     methods
-        function obj = MpcWithUncertainty(zoneName, delayCurtailment, delayBattery, ...
+        function obj = MpcWithUncertainty(zoneName, delayCurtailment, delayBattery, delayTelecom, ...
                 controlCycle, predictionHorizon, numberOfScenarios)
             zoneOperatorsFilename = ['operatorsZone' zoneName '.mat'];
             obj.loadOperators(zoneOperatorsFilename);
@@ -102,8 +102,8 @@ classdef MpcWithUncertainty < Controller
             obj.changeOperatorControlBatteryDueToBattery(controlCycle);
             obj.restrictOperatorSize();
             
-            obj.tau_c = delayCurtailment;
-            obj.tau_b = delayBattery;
+            obj.tau_c = delayCurtailment + delayTelecom;
+            obj.tau_b = delayBattery + delayTelecom;
             obj.N = predictionHorizon;
             obj.Ns = numberOfScenarios;
             
