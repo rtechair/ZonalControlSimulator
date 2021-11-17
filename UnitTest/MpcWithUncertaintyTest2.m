@@ -43,6 +43,7 @@ classdef MpcWithUncertaintyTest2 < matlab.unittest.TestCase
             testCase.zoneName = 'VGsmall';
             testCase.delayCurt = 9;
             testCase.delayBatt = 1;
+            testCase.delayTelecom = 0;
             testCase.controlCycle = 5;
             testCase.predictionHorizon = 10;
             testCase.numberOfScenarios = 1;
@@ -58,7 +59,7 @@ classdef MpcWithUncertaintyTest2 < matlab.unittest.TestCase
         
         function createMpc(testCase)
             testCase.mpc = MpcWithUncertainty(testCase.zoneName,...
-                testCase.delayCurt, testCase.delayBatt,...
+                testCase.delayCurt, testCase.delayBatt, testCase.delayTelecom, ...
                 testCase.controlCycle, testCase.predictionHorizon, ...
                 testCase.numberOfScenarios);
             
