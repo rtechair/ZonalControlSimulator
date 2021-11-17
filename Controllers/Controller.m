@@ -21,15 +21,15 @@ classdef (Abstract) Controller < handle
 
     methods (Abstract)
         
-        computeControl;
+        computeControl(obj);
         
-        getControl;
+        getControl(obj);
         
-        receiveState;
+        receiveState(obj, stateOfZone);
         
-        receiveDisturbancePowerTransit;
+        receiveDisturbancePowerTransit(obj, disturbancePowerTransit);
         
-        receiveDisturbancePowerAvailable;
+        receiveDisturbancePowerAvailable(obj, disturbancePowerAvailable);
     end
     
 end
