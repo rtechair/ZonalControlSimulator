@@ -26,6 +26,10 @@ function object = buildMathematicalModel(basecaseFilename, zoneName)
 %   - set up the associate mathematical model
 % As a consequence, reading the source code could help understanding how to
 % create and manipulate objects which are used with the simulator.
+    arguments
+        basecaseFilename char
+        zoneName char
+    end
     grid = ElectricalGrid(basecaseFilename);
     zoneFilename = ['zone' zoneName '.json'];
     zoneSetting = decodeJsonFile(zoneFilename);
