@@ -207,6 +207,10 @@ classdef MathematicalModel < handle
         end
         
         function saveOperators(obj, filename)
+            arguments
+                obj
+                filename char
+            end
             operatorState = obj.operatorState;                                            % A
             operatorControlCurtailment = obj.operatorControlCurtailment;                  % Bc
             operatorControlBattery = obj.operatorControlBattery;                          % Bb
@@ -219,7 +223,7 @@ classdef MathematicalModel < handle
                           'operatorDisturbancePowerGeneration', ...  % Dg
                           'operatorDisturbancePowerTransit', ...     % Dt
                           'operatorDisturbancePowerAvailable')       % Da
-            message = ['The operators of the mathematical model are save in file: ' filename];
+            message = ['The operators of the mathematical model are saved in file: ' filename];
             disp(message)
         end
  
