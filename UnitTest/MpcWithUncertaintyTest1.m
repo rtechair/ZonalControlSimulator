@@ -22,9 +22,18 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
         zoneName
         delayCurt
         delayBatt
+        delayTelecom
         controlCycle
         predictionHorizon
         numberOfScenarios
+        
+        amplifierQ_ep1
+        maxPowerGeneration
+        minPowerBattery
+        maxPowerBattery
+        maxEnergyBattery
+        flowLimit
+        maxEpsilon
         
         % the object of the test
         mpc
@@ -39,6 +48,14 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
             testCase.controlCycle = 5;
             testCase.predictionHorizon = 10;
             testCase.numberOfScenarios = 1;
+            
+            testCase.amplifierQ_ep1 = 10^7;
+            testCase.maxPowerGeneration = [78;66;54;10];
+            testCase.minPowerBattery = -10;
+            testCase.maxPowerBattery = 10;
+            testCase.maxEnergyBattery = 800;
+            testCase.flowLimit = 45;
+            testCase.maxEpsilon = 0.05;
         end
         
         function createMpc(testCase)
@@ -46,114 +63,14 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
                 testCase.delayCurt, testCase.delayBatt, testCase.delayTelecom, ...
                 testCase.controlCycle, testCase.predictionHorizon, ...
                 testCase.numberOfScenarios);
-        end
-        
-        function setQ(testCase)
-            testCase.mpc.setCostRefDeviation();
-        end
-        
-        function setR(testCase)
-            testCase.mpc.setCostControlUse();
-        end
-        
-        function setQ_ep1(testCase)
-            amplifier = 10^7;
-            testCase.mpc.setCostRefDeviationEp1(amplifier);
-        end
-        
-        function setMaxPG(testCase)
-            maxPG = [78;66;54;10];
-            testCase.mpc.setMaxPowerGeneration(maxPG);
-        end
-        
-        function setMinControlCurt(testCase)
-            testCase.mpc.setMinControlCurt();
-        end
-        
-        function setMaxControlCurt(testCase)
-            testCase.mpc.setMaxControlCurt();
-        end
-        
-        function setMinPowerBattery(testCase)
-            minInjection = - 10;
-            testCase.mpc.setMinPowerBattery(minInjection);
-        end
-        
-        function setMaxPowerBattery(testCase)
-            maxInjection = 10;
-            testCase.mpc.setMaxPowerBattery(maxInjection);
-        end
-        
-        function setMinControlBattery(testCase)
-            testCase.mpc.setMinControlBattery();
-        end
-        
-        function setMaxControlBattery(testCase)
-            testCase.mpc.setMaxControlBattery();
-        end
-        
-        function setMaxEnergyBattery(testCase)
-            maxEB = 800;
-            testCase.mpc.setMaxEnergyBattery(maxEB);
-        end
-        
-        function setFlowLimit(testCase)
-            flowLimit = 45;
-            testCase.mpc.setFlowLimit(flowLimit);
-        end
-        
-        function setMaxEpsilon(testCase)
-            maxEpsilon = 0.05;
-            testCase.mpc.setMaxEpsilon(maxEpsilon);
-        end
-        
-        function setYalmipVar(testCase)
-            testCase.mpc.setYalmipVar();
-        end
-        
-        function setOperatorExtendedState(testCase)
-            testCase.mpc.setOperatorExtendedState();
-        end
-        
-        function setOperatorExtendedControl(testCase)
-            testCase.mpc.setOperatorExtendedControl();
-        end
-        
-        function setOperatorExtendedDisturbance(testCase)
-            testCase.mpc.setOperatorExtendedDisturbance();
-        end
-        
-        function setMinControl(testCase)
-            testCase.mpc.setMinControl();
-        end
-        
-        function setMaxControl(testCase)
-            testCase.mpc.setMaxControl();
-        end
-        
-        function setMinState(testCase)
-            testCase.mpc.setMinState();
-        end
-        
-        function setMaxState(testCase)
-            testCase.mpc.setMaxState();
-        end
-        
-        function setMpcFormulation(testCase)
-            testCase.mpc.setMpcFormulation();
-        end
-        
-        function setSolver(testCase)
-            testCase.mpc.setSolver();
-        end
-        
-        function setController(testCase)
-            testCase.mpc.setController();
-        end
-        
-        function initializePastControls(testCase)
-            testCase.mpc.initializePastCurtControls();
-            testCase.mpc.initializePastBattControls();
+            
+            testCase.mpc.setOtherElements(testCase.amplifierQ_ep1, ...
+                testCase.maxPowerGeneration, ...
+                testCase.minPowerBattery, ...
+                testCase.maxPowerBattery, ...
+                testCase.maxEnergyBattery, ...
+                testCase.flowLimit, ...
+                testCase.maxEpsilon);
         end
         
     end
@@ -366,7 +283,7 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
         
         function checkA(testCase)
             actValue = testCase.mpc.A;
-            expValue = load('MATPOWERfileNEWdata.mat').A;
+            expValue = load('mathematicalModelVGsmall_fromTrung.mat').A;
             testCase.verifyEqual(actValue, expValue);
         end
         
@@ -374,25 +291,25 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
         THE FOLLOWING CHECKS ARE FAILED BECAUSE OF THE PTDF COEF
         function checkBc(testCase)
             actValue = testCase.mpc.Bc;
-            expValue = load('MATPOWERfileNEWdata.mat').Bc;
+            expValue = load('mathematicalModelVGsmall_fromTrung.mat').Bc;
             testCase.verifyEqual(actValue, expValue);
         end
         
         function checkBb(testCase)
             actValue = testCase.mpc.Bb;
-            expValue = load('MATPOWERfileNEWdata.mat').Bb;
+            expValue = load('mathematicalModelVGsmall_fromTrung.mat').Bb;
             testCase.verifyEqual(actValue, expValue);
         end
         
         function checkDg(testCase)
             actValue = testCase.mpc.Dg;
-            expValue = load('MATPOWERfileNEWdata.mat').Dg;
+            expValue = load('mathematicalModelVGsmall_fromTrung.mat').Dg;
             testCase.verifyEqual(actValue, expValue);
         end
         
         function checkDn(testCase)
             actValue = testCase.mpc.Dn;
-            expValue = load('MATPOWERfileNEWdata.mat').Dn;
+            expValue = load('mathematicalModelVGsmall_fromTrung.mat').Dn;
             testCase.verifyEqual(actValue, expValue);
         end
         %}

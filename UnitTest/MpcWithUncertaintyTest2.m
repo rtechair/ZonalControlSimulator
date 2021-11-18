@@ -22,6 +22,7 @@ classdef MpcWithUncertaintyTest2 < matlab.unittest.TestCase
         zoneName
         delayCurt
         delayBatt
+        delayTelecom
         controlCycle
         predictionHorizon
         numberOfScenarios
