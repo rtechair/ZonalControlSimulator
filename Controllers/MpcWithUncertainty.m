@@ -90,7 +90,7 @@ classdef MpcWithUncertainty < Controller
     
     methods
         function obj = MpcWithUncertainty(zoneName, delayCurtailment, delayBattery, delayTelecom, ...
-                controlCycle, predictionHorizon, numberOfScenarios)
+                controlCycle, predictionHorizonInSeconds, numberOfScenarios)
             zoneOperatorsFilename = ['operatorsZone' zoneName '.mat'];
             obj.loadOperators(zoneOperatorsFilename);
             obj.setNumberOfBuses();
@@ -104,7 +104,9 @@ classdef MpcWithUncertainty < Controller
             
             obj.tau_c = delayCurtailment + delayTelecom;
             obj.tau_b = delayBattery + delayTelecom;
-            obj.N = predictionHorizon;
+            
+            horizonInIterations = ceil(predictionHorizonInSeconds / controlCycle);
+            obj.N = horizonInIterations;
             obj.Ns = numberOfScenarios;
             
             obj.setNumberOfStateOperatorCol();
@@ -380,6 +382,8 @@ classdef MpcWithUncertainty < Controller
             noEpsilonAfterDelayCurt = obj.epsilon(:, obj.tau_c+1 : end) == 0;
             noEpsilonAfterDelayCurt = noEpsilonAfterDelayCurt : 'epsilon = 0 after delay curt';
 
+            obj.constraints = [obj.constraints, noEpsilonAfterDelayCurt];
+            
             obj.setConstraintLowerBoundControl(false);
             obj.setConstraintUpperBoundControl(false);
             obj.setConstraintEpsilonNonNegative(false);

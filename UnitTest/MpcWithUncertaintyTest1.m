@@ -24,6 +24,7 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
         delayBatt
         delayTelecom
         controlCycle
+        horizonInSeconds
         predictionHorizon
         numberOfScenarios
         
@@ -46,7 +47,9 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
             testCase.delayBatt = 1;
             testCase.delayTelecom = 0;
             testCase.controlCycle = 5;
-            testCase.predictionHorizon = 10;
+            testCase.horizonInSeconds = 50;
+            horizonInIterations = ceil(testCase.horizonInSeconds / testCase.controlCycle);
+            testCase.predictionHorizon = horizonInIterations;
             testCase.numberOfScenarios = 1;
             
             testCase.amplifierQ_ep1 = 10^7;
@@ -61,7 +64,7 @@ classdef MpcWithUncertaintyTest1 < matlab.unittest.TestCase
         function createMpc(testCase)
             testCase.mpc = MpcWithUncertainty(testCase.zoneName,...
                 testCase.delayCurt, testCase.delayBatt, testCase.delayTelecom, ...
-                testCase.controlCycle, testCase.predictionHorizon, ...
+                testCase.controlCycle, testCase.horizonInSeconds, ...
                 testCase.numberOfScenarios);
             
             testCase.mpc.setOtherElements(testCase.amplifierQ_ep1, ...

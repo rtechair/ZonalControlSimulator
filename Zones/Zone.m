@@ -161,12 +161,12 @@ classdef Zone < handle
             delayBatt = obj.delayInIterations.getDelayBatt();
             delayTelecom = obj.delayInIterations.getDelayController2Zone();
             controlCycleInSeconds = obj.setting.getControlCycleInSeconds();
-            
-            predictionHorizon = 10;
+            % TODO: add to mpc.json the following info
+            horizonInSeconds = 50;
             numberOfScenarios = 1;
             
             obj.controller = MpcWithUncertainty(obj.name, delayCurt, delayBatt, delayTelecom, ...
-                controlCycleInSeconds, predictionHorizon, numberOfScenarios);
+                controlCycleInSeconds, horizonInSeconds, numberOfScenarios);
             
             amplifierQ_ep1 = 10^7;
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
