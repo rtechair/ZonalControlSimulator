@@ -223,7 +223,7 @@ classdef MathematicalModel < handle
                           'operatorDisturbancePowerGeneration', ...  % Dg
                           'operatorDisturbancePowerTransit', ...     % Dt
                           'operatorDisturbancePowerAvailable')       % Da
-            message = ['The operators of the mathematical model are saved in file: ' filename];
+            message = ['The operators of the mathematical model are saved in file: ' filename '.mat'];
             disp(message)
         end
  
