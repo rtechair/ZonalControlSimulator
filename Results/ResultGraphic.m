@@ -49,11 +49,11 @@ classdef ResultGraphic < Result
                 % decompose the plot into a square of subplots
                 subplot(numberOfRowsOfGraph, numberOfRowsOfGraph, gen);
                 hold on;
-                stairs(time, obj.powerAvailable(gen,:), ':'); % PA
-                stairs(time, obj.powerCurtailment(gen, :), '-.'); % PC
+                stairs(time, obj.powerAvailable(gen,:), ':', "LineWidth", 2.0); % PA
+                stairs(time, obj.powerCurtailment(gen, :), '-.', "LineWidth", 2.0); % PC
                 maxPGminusPC = obj.maxPowerGeneration(gen) - obj.powerCurtailment(gen,:);
-                stairs(time, maxPGminusPC, '--'); % MaxPG - PC
-                stairs(time, obj.powerGeneration(gen,:)); % PG
+                stairs(time, maxPGminusPC, '--', "LineWidth", 2.0); % MaxPG - PC
+                stairs(time, obj.powerGeneration(gen,:), "LineWidth", 2.0); % PG
                 legend({'PA', 'PC', 'MaxPG - PC', 'PG = min(PA, MaxPG-PC)'},'Location','Best')
                 xlabel(xlegend)
                 ylabel('Power [MW]')
@@ -80,7 +80,7 @@ classdef ResultGraphic < Result
                 hold on;
                 stairs(time, obj.disturbanceAvailable(gen, :), ':'); % DeltaPA
                 stairs(time, obj.disturbanceGeneration(gen, :)); % DeltaPG
-                stairs(time, obj.controlCurtailment(gen, :), '--'); % DeltaPC: control taken by the controller
+                stairs(time, obj.controlCurtailment(gen, :), '--', "LineWidth", 2.0); % DeltaPC: control taken by the controller
                 delayForZone = obj.delayCurt + obj.delayController2Zone;
                 controlCurtApplied = [zeros(1, delayForZone) ...
                     obj.controlCurtailment(gen, 1: obj.numberOfIterations-delayForZone)];
@@ -132,10 +132,10 @@ classdef ResultGraphic < Result
             for br = 1:obj.numberOfBranches
                 subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, br);
                 hold on;
-                stairs(time, abs(obj.powerBranchFlow(br,:)));  % abs(Fij)
+                stairs(time, abs(obj.powerBranchFlow(br,:)), "LineWidth", 2.0);  % abs(Fij)
                 
                 branchLimitOverTime = ones(1, obj.numberOfIterations+1)*obj.branchFlowLimit;
-                stairs(time, branchLimitOverTime);
+                stairs(time, branchLimitOverTime, "LineWidth", 2.0);
                 
                 legend({'|Fij|','UB'},'Location','Best')
                 xlabel(xlegend)
@@ -180,9 +180,9 @@ classdef ResultGraphic < Result
             for batt = 1:obj.numberOfBatt
                subplot(numberOfRowsOfPlot, numberOfRowsOfPlot, batt);
                hold on;
-               stairs(timeControl, obj.controlBattery(batt,:),'--'); % DeltaPB
-               stairs(timeState, obj.powerBattery(batt,:),':'); % PB
-               stairs(timeState, obj.energyBattery(batt,:));    % EB
+               stairs(timeControl, obj.controlBattery(batt,:),'--', "LineWidth", 2.0); % DeltaPB
+               stairs(timeState, obj.powerBattery(batt,:),':', "LineWidth", 2.0); % PB
+               stairs(timeState, obj.energyBattery(batt,:), "LineWidth", 2.0);    % EB
 
                legend({'DeltaPB', 'PB', 'EB'}, 'Location', 'Best')
                xlabel(xlegend)
