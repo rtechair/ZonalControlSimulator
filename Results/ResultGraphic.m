@@ -200,6 +200,7 @@ classdef ResultGraphic < Result
             obj.plotControlAndDisturbanceGen(electricalGrid);
             obj.plotAbsoluteFlowBranch(electricalGrid);
             obj.plotDisturbanceTransit();
+            obj.plotStateAndControlBattery(electricalGrid);
         end
         
     end

@@ -370,11 +370,7 @@ classdef Zone < handle
         end
         
         function plotResult(obj, electricalGrid)
-            obj.result.plotAbsoluteFlowBranch(electricalGrid);
-            obj.result.plotControlAndDisturbanceGen(electricalGrid);
-            obj.result.plotStateGen(electricalGrid);
-            obj.result.plotDisturbanceTransit();
-            obj.result.plotStateAndControlBattery(electricalGrid);
+            obj.result.plotAllFigures(electricalGrid);
         end
         
         %% GETTER
