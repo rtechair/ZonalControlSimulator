@@ -377,5 +377,9 @@ classdef Zone < handle
         function object = getModelEvolution(obj)
             object = obj.modelEvolution;
         end
+        
+        function object = getSimulationEvolution(obj)
+            object = obj.simulationEvolution;
+        end
     end
 end
