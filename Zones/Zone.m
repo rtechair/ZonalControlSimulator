@@ -122,7 +122,7 @@ classdef Zone < handle
         end
         
         function setResult(obj, duration)
-            obj.modelResult = buildResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
+            obj.modelResult = buildModelResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
                 obj.name);
         end
         

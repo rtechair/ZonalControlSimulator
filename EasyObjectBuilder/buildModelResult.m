@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 %}
 
-function object = buildResult(zoneSetting, zoneTopology, delayInIterations, duration, name)
+function object = buildModelResult(zoneSetting, zoneTopology, delayInIterations, duration, name)
     arguments
         zoneSetting ZoneSetting
         zoneTopology ZoneTopology
