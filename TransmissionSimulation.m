@@ -167,7 +167,7 @@ classdef TransmissionSimulation < handle
                     if updateZone
                         zone.update(obj.grid);
                         zone.saveResult();
-                        zone.result.prepareForNextStep();
+                        zone.modelResult.prepareForNextStep();
                     else
                         zone.updateNoControlCycle(obj.grid);
                     end

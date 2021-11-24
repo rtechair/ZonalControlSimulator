@@ -46,7 +46,7 @@ classdef Zone < handle
        modelTimeSeries
        simulationTimeSeries
        
-       result
+       modelResult
     end
     
     methods
@@ -122,7 +122,7 @@ classdef Zone < handle
         end
         
         function setResult(obj, duration)
-            obj.result = buildResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
+            obj.modelResult = buildResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
                 obj.name);
         end
         
@@ -271,7 +271,7 @@ classdef Zone < handle
         end
         
         function prepareResultForNextStep(obj)
-            obj.result.prepareForNextStep();
+            obj.modelResult.prepareForNextStep();
         end
         
         function dropOldestPowerTransit(obj)
@@ -355,14 +355,14 @@ classdef Zone < handle
         end
         
         function saveResult(obj)
-            obj.modelEvolution.saveState(obj.result);
-            obj.controller.saveControl(obj.result);
-            obj.modelEvolution.saveDisturbance(obj.result);
+            obj.modelEvolution.saveState(obj.modelResult);
+            obj.controller.saveControl(obj.modelResult);
+            obj.modelEvolution.saveDisturbance(obj.modelResult);
         end
         
         function saveState(obj)
             % used in the initialization of TransmissionSimulation
-            obj.modelEvolution.saveState(obj.result);
+            obj.modelEvolution.saveState(obj.modelResult);
         end
         
         function plotTopology(obj, electricalGrid)
@@ -370,7 +370,7 @@ classdef Zone < handle
         end
         
         function plotResult(obj, electricalGrid)
-            obj.result.plotAllFigures(electricalGrid);
+            obj.modelResult.plotAllFigures(electricalGrid);
         end
         
         %% GETTER
