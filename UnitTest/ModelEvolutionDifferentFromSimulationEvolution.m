@@ -19,7 +19,6 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
     
     properties
         transmissionSim
-        stoppingTime
     end
     
     methods(TestClassSetup)
@@ -27,9 +26,6 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
             testCase.transmissionSim = TransmissionSimulation('simulation.json');
         end
         
-        function setTime(testCase)
-            testCase.stoppingTime = 10;
-        end
     end
     
     methods(Test)
@@ -68,19 +64,59 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
                 end
                 
                 % check at every control cycle, model evolution and
-                % simulation evolution have the same generated powers.
+                % simulation evolution's properties have the same values.
                 zone1 = trans.zones{1};
-                controlCycle = zone1.setting.getControlCycleInSeconds();
-                if rem(time, controlCycle)==0
+                isZoneToUpdate = zone1.isItTimeToUpdate(time, step);
+                % controlCycle = zone1.setting.getControlCycleInSeconds();
+                if isZoneToUpdate
+                %if rem(time, controlCycle)==0
                     zone1 = trans.zones{1};
                     model1 = zone1.getModelEvolution();
                     simulation1 = zone1.getSimulationEvolution();
                     stateModel1 = model1.getState();
                     stateSim1 = simulation1.getState();
-
+                    
+                    FLOWmodel = stateModel1.getPowerFlow();
+                    FLOWsim = stateSim1.getPowerFlow();
+                    
                     PGmodel = stateModel1.getPowerGeneration();
                     PGsim = stateSim1.getPowerGeneration();
-                    testCase.verifyEqual(PGmodel, PGsim, "AbsTol",10^(-3));
+                    
+                    PCmodel = stateModel1.getPowerCurtailment();
+                    PCsim = stateSim1.getPowerCurtailment();
+                    
+                    PBmodel = stateModel1.getPowerBattery();
+                    PBsim = stateSim1.getPowerBattery();
+                    
+                    EBmodel = stateModel1.getEnergyBattery();
+                    EBsim = stateSim1.getEnergyBattery();
+                    
+                    PAmodel = stateModel1.getPowerAvailable();
+                    PAsim = stateSim1.getPowerAvailable();
+                    
+                    deltaPAmodel = model1.getDisturbancePowerAvailable();
+                    deltaPAsim = simulation1.getDisturbancePowerAvailable();
+                    
+                    deltaPTmodel = model1.getDisturbancePowerTransit();
+                    deltaPTsim = simulation1.getDisturbancePowerTransit();
+                    
+                    aa = 5;
+                    
+                    testCase.verifyEqual(FLOWmodel, FLOWsim, "AbsTol",10^(-5));
+                    testCase.verifyEqual(PGmodel, PGsim, "AbsTol",10^(-5));
+                    testCase.verifyEqual(PCmodel, PCsim, "AbsTol",10^(-5));
+                    testCase.verifyEqual(PBmodel, PBsim, "AbsTol",10^(-5));
+                    testCase.verifyEqual(deltaPTmodel, deltaPTsim, "AbsTol",10^(-5));
+                    testCase.verifyEqual(PAmodel, PAsim, "AbsTol",10^(-5));
+                    
+                    
+                    %{
+                    
+                    testCase.verifyEqual(EBmodel, EBsim, "AbsTol",10^(-5));
+                    
+                    testCase.verifyEqual(deltaPAmodel, deltaPAsim, "AbsTol",10^(-5));
+                    
+                    %}
                 end
             end
         end
