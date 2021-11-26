@@ -92,6 +92,17 @@ classdef MpcWithUncertaintyTest2 < matlab.unittest.TestCase
                  0,0,0,0,0,0,0.000382999422856887,0.000440131934420258,0.000538930074855163;...
                  0,0,0,0,0,0,0.000415874049394707,0.000462089473108724,0.000630702774841456];
              
+             % the following commented lines are aimed to observe a 2nd
+             % situation where PG < 0 at some points during the prediction
+             % horizo
+             %{
+             ucK_delay = zeros(4,10);
+             ucK_delay = [zeros(3,10);
+                          0 0 1.00000238470 1.0002231411 1.00078708 0.000232324 0.0005898 0.00113289 0.00008541002 0.010000000065];
+             PG = 0.8 * PG;
+             ucK_delay = [zeros(3,10);
+                 0.000415874049394707 * ones(1,10)];
+             %}
              ubK_delay = -3.528591890483582e-04;
              
              % don't forget, xK_extend is built without PA
