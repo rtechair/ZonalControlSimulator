@@ -59,96 +59,35 @@ classdef TransmissionSimulation < handle
         end
         
         function initialize(obj)
-            % Beware the following methods apply their actions to all the
-            % zones, no matter their control cycle. They should not be used during the simulation,
-            % as the zones might not share the same control cyle.
-            obj.initializeZonesPowerAvailable();
-            obj.initializeZonesPowerGeneration();
-            
-            obj.updateGridForAllZones();
+            for i = 1:obj.numberOfZones
+                zone = obj.zones{i};
+                zone.initializePowerAvailable();
+                zone.initializePowerGeneration();
+                zone.updateGrid(obj.grid);
+            end
             
             obj.grid.runPowerFlow();
             
-            obj.updateZonesPowerFlow();
-            obj.updateZonesPowerTransit();
-            
-            % do not compute disturbance transit initially, as there is not enough data
-            obj.transmitDataZone2Controller();
-            obj.saveZonesSimulationState();
-            obj.saveZonesModelState();
-            
-            obj.prepareForNextStepZonesModelResult()
-            obj.prepareForNextStepZonesSimulationResult();
-            obj.dropZonesOldestPowerTransit();
-        end
-        
-        function initializeZonesPowerAvailable(obj)
             for i = 1:obj.numberOfZones
-               obj.zones{i}.initializePowerAvailable();
-            end
-        end
-        
-        function initializeZonesPowerGeneration(obj)
-           for i = 1:obj.numberOfZones
-              obj.zones{i}.initializePowerGeneration();
-           end
-        end
-        
-        function updateGridForAllZones(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.updateGrid(obj.grid);
-            end
-        end
-        
-        function updateZonesPowerFlow(obj)
-           for i = 1:obj.numberOfZones
-               zone = obj.zones{i};
-               zone.updatePowerFlowModel(obj.grid);
-               zone.updatePowerFlowSimulation(obj.grid);
-           end
-        end
-        
-        function updateZonesPowerTransit(obj)
-            for i = 1:obj.numberOfZones
-                zone = obj.zones{i};
+                zone.updatePowerFlowModel(obj.grid);
+                zone.updatePowerFlowSimulation(obj.grid);
+                
                 zone.updatePowerTransitModel(obj.grid);
                 zone.updatePowerTransitSimulation(obj.grid);
-            end
-        end
-        
-        function saveZonesModelState(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.saveModelState();
-            end
-        end
-        
-        function saveZonesSimulationState(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.saveSimulationState();
-            end
-        end
-        
-        function transmitDataZone2Controller(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.transmitDataZone2Controller();
-            end
-        end
-        
-        function prepareForNextStepZonesModelResult(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.prepareForNextStepModelResult();
-            end
-        end
-        
-        function prepareForNextStepZonesSimulationResult(obj)
-            for i = 1:obj.numberOfZones
-                obj.zones{i}.prepareForNextStepSimulationResult();
-            end
-        end
-        
-        function dropZonesOldestPowerTransit(obj)
-            for i= 1:obj.numberOfZones
-                obj.zones{i}.dropOldestPowerTransit();
+                
+                zone.updatePowerTransitModel(obj.grid);
+                zone.updatePowerTransitSimulation(obj.grid);
+                
+                % do not compute disturbance transit initially, as there is not enough data
+                
+                zone.transmitDataZone2Controller();
+                zone.saveModelState();
+                zone.saveSimulationState();
+                
+                zone.prepareForNextStepModelResult();
+                zone.prepareForNextStepSimulationResult();
+                
+                zone.dropOldestPowerTransit();
             end
         end
     end
