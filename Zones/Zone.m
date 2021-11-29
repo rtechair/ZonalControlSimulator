@@ -273,8 +273,12 @@ classdef Zone < handle
             obj.simulationTimeSeries.goToNextStep();
         end
         
-        function prepareResultForNextStep(obj)
+        function prepareForNextStepModelResult(obj)
             obj.modelResult.prepareForNextStep();
+        end
+        
+        function prepareForNextStepSimulationResult(obj)
+            obj.simulationResult.prepareForNextStep();
         end
         
         function dropOldestPowerTransit(obj)
@@ -363,10 +367,16 @@ classdef Zone < handle
             obj.modelEvolution.saveDisturbance(obj.modelResult);
         end
         
-        function saveState(obj)
+        function saveModelState(obj)
             % used in the initialization of TransmissionSimulation
             obj.modelEvolution.saveState(obj.modelResult);
         end
+        
+        function saveSimulationState(obj)
+            % used in the initialization of TransmissionSimulation
+            obj.simulationEvolution.saveState(obj.modelResult);
+        end
+        
         
         function plotTopology(obj, electricalGrid)
             obj.topology.plotLabeledGraph(electricalGrid);

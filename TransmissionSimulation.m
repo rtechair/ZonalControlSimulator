@@ -74,9 +74,11 @@ classdef TransmissionSimulation < handle
             
             % do not compute disturbance transit initially, as there is not enough data
             obj.transmitDataZone2Controller();
-            obj.saveZonesState();
+            obj.saveZonesSimulationState();
+            obj.saveZonesModelState();
             
-            obj.prepareZonesForFirstStep();
+            obj.prepareForNextStepZonesModelResult()
+            obj.prepareForNextStepZonesSimulationResult();
             obj.dropZonesOldestPowerTransit();
         end
         
@@ -114,9 +116,15 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function saveZonesState(obj)
+        function saveZonesModelState(obj)
             for i = 1:obj.numberOfZones
-                obj.zones{i}.saveState();
+                obj.zones{i}.saveModelState();
+            end
+        end
+        
+        function saveZonesSimulationState(obj)
+            for i = 1:obj.numberOfZones
+                obj.zones{i}.saveSimulationState();
             end
         end
         
@@ -126,9 +134,15 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function prepareZonesForFirstStep(obj)
+        function prepareForNextStepZonesModelResult(obj)
             for i = 1:obj.numberOfZones
-                obj.zones{i}.prepareResultForNextStep();
+                obj.zones{i}.prepareForNextStepModelResult();
+            end
+        end
+        
+        function prepareForNextStepZonesSimulationResult(obj)
+            for i = 1:obj.numberOfZones
+                obj.zones{i}.prepareForNextStepSimulationResult();
             end
         end
         
