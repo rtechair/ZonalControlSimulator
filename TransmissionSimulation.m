@@ -123,7 +123,9 @@ classdef TransmissionSimulation < handle
                     zone = obj.zones{i};
                     updateZone = zone.isItTimeToUpdate(time, step);
                     if updateZone
-                        zone.update(obj.grid);
+                        zone.updateModel(obj.grid);
+                        zone.updateSimulation(obj.grid);
+                        zone.transmitDataZone2Controller();
                         zone.saveResult();
                         zone.modelResult.prepareForNextStep();
                     else

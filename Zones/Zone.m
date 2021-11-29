@@ -326,20 +326,18 @@ classdef Zone < handle
             obj.simulationEvolution.updateState();
         end
         
-        function update(obj, electricalGrid)
+        function updateModel(obj, electricalGrid)
             obj.updatePowerFlowModel(electricalGrid);
-            obj.updatePowerFlowSimulation(electricalGrid);
-            
             obj.updatePowerTransitModel(electricalGrid);
-            obj.updatePowerTransitSimulation(electricalGrid);
-            
             obj.modelEvolution.updateDisturbancePowerTransit();
-            obj.simulationEvolution.updateDisturbancePowerTransit();
-            
             obj.modelEvolution.dropOldestPowerTransit();
+        end
+        
+        function updateSimulation(obj, electricalGrid)
+            obj.updatePowerFlowSimulation(electricalGrid);
+            obj.updatePowerTransitSimulation(electricalGrid);
+            obj.simulationEvolution.updateDisturbancePowerTransit();
             obj.simulationEvolution.dropOldestPowerTransit();
-            
-            obj.transmitDataZone2Controller();
         end
         
         function updateNoControlCycle(obj, electricalGrid)
