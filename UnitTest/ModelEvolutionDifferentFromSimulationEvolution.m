@@ -32,6 +32,8 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
         function test1(testCase)
             % the following code is adapted from
             % TransmissionSimulation>runSimulation
+            
+            % the file simulation.json requires to be adapted for this test
             trans = testCase.transmissionSim;
             step = trans.simulationSetting.getWindow();
             start = step;
@@ -57,7 +59,7 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
                     if updateZone
                         zone.update(trans.grid);
                         zone.saveResult();
-                        zone.result.prepareForNextStep();
+                        zone.modelResult.prepareForNextStep();
                     else
                         zone.updateNoControlCycle(trans.grid);
                     end
@@ -110,11 +112,19 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
                     testCase.verifyEqual(PAmodel, PAsim, "AbsTol",10^(-5));
                     
                     
-                    %{
                     
+                    %{
+                    % I don't know why the battery energies are different
+                    at the control cycles
                     testCase.verifyEqual(EBmodel, EBsim, "AbsTol",10^(-5));
                     
+                    % the following test fails with zone VTV, logical as
+                    deltaPAsim represents the variation of PA during a
+                    simulation window (i.e. 5 sec normally), while deltaPAmodel
+                    represents the variation during a control cycle (i.e.
+                    15 sec normally)
                     testCase.verifyEqual(deltaPAmodel, deltaPAsim, "AbsTol",10^(-5));
+                    
                     
                     %}
                 end
