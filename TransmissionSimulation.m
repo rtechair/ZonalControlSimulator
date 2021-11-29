@@ -61,8 +61,12 @@ classdef TransmissionSimulation < handle
         function initialize(obj)
             for i = 1:obj.numberOfZones
                 zone = obj.zones{i};
+                % the initialization is for both the modelEvolution and the
+                % simulationEvolution
                 zone.initializePowerAvailable();
                 zone.initializePowerGeneration();
+                
+                % the update of the grid is done using simulationEvolution's state
                 zone.updateGrid(obj.grid);
             end
             
@@ -87,7 +91,8 @@ classdef TransmissionSimulation < handle
                 zone.prepareForNextStepModelResult();
                 zone.prepareForNextStepSimulationResult();
                 
-                zone.dropOldestPowerTransit();
+                zone.dropOldestPowerTransitModel();
+                zone.dropOldestPowerTransitSimulation();
             end
         end
     end
