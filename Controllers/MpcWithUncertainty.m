@@ -871,9 +871,22 @@ classdef MpcWithUncertainty < Controller
         function setDelta_PG_and_PG_est_over_horizon(obj)
             for k = 1: obj.N
                 f = obj.PA_est(:,k+1) - obj.PG_est(:,k) + obj.Delta_PC_est(:,k);
+                % f = obj.PA_est(:,k) - obj.PG_est(:,k) + obj.Delta_PA_est(:,k) + obj.Delta_PC_est(:,k);
                 g = obj.maxPG - obj.PC_est(:,k) - obj.PG_est(:,k);
                 obj.Delta_PG_est(:,k) = min(f, g);
                 obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
+                %{
+                This is an attempt at improving the numerical computation
+                of the disturbance Delta_PG_est in order to solve the
+                numerical approximation responsible for PG < 0 in the MPC
+                if f <= g
+                    obj.PG_est(:,k+1) = obj.PA_est(:,k+1);
+                    obj.Delta_PG_est(:,k) = f;
+                else
+                    obj.Delta_PG_est(:,k) = min(f, g);
+                    obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
+                end
+                %}
             end
         end
         
