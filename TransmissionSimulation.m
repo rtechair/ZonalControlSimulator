@@ -126,10 +126,16 @@ classdef TransmissionSimulation < handle
                         zone.updateModel(obj.grid);
                         zone.updateSimulation(obj.grid);
                         zone.transmitDataZone2Controller();
-                        zone.saveResult();
+                        
+                        zone.saveModelResult();
+                        zone.saveSimulationResultOnControlCycle();
+                        
                         zone.modelResult.prepareForNextStep();
+                        zone.simulationResult.prepareForNextStep();
                     else
-                        zone.updateNoControlCycle(obj.grid);
+                        % zone.updateNoControlCycle(obj.grid);
+                        zone.updateSimulation(obj.grid);
+                        zone.saveSimulationResultNoControl(obj);
                     end
                 end
             end

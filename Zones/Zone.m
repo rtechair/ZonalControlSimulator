@@ -340,14 +340,35 @@ classdef Zone < handle
             obj.simulationEvolution.dropOldestPowerTransit();
         end
         
+        % TODO: delete later this function after checking it is of no zone
+        % anymore
         function updateNoControlCycle(obj, electricalGrid)
             obj.updatePowerFlowSimulation(electricalGrid);
         end
         
-        function saveResult(obj)
+        %% SAVE
+        function saveModelResult(obj)
             obj.modelEvolution.saveState(obj.modelResult);
             obj.controller.saveControl(obj.modelResult);
             obj.modelEvolution.saveDisturbance(obj.modelResult);
+        end
+        
+        function saveSimulationResultOnControlCycle(obj)
+            obj.simulationEvolution.saveState(obj.simulationResult);
+            obj.controller.saveControl(obj.simulationResult);
+            obj.simulationEvolution.saveDisturbance(obj.simulationResult);
+        end
+        
+        function saveSimulationResultNoControl(obj)
+            obj.simulationEvolution.saveState(obj.simulationResult);
+            
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+            noControlCurtailment = zeros(numberOfGen, 1);
+            noControlBatteryInjection = zeros(numberOfBatt, 1);
+            obj.simulationResult.saveControl(noControlCurtailment, noControlBatteryInjection);
+            
+            obj.simulationEvolution.saveDisturbance(obj.simulationResult);
         end
         
         function saveModelState(obj)
@@ -360,7 +381,7 @@ classdef Zone < handle
             obj.simulationEvolution.saveState(obj.modelResult);
         end
         
-        
+        %% PLOT
         function plotTopology(obj, electricalGrid)
             obj.topology.plotLabeledGraph(electricalGrid);
         end
