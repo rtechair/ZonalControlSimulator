@@ -47,6 +47,7 @@ classdef Zone < handle
        simulationTimeSeries
        
        modelResult
+       simulationResult
     end
     
     methods
@@ -69,7 +70,7 @@ classdef Zone < handle
             obj.setSimulationEvolution();
             
             obj.setTelecom();
-            obj.setResult(duration);
+            obj.setResult(simulationWindow, duration);
             
             isControllerMPC = true;
             
@@ -121,9 +122,11 @@ classdef Zone < handle
                 buildTelecom(obj.topology, obj.delayInIterations);
         end
         
-        function setResult(obj, duration)
+        function setResult(obj, simulationWindow, duration)
             obj.modelResult = buildModelResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
                 obj.name);
+            obj.simulationResult = buildSimulationResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
+                obj.name, simulationWindow);
         end
         
         % WARNING: the following function is for the limiter,
