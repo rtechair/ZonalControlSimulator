@@ -57,11 +57,19 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
                     zone = trans.zones{i};
                     updateZone = zone.isItTimeToUpdate(time, step);
                     if updateZone
-                        zone.update(trans.grid);
-                        zone.saveResult();
+                        zone.updateModel(trans.grid);
+                        zone.updateSimulation(trans.grid);
+                        zone.transmitDataZone2Controller();
+                        
+                        zone.saveModelResult();
+                        zone.saveSimulationResultOnControlCycle();
+                        
                         zone.modelResult.prepareForNextStep();
+                        zone.simulationResult.prepareForNextStep();
                     else
-                        zone.updateNoControlCycle(trans.grid);
+                        zone.updateSimulation(trans.grid);
+                        zone.saveSimulationResultNoControl();
+                        zone.simulationResult.prepareForNextStep();
                     end
                 end
                 
@@ -102,27 +110,23 @@ classdef ModelEvolutionDifferentFromSimulationEvolution < matlab.unittest.TestCa
                     deltaPTmodel = model1.getDisturbancePowerTransit();
                     deltaPTsim = simulation1.getDisturbancePowerTransit();
                     
-                    aa = 5;
-                    
                     testCase.verifyEqual(FLOWmodel, FLOWsim, "AbsTol",10^(-5));
                     testCase.verifyEqual(PGmodel, PGsim, "AbsTol",10^(-5));
                     testCase.verifyEqual(PCmodel, PCsim, "AbsTol",10^(-5));
                     testCase.verifyEqual(PBmodel, PBsim, "AbsTol",10^(-5));
-                    testCase.verifyEqual(deltaPTmodel, deltaPTsim, "AbsTol",10^(-5));
                     testCase.verifyEqual(PAmodel, PAsim, "AbsTol",10^(-5));
                     
-                    
-                    
-                    %{
-                    % I don't know why the battery energies are different
-                    at the control cycles
+                    % the battery energies are different at the control cycles
                     testCase.verifyEqual(EBmodel, EBsim, "AbsTol",10^(-5));
                     
-                    % the following test fails with zone VTV, logical as
+                    %{
+                    the following test fails with zone VTV, logical as
                     deltaPAsim represents the variation of PA during a
                     simulation window (i.e. 5 sec normally), while deltaPAmodel
                     represents the variation during a control cycle (i.e.
                     15 sec normally)
+                    
+                    testCase.verifyEqual(deltaPTmodel, deltaPTsim, "AbsTol",10^(-5));
                     testCase.verifyEqual(deltaPAmodel, deltaPAsim, "AbsTol",10^(-5));
                     
                     
