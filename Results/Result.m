@@ -114,19 +114,8 @@ classdef Result < handle
             obj.disturbanceAvailable = NaN(numberOfGenerators, obj.numberOfIterations);
         end
         
-        
-        function saveState(obj, powerBranchFlow, powerCurtailment, powerBattery, ...
-                energyBattery, powerGeneration, powerAvailable)
-            obj.powerBranchFlow(:, obj.step + 1) = powerBranchFlow;
-            obj.powerCurtailment(:, obj.step + 1) = powerCurtailment;
-            obj.powerBattery(:, obj.step + 1) = powerBattery;
-            obj.energyBattery(:, obj.step + 1) = energyBattery;
-            obj.powerGeneration(:, obj.step + 1) = powerGeneration;
-            obj.powerAvailable(:, obj.step + 1) = powerAvailable;
-        end
-        
-        function saveState2(obj, state)
-            obj.powerBranchFlow(:, obj.step + 1) = state.getPowerBranchFlow();
+        function saveState(obj, state)
+            obj.powerBranchFlow(:, obj.step + 1) = state.getPowerFlow();
             obj.powerCurtailment(:, obj.step + 1) = state.getPowerCurtailment();
             obj.powerBattery(:, obj.step + 1) = state.getPowerBattery();
             obj.energyBattery(:, obj.step + 1) = state.getEnergyBattery();
@@ -137,11 +126,6 @@ classdef Result < handle
         function saveControl(obj, controlCurt, controlBatt)
             obj.controlCurtailment(:, obj.step) = controlCurt;
             obj.controlBattery(:, obj.step) = controlBatt;
-        end
-        
-        function saveControl2(obj, control)
-            obj.controlCurtailment(:, obj.step) = control.getControlCurtailment();
-            obj.controlBattery(:, obj.step) = control.getControlBattery();
         end
         
         function saveDisturbance(obj, transit, generation, available)
