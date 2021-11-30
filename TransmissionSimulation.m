@@ -133,7 +133,6 @@ classdef TransmissionSimulation < handle
                         zone.modelResult.prepareForNextStep();
                         zone.simulationResult.prepareForNextStep();
                     else
-                        % zone.updateNoControlCycle(obj.grid);
                         zone.updateSimulation(obj.grid);
                         zone.saveSimulationResultNoControl();
                         zone.simulationResult.prepareForNextStep();

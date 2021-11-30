@@ -242,11 +242,6 @@ classdef Zone < handle
             obj.simulationEvolution.receiveControl(sentControl);
         end
         
-        function transmitDataTimeSeries2Zone(obj)
-            disturbancePowerAvailable = obj.modelTimeSeries.getDisturbancePowerAvailable();
-            obj.modelEvolution.receiveDisturbancePowerAvailable(disturbancePowerAvailable);
-        end
-        
         function transmitDataTimeSeries2Model(obj)
             obj.modelTimeSeries.sendDisturbancePowerAvailable(obj.modelEvolution);
         end
@@ -338,12 +333,6 @@ classdef Zone < handle
             obj.updatePowerTransitSimulation(electricalGrid);
             obj.simulationEvolution.updateDisturbancePowerTransit();
             obj.simulationEvolution.dropOldestPowerTransit();
-        end
-        
-        % TODO: delete later this function after checking it is of no zone
-        % anymore
-        function updateNoControlCycle(obj, electricalGrid)
-            obj.updatePowerFlowSimulation(electricalGrid);
         end
         
         %% SAVE
