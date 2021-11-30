@@ -135,7 +135,8 @@ classdef TransmissionSimulation < handle
                     else
                         % zone.updateNoControlCycle(obj.grid);
                         zone.updateSimulation(obj.grid);
-                        zone.saveSimulationResultNoControl(obj);
+                        zone.saveSimulationResultNoControl();
+                        zone.simulationResult.prepareForNextStep();
                     end
                 end
             end
@@ -149,11 +150,18 @@ classdef TransmissionSimulation < handle
             end
         end
         
-        function plotZonesResult(obj)
+        function plotZonesModelResult(obj)
             for i = 1 : obj.numberOfZones
-                obj.zones{i}.plotResult(obj.grid);
+                obj.zones{i}.plotModelResult(obj.grid);
             end
         end
+        
+        function plotZonesSimulationResult(obj)
+            for i = 1 : obj.numberOfZones
+                obj.zones{i}.plotSimulationResult(obj.grid);
+            end
+        end
+        
         
         %% GETTER
         function value = getNumberOfZones(obj)

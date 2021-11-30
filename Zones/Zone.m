@@ -386,8 +386,12 @@ classdef Zone < handle
             obj.topology.plotLabeledGraph(electricalGrid);
         end
         
-        function plotResult(obj, electricalGrid)
+        function plotModelResult(obj, electricalGrid)
             obj.modelResult.plotAllFigures(electricalGrid);
+        end
+        
+        function plotSimulationResult(obj, electricalGrid)
+            obj.simulationResult.plotAllFigures(electricalGrid);
         end
         
         %% GETTER

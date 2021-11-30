@@ -35,12 +35,17 @@ transmission = TransmissionSimulation('simulation.json');
 transmission.runSimulation();
 
 isTopologyShown = false;
-isResultShown = true;
+isModelResultShown = true;
+isSimulationResultShown = false;
 
 if isTopologyShown
-transmission.plotZonesTopology();
+    transmission.plotZonesTopology();
 end
 
-if isResultShown
-transmission.plotZonesResult();
+if isModelResultShown
+    transmission.plotZonesModelResult();
+end
+
+if isSimulationResultShown
+    transmission.plotZonesSimulationResult();
 end
