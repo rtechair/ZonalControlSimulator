@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 %}
 
-classdef StateOfZone < handle
+classdef StateOfZone < matlab.mixin.Copyable
     
     properties (SetAccess = protected)
        powerFlow        % Fij

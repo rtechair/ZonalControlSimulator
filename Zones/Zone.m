@@ -251,7 +251,7 @@ classdef Zone < handle
         end
         
         function transmitDataZone2Controller(obj)
-            state = obj.simulationEvolution.getState();
+            state = copy(obj.simulationEvolution.getState());
             disturbancePowerTransit = obj.modelEvolution.getDisturbancePowerTransit();
             disturbancePowerAvailable = obj.modelEvolution.getDisturbancePowerAvailable();
             
