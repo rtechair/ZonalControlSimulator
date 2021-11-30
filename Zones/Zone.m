@@ -378,7 +378,7 @@ classdef Zone < handle
         
         function saveSimulationState(obj)
             % used in the initialization of TransmissionSimulation
-            obj.simulationEvolution.saveState(obj.modelResult);
+            obj.simulationEvolution.saveState(obj.simulationResult);
         end
         
         %% PLOT
