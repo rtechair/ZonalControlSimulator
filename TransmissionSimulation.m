@@ -73,6 +73,7 @@ classdef TransmissionSimulation < handle
             obj.grid.runPowerFlow();
             
             for i = 1:obj.numberOfZones
+                zone = obj.zones{i};
                 zone.updatePowerFlowModel(obj.grid);
                 zone.updatePowerFlowSimulation(obj.grid);
                 
