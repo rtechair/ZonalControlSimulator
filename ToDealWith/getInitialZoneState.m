@@ -26,8 +26,8 @@ function cellOfZoneStates = getInitialZoneState(simulationFilename)
     cellOfZoneStates = cell(numberOfZones,1);
     for z = 1:numberOfZones
         zone = zones{z};
-        zoneEvolution = zone.getZoneEvolution();
-        state = zoneEvolution.getState();
+        zoneSimulationEvolution = zone.getSimulationEvolution();
+        state = zoneSimulationEvolution.getState();
         cellOfZoneStates{z} = state;
     end
 end
