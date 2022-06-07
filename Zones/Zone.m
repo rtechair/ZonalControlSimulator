@@ -235,9 +235,9 @@ classdef Zone < handle
         end
         
         function transmitDataController2Zone(obj)
-            control = obj.controller.getControl();
+            control = copy(obj.controller.getControl());
             obj.telecomController2Zone.receiveControl(control);
-            sentControl = obj.telecomController2Zone.sendControl();
+            sentControl = copy(obj.telecomController2Zone.sendControl());
             obj.modelEvolution.receiveControl(sentControl);
             obj.simulationEvolution.receiveControl(sentControl);
         end

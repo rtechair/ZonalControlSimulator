@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 %}
 
-classdef ControlOfZone < handle
+classdef ControlOfZone < matlab.mixin.Copyable
 % Wrapper class of the 2 controls defined by the controller:
 % the control of the generator curtailments
 % the control of the battery injections
