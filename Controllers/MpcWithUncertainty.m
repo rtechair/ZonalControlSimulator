@@ -738,6 +738,8 @@ classdef MpcWithUncertainty < Controller
         
         function receiveDisturbancePowerTransit(obj, disturbancePowerTransit)
             obj.disturbancePowerTransit = disturbancePowerTransit;
+            % 08/06/2022: Sorin advises the controller should not consider any disturbance form outside the zone currently
+            obj.disturbancePowerTransit = zeros(obj.numberOfBuses, 1);
         end
         
         function receiveDisturbancePowerAvailable(obj, disturbancePowerAvailable)
