@@ -159,6 +159,7 @@ classdef ZoneTopology < handle
             figure('name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
             graphStatic = obj.getGraphStatic(electricalGrid);
             P = plot(graphStatic);
+            layout(P,'force');
             P = obj.configurePlot(P);
             
             % display in red color, each bus inside the zone
@@ -201,7 +202,7 @@ classdef ZoneTopology < handle
                 if it is the only node of the graph. Therefore, node's numbers are
                 converted into strings to avoid this strange behavior.
             %}
-            G = graph(string(fromBus), string(toBus));
+            G = digraph(string(fromBus), string(toBus));
         end
         
         function P = configurePlot(obj, P)
@@ -213,6 +214,7 @@ classdef ZoneTopology < handle
             P.EdgeColor = 'k';
             P.LineWidth = 3;
             P.EdgeLabelColor = 'k';
+            P.ShowArrows = 0;
         end
         
     end
