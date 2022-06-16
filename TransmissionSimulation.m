@@ -144,9 +144,10 @@ classdef TransmissionSimulation < handle
         end
         
         %% PLOT
-        function plotZonesTopology(obj)
+        function cellOfGraphPlots = plotZonesTopology(obj)
+            cellOfGraphPlots = cell(obj.numberOfZones,1);
             for i = 1:obj.numberOfZones
-                obj.zones{i}.plotTopology(obj.grid);
+                cellOfGraphPlots{i} = obj.zones{i}.plotTopology();
             end
         end
         

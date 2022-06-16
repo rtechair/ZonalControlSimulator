@@ -153,7 +153,7 @@ classdef ZoneTopology < handle
         end
         
         %% GRAPH
-        function P = plotLabeledGraph(obj, electricalGrid)
+        function P = plotTopology(obj)
             % plot the static graph given as input while modifying the legend
             % 3 modifications in the plot:
             % - buses in busId are red

@@ -371,8 +371,8 @@ classdef Zone < handle
         end
         
         %% PLOT
-        function plotTopology(obj, electricalGrid)
-            obj.topology.plotLabeledGraph(electricalGrid);
+        function graphPlot = plotTopology(obj)
+            graphPlot = obj.topology.plotTopology();
         end
         
         function plotModelResult(obj, electricalGrid)
