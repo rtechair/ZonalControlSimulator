@@ -44,6 +44,14 @@ classdef ZoneTopology < handle
         busBorderId
         branchBorderIdx
         
+        busWithGenOn
+        busWithBattOn
+        
+        fromBus
+        toBus
+        borderFromBus
+        borderToBus
+        
         maxPowerGeneration
         maxPowerBattery % if PowerBattery > 0, it consumes the battery
         minPowerBattery % if PowerBattery < 0, it charges the battery
@@ -52,6 +60,8 @@ classdef ZoneTopology < handle
         numberOfBranches
         numberOfGenOn
         numberOfBattOn
+        
+        staticGraph
     end
     
     methods
@@ -65,14 +75,22 @@ classdef ZoneTopology < handle
             obj.busId = zoneBusId;
             
             obj.setBranchesInZoneAndInBorder(electricalGrid);
+            obj.setEndBus(electricalGrid);
+            obj.setBorderEndBus(electricalGrid);
+            
             obj.setBusBorderId(electricalGrid);
             
             obj.setGenOnIdx(electricalGrid);
             obj.setBattOnIdx(electricalGrid);
             
+            obj.setBusWithGenOn(electricalGrid);
+            obj.setBusWithBattOn(electricalGrid);
+            
             obj.setMaxPowerGeneration(electricalGrid);
             obj.setMaxPowerBattery(electricalGrid);
             obj.setMinPowerBattery(electricalGrid);
+            
+            obj.setStaticGraph();
                         
             obj.setNumberOfElements();
         end
@@ -149,16 +167,13 @@ classdef ZoneTopology < handle
                 https://www.mathworks.com/help/matlab/ref/graph.plot.html#namevaluepairarguments
             %}
             % unique to remove redundancy as several generators can be on a same bus
-            busIdWithGenOn = electricalGrid.getBuses(obj.genOnIdx);
-            busIdWithBattOn = electricalGrid.getBuses(obj.battOnIdx);
             
-            isBusOfZoneWithGenOn = ismember(obj.busId, busIdWithGenOn);
-            isBusOfZoneWithBattOn = ismember(obj.busId, busIdWithBattOn);
+            isBusOfZoneWithGenOn = ismember(obj.busId, obj.busWithGenOn);
+            isBusOfZoneWithBattOn = ismember(obj.busId, obj.busWithBattOn);
             
             figName = ['Zone ' obj.name ': red node = bus within zone, black node = bus at the border'];
-            figure('name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');    
-            graphStatic = obj.getGraphStatic(electricalGrid);
-            P = plot(graphStatic);
+            figure('name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
+            P = plot(obj.staticGraph);
             layout(P,'force');
             P = obj.configurePlot(P);
             
@@ -188,23 +203,6 @@ classdef ZoneTopology < handle
             end
         end
         
-        function G = getGraphStatic(obj, electricalGrid)
-            % Create the static graph of a zone defined by its branch indices in the
-            % basecase.
-        
-            insideAndBorderBranches = [obj.branchIdx; obj.branchBorderIdx];
-            [fromBus, toBus] = electricalGrid.getEndBuses(insideAndBorderBranches);
-            %{
-                %https://www.mathworks.com/help/matlab/ref/graph.html
-                Matlab's Graph object cares about the value / id of nodes, it will print as many nodes as
-                 the max id of nodes; e.g. if a node's number is 1000,
-                then Matlab assumes this is the 1000th node and will plot 1000 nodes, even
-                if it is the only node of the graph. Therefore, node's numbers are
-                converted into strings to avoid this strange behavior.
-            %}
-            G = digraph(string(fromBus), string(toBus));
-        end
-        
         function P = configurePlot(obj, P)
             % Node
             P.NodeColor = 'k'; % k = black
@@ -225,6 +223,16 @@ classdef ZoneTopology < handle
         function setBranchesInZoneAndInBorder(obj, electricalGrid)
             [obj.branchIdx, obj.branchBorderIdx] = ...
                 electricalGrid.getInnerAndBorderBranchIdx(obj.busId);
+        end
+        
+        function setEndBus(obj, electricalGrid)
+            [obj.fromBus, obj.toBus] = ...
+                electricalGrid.getEndBuses(obj.branchIdx);
+        end
+        
+        function setBorderEndBus(obj, electricalGrid)
+            [obj.borderFromBus, obj.borderToBus] = ...
+                electricalGrid.getEndBuses(obj.branchBorderIdx);
         end
         
         function setBusBorderId(obj, electricalGrid)
@@ -249,6 +257,28 @@ classdef ZoneTopology < handle
         
         function setMinPowerBattery(obj, electricalGrid)
             obj.minPowerBattery = electricalGrid.getMinPowerBattery(obj.battOnIdx);
+        end
+        
+        function setStaticGraph(obj)
+            allFromBuses = [obj.fromBus; obj.borderFromBus];
+            allToBuses = [obj.toBus; obj.borderToBus];
+            %{
+                %https://www.mathworks.com/help/matlab/ref/graph.html
+                Matlab's Graph object cares about the value / id of nodes, it will print as many nodes as
+                 the max id of nodes; e.g. if a node's number is 1000,
+                then Matlab assumes this is the 1000th node and will plot 1000 nodes, even
+                if it is the only node of the graph. Therefore, node's numbers are
+                converted into strings to avoid this strange behavior.
+            %}
+            obj.staticGraph = digraph(string(allFromBuses), string(allToBuses));
+        end
+        
+        function setBusWithGenOn(obj, electricalGrid)
+            obj.busWithGenOn = electricalGrid.getBuses(obj.genOnIdx);
+        end
+        
+        function setBusWithBattOn(obj, electricalGrid)
+            obj.busWithBattOn = electricalGrid.getBuses(obj.battOnIdx);
         end
         
         function setNumberOfElements(obj)                     
