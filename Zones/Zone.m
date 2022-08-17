@@ -73,12 +73,19 @@ classdef Zone < handle
             obj.setResult(simulationWindow, duration);
             
             isControllerMPC = true;
-            
+            isControllerLimiter = false;
+            isControllerMixedLogicalModel = false;
             if isControllerMPC
                 obj.setModelPredictiveController();
-            else
+            elseif isControllerLimiter
                 obj.setControllerSetting();
                 obj.setController();
+            elseif isControllerMixedLogicalModel
+                %TODO
+            else
+                except = MException('The choice of controller is incorrect, ',...
+                    'one of the controller must be selected in Zone.m');
+                throw(except)
             end
         end
         
