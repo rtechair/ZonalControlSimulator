@@ -85,6 +85,39 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         maxEB
         sdp_setting
         controller
+
+        %% Closed-loop simulation
+        real_short_state
+       Real_state % = real extended state, #( n + c*tau_c + b*tau_b) x #simIterations
+       ucK_delay % over the prediction horizon
+       ucK_new % new curt control decided now by the controller, but will be applied after delay
+       ubK_delay % over the prediction horizon
+       ubK_new % new battery control decided now by the controller, but delayed
+       Delta_PA_est
+       Delta_PC_est
+       Delta_PT_est
+       PA_est
+       PC_est
+       PG_est       % #gen x #iterations
+       Delta_PG_est % #gen x predictionHorizon x #simIterations
+       PG_est_record  % #gen x #iterations x #scenarios
+       delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
+       flags % #simIterations
+       epsilons_all % #branch x #horizonPrediction x #scenarios x simIterations
+       u_mpc % #gen+1 x #simIterations
+       
+       xK_new % the new state received at each iteration of the simulation
+       xK_extend % a column vector
+       
+       result
+       infeas
+       
+        % elements received
+        state
+        disturbancePowerTransit
+        disturbancePowerAvailable
+        
+        countControls
     end
     
     
@@ -639,40 +672,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
     end
         
         %% CLOSED LOOP SIMULATION
-        
-    properties
-       real_short_state
-       Real_state % = real extended state, #( n + c*tau_c + b*tau_b) x #simIterations
-       ucK_delay % over the prediction horizon
-       ucK_new % new curt control decided now by the controller, but will be applied after delay
-       ubK_delay % over the prediction horizon
-       ubK_new % new battery control decided now by the controller, but delayed
-       Delta_PA_est
-       Delta_PC_est
-       Delta_PT_est
-       PA_est
-       PC_est
-       PG_est       % #gen x #iterations
-       Delta_PG_est % #gen x predictionHorizon x #simIterations
-       PG_est_record  % #gen x #iterations x #scenarios
-       delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
-       flags % #simIterations
-       epsilons_all % #branch x #horizonPrediction x #scenarios x simIterations
-       u_mpc % #gen+1 x #simIterations
-       
-       xK_new % the new state received at each iteration of the simulation
-       xK_extend % a column vector
-       
-       result
-       infeas
-       
-        % elements received
-        state
-        disturbancePowerTransit
-        disturbancePowerAvailable
-        
-        countControls
-    end
         
     methods
         
