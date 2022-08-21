@@ -669,12 +669,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
         end
         
-    end
         
         %% CLOSED LOOP SIMULATION
-        
-    methods
-        
         function buildReal_state(obj)
             numberOfDelayedCurtCtrl = obj.c * obj.tau_c;
             numberOfDelayedBatteryCtrl = obj.b * obj.tau_b;
