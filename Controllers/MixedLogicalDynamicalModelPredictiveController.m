@@ -705,28 +705,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.ubK_delay = zeros(obj.b, obj.tau_b);
         end
         
-        function recallWhatIsDone(obj)
-            %{
-            at each step:
-            DeltaPC: delayed controls known, the extra remaining controls
-            not computed yet are = 0 for the rest of the prediction horizon
-            
-            thus, all PC of the prediction horizon are computable
-            
-            DeltaPA considered constant for the moment on the whole
-            prediction horizon
-            
-            thus, all PA of the prediction horizon are computable
-            
-            the initial PG is known from the current state.
-            thus all the DeltaPG and PG are computable for the prediction horizon
-            
-            DeltaPT: for now they are considered null for the whole
-            prediction horizon
-            later it will be changed
-            %}
-        end
-        
         function receiveState(obj, stateOfZone)
             obj.state = stateOfZone;
         end
@@ -793,10 +771,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 obj
                 state StateOfZone
             end
-            Fij = state.getPowerFlow();
             PC = state.getPowerCurtailment();
-            PB = state.getPowerBattery();
-            EB = state.getEnergyBattery();
             PG = state.getPowerGeneration();
             PA = state.getPowerAvailable();
             obj.PA_est(:,1) = PA;
