@@ -23,7 +23,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         Bb
         Dg
         Dn
-
+        
         operatorState
         operatorControlCurtailment
         operatorControlBattery
@@ -31,25 +31,36 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         operatorDisturbancePowerTransit
         operatorDisturbancePowerAvailable
         
-        % parameters
-        numberOfBuses
-        numberOfBranches
-        numberOfStateOperatorCol
-        b
-        c
-
-        tau_c
-        tau_b
-        N
-        Ns
-
         % Extended model
         A_new
         B_new
         D_new_in
         D_new_out
-
-        % Yalmip
+        
+        % Parameters
+        tau_c
+        tau_b
+        N
+        
+        c
+        numberOfBuses
+        b
+        numberOfBranches
+        numberOfStateOperatorCol
+        
+        Ns
+        
+        %% Yalmip
+        x
+        dk_in
+        dk_out
+        u
+        epsilon
+        probs
+        
+        constraints
+        objective
+        % Parameter
         epsilon_max
         
         Q
@@ -74,54 +85,42 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         maxEB
         sdp_setting
         controller
-
-        x
-        dk_in
-        dk_out
-        u
-        epsilon
-        probs
-        constraints
-        objective
     end
-
+    
     
     methods
-        function obj = MixedLogicalDynamicalModelPredictiveController(...
-                zoneName, delayCurtailment, delayBattery, delayTelecom, controlCycle, ...
-                predictionHorizonInSeconds, numberOfScenarios, ...
-                amplifierQ_ep1, maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon)
+        function obj = MixedLogicalDynamicalModelPredictiveController(zoneName, delayCurtailment, delayBattery, delayTelecom, ...
+                controlCycle, predictionHorizonInSeconds, numberOfScenarios)
             zoneOperatorsFilename = ['operatorsZone' zoneName '.mat'];
             obj.loadOperators(zoneOperatorsFilename);
             obj.setNumberOfBuses();
             obj.setNumberOfGen();
             obj.setNumberOfBatt();
             obj.setNumberOfBranches();
-
+            
             obj.changeOperatorStateDueToBattery(controlCycle);
             obj.changeOperatorControlBatteryDueToBattery(controlCycle);
             obj.restrictOperatorSize();
-
-
+            
             obj.tau_c = delayCurtailment + delayTelecom;
             obj.tau_b = delayBattery + delayTelecom;
             
             horizonInIterations = ceil(predictionHorizonInSeconds / controlCycle);
             obj.N = horizonInIterations;
             obj.Ns = numberOfScenarios;
-
+            
             obj.setNumberOfStateOperatorCol();
-
-            % the following actions correspond to the method
-            % setOtherElements in MpcWithUncertainty
-
+        end
+        
+        function setOtherElements(obj, amplifierQ_ep1, maxPowerGeneration, ...
+                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon)
             obj.setCostRefDeviation();
             obj.setCostControlUse();
             obj.setCostRefDeviationEp1(amplifierQ_ep1);
             obj.setMaxPowerGeneration(maxPowerGeneration);
             obj.setMinControlCurt();
             obj.setMaxControlCurt();
-
+            
             obj.setMinPowerBattery(minPowerBattery);
             obj.setMaxPowerBattery(maxPowerBattery);
             
@@ -132,8 +131,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.setFlowLimit(flowLimit);
             
             obj.setMaxEpsilon(maxEpsilon);
-
-
+            
             obj.setYalmipVar();
             obj.setOperatorExtendedState();
             obj.setOperatorExtendedControl();
@@ -142,22 +140,29 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.setMaxControl();
             obj.setMinState();
             obj.setMaxState();
-
+            
             obj.resetConstraints();
             obj.resetObjective();
             
-            obj.setConstraints();
+            obj.setConstraints(); % CAUTIOUS
+            % obj.setMpcFormulation();
+            
+            % obj.setObjective(); % CAUTIOUS
+            % obj.setUselessObjectiveSearchingForFeasibility(); % CAUTIOUS
+            % obj.setObjective_penalizeControl();
+            % obj.setObjective_penalizeControlAndEpsilon();
             obj.setObjective_penalizeSumSquaredControlAndEpsilon();
             
-            solverName = 'cplex';
-            obj.setSolver(solverName);
+            obj.setSolver();
             obj.setController();
-
+            
             obj.initializePastCurtControls();
             obj.initializePastBattControls();
+            
+            obj.countControls = 0;
+            
         end
-
-
+        
         function loadOperators(obj, filename)
             operators = load(filename);
             obj.operatorState = operators.operatorState;
@@ -167,7 +172,20 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.operatorDisturbancePowerTransit = operators.operatorDisturbancePowerTransit;
             obj.operatorDisturbancePowerAvailable = operators.operatorDisturbancePowerAvailable;
         end
-
+        
+        function changeOperatorStateDueToBattery(obj, controlCycle)
+            rowRange = obj.numberOfBranches + obj.c + obj.b + (1:obj.b);
+            columnRange = obj.numberOfBranches + obj.c + (1:obj.b);
+            obj.operatorState(rowRange, columnRange) = ...
+                controlCycle * obj.operatorState(rowRange, columnRange);
+        end
+        
+        function changeOperatorControlBatteryDueToBattery(obj, controlCycle)
+            rowRange = obj.numberOfBranches + obj.c + obj.b + (1:obj.b);
+            obj.operatorControlBattery(rowRange, :) = ...
+                controlCycle * obj.operatorControlBattery(rowRange, :);
+        end
+        
         function setNumberOfBuses(obj)
             obj.numberOfBuses = width(obj.operatorDisturbancePowerTransit);
         end
@@ -183,20 +201,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         function setNumberOfBranches(obj)
             obj.numberOfBranches = width(obj.operatorState) - 3 * obj.c - 2 * obj.b;
         end
-
-        function changeOperatorStateDueToBattery(obj, controlCycle)
-            rowRange = obj.numberOfBranches + obj.c + obj.b + (1:obj.b);
-            columnRange = obj.numberOfBranches + obj.c + (1:obj.b);
-            obj.operatorState(rowRange, columnRange) = ...
-                controlCycle * obj.operatorState(rowRange, columnRange);
-        end
-
-        function changeOperatorControlBatteryDueToBattery(obj, controlCycle)
-            rowRange = obj.numberOfBranches + obj.c + obj.b + (1:obj.b);
-            obj.operatorControlBattery(rowRange, :) = ...
-                controlCycle * obj.operatorControlBattery(rowRange, :);
-        end
-
+        
         function restrictOperatorSize(obj)
             %{
             CDC model does not take into account PA and DeltaPA,
@@ -210,18 +215,36 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.Dg = obj.operatorDisturbancePowerGeneration(1: end-obj.c, :);
             obj.Dn = obj.operatorDisturbancePowerTransit(1: end-obj.c, :);
         end
-
+        
         function setNumberOfStateOperatorCol(obj)
             obj.numberOfStateOperatorCol = width(obj.A);
         end
-
-         function setCostRefDeviation(obj)
+        
+        function setYalmipVar(obj)
+            numberOfExtendedStateVar = obj.numberOfStateOperatorCol ...
+                + obj.c * obj.tau_c ...
+                + obj.b * obj.tau_b;
+            
+            % ease the debugging phase by resetting the indices of the model
+            yalmip('clear');
+            
+            obj.x = sdpvar(numberOfExtendedStateVar, (obj.N+1) * obj.Ns, 'full');
+            obj.dk_in = sdpvar( obj.c, obj.Ns*obj.N, 'full');
+            obj.dk_out = sdpvar(obj.numberOfBuses, obj.Ns*obj.N, 'full');
+            
+            obj.u = sdpvar(obj.c + obj.b, obj.N, 'full');
+            
+            obj.epsilon = sdpvar(obj.numberOfBranches, obj.N, obj.Ns, 'full');
+            obj.probs = sdpvar(obj.Ns, obj.N, 'full');
+        end
+        
+        function setCostRefDeviation(obj)
             obj.Q = blkdiag(zeros(obj.numberOfBranches), ...
                 eye(obj.c), eye(obj.b), zeros(obj.b),...
                 zeros(obj.c), eye(obj.c * obj.tau_c), eye(obj.b) );
-         end
-
-         function setCostControlUse(obj)
+        end
+        
+        function setCostControlUse(obj)
             obj.R = blkdiag(eye(obj.c), eye(obj.b));
         end
         
@@ -256,37 +279,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         function setMaxControlBattery(obj)
             obj.umax_b = obj.maxPB - obj.minPB;
         end
-
-        function setMaxEnergyBattery(obj, value)
-            obj.maxEB = value;
-        end
-
-        function setFlowLimit(obj, value)
-            obj.flowLimit = value;
-        end
         
         function setMaxEpsilon(obj, maxEpsilon)
             obj.epsilon_max = maxEpsilon;
         end
-
-        function setYalmipVar(obj)
-            numberOfExtendedStateVar = obj.numberOfStateOperatorCol ...
-                + obj.c * obj.tau_c ...
-                + obj.b * obj.tau_b;
-            
-            % ease the debugging phase by resetting the indices of the model
-            yalmip('clear');
-            
-            obj.x = sdpvar(numberOfExtendedStateVar, (obj.N+1) * obj.Ns, 'full');
-            obj.dk_in = sdpvar( obj.c, obj.Ns*obj.N, 'full');
-            obj.dk_out = sdpvar(obj.numberOfBuses, obj.Ns*obj.N, 'full');
-            
-            obj.u = sdpvar(obj.c + obj.b, obj.N, 'full');
-            
-            obj.epsilon = sdpvar(obj.numberOfBranches, obj.N, obj.Ns, 'full');
-            obj.probs = sdpvar(obj.Ns, obj.N, 'full');
-        end
-
+        
         function setOperatorExtendedState(obj)
             block1 = blkdiag([obj.A obj.Bc], eye(obj.c * (obj.tau_c - 1) ));
             tmpNumberOfCol = obj.numberOfStateOperatorCol ...
@@ -300,13 +297,13 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             tmpNumberOfCol = obj.numberOfStateOperatorCol + obj.c * obj.tau_c + obj.b * obj.tau_b;
             obj.A_new = [combineBlock ; zeros( obj.b, tmpNumberOfCol)];
         end
-
+        
         function setOperatorExtendedControl(obj)
             operExtControlCurt = obj.getOperatorExtendedControlCurt();
             operExtControlBatt = obj.getOperatorExtendedControlBatt();
             obj.B_new = [operExtControlCurt operExtControlBatt];
         end
-
+        
         function value = getOperatorExtendedControlCurt(obj)
             block1 = zeros(obj.numberOfStateOperatorCol, obj.c);
             block2 = zeros(obj.c * (obj.tau_c - 1), obj.c);
@@ -322,21 +319,29 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             block4 = eye(obj.b);
             value = [block1; block2; block3; block4];
         end
-
+        
         function setOperatorExtendedDisturbance(obj)
             tmpNumberOfRows = obj.b * obj.tau_b + obj.c * obj.tau_c;
             obj.D_new_in = [obj.Dg ; zeros( tmpNumberOfRows, obj.c)];
             obj.D_new_out = [obj.Dn ; zeros( tmpNumberOfRows, obj.numberOfBuses)];
         end
-
-        function setMinControl(obj)
-            obj.umin = [obj.umin_c ; obj.umin_b];
+        
+        function resetConstraints(obj)
+            obj.constraints = [];
         end
         
-        function setMaxControl(obj)
-            obj.umax = [obj.umax_c ; obj.umax_b];
+        function resetObjective(obj)
+            obj.objective = 0;
         end
-
+        
+        function setFlowLimit(obj, value)
+            obj.flowLimit = value;
+        end
+        
+        function setMaxEnergyBattery(obj, value)
+            obj.maxEB = value;
+        end
+        
         function setMinState(obj)
             minFlow = - obj.flowLimit * ones(obj.numberOfBranches, 1);
             minPC = zeros(obj.c, 1);
@@ -359,18 +364,17 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             xmax_b = repmat(obj.umax_b, obj.tau_b, 1);
             obj.xmax = [xmax_x ; xmax_c ; xmax_b];
         end
-
-        function resetConstraints(obj)
-            obj.constraints = [];
+        
+        function setMinControl(obj)
+            obj.umin = [obj.umin_c ; obj.umin_b];
         end
         
-        function resetObjective(obj)
-            obj.objective = 0;
+        function setMaxControl(obj)
+            obj.umax = [obj.umax_c ; obj.umax_b];
         end
-
-
-        %% Constraints
-
+        
+        %% CONSTRAINT
+        
         function setConstraints(obj)
             upperBoundEpsilonBeforeDelayCurt = obj.epsilon(:, 1:obj.tau_c) <= obj.epsilon_max;
             upperBoundEpsilonBeforeDelayCurt = upperBoundEpsilonBeforeDelayCurt : 'upper bound epsilon before delay curt';
@@ -392,7 +396,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.setConstraintMinPB();
             obj.setConstraintMaxPB();
         end
-
+        
         function setConstraintLowerBoundFlow(obj)
             flowVar = obj.x(1:obj.numberOfBranches, 2: end);
             minFlow = obj.xmin(1:obj.numberOfBranches);
@@ -551,7 +555,43 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             constraintWithName = constraint : 'flow conservation';
             obj.constraints = [obj.constraints, constraintWithName];
         end
-
+        
+        %% OBJECTIVE
+        function setObjective(obj)
+            % inspired from method setMpcFormulation and Hung's model
+            % CAUTIOUS: scenarios are not taken into consideration
+            
+            % reset the objective defined in 'setMpcFormulation'
+            obj.resetObjective();
+            
+            for k = 1:obj.tau_b
+                obj.objective = obj.objective + obj.x(:,k+1)' * obj.Q * obj.x(:,k+1) ...
+                                              + obj.u(:,k)'*obj.R*obj.u(:,k);
+            end
+            
+            for k = obj.tau_b+1 : obj.tau_c
+                obj.objective = obj.objective + obj.x(:,k+1)' * obj.Q * obj.x(:,k+1) ...
+                                              + obj.u(:,k)'*obj.R*obj.u(:,k);
+            end
+            
+            for k = obj.tau_c+1:obj.N
+                obj.objective = obj.objective + obj.x(:,k+1)' * obj.Q * obj.x(:,k+1) ...
+                                              + obj.u(:,k)'*obj.R*obj.u(:,k);
+            end
+            
+            for k = 1:obj.N
+                obj.objective = obj.objective + obj.epsilon(:,k,1)'*obj.Q_ep1*obj.epsilon(:,k,1);
+            end
+        end
+        
+        function setObjective_penalizeControl(obj)
+            obj.objective = sum(obj.u, 'all');
+        end
+        
+        function setObjective_penalizeControlAndEpsilon(obj)
+            obj.objective = sum(obj.u, 'all') + sum(obj.epsilon, 'all');
+        end
+        
         function setObjective_penalizeSumSquaredControlAndEpsilon(obj)
             % function sumsqr not compatible with sdpvar
             coefEpsilon = 10^6;
@@ -569,7 +609,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 end
             end
         end
-
+        
+        function setUselessObjectiveSearchingForFeasibility(obj)
+            obj.resetObjective();
+        end
+        
         function setSolver(obj, solverName)
             arguments
                 obj
@@ -581,7 +625,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 obj.sdp_setting = sdpsettings('solver', solverName);
             end
         end
-
+        
         function setController(obj)
             if (obj.Ns == 1)
                 parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
@@ -591,7 +635,73 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             outputs = {obj.u,obj.epsilon,obj.x};
             obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
         end
-
+        
+    end
+        
+        %% CLOSED LOOP SIMULATION
+        
+    properties
+       real_short_state
+       Real_state % = real extended state, #( n + c*tau_c + b*tau_b) x #simIterations
+       ucK_delay % over the prediction horizon
+       ucK_new % new curt control decided now by the controller, but will be applied after delay
+       ubK_delay % over the prediction horizon
+       ubK_new % new battery control decided now by the controller, but delayed
+       Delta_PA_est
+       Delta_PC_est
+       Delta_PT_est
+       PA_est
+       PC_est
+       PG_est       % #gen x #iterations
+       Delta_PG_est % #gen x predictionHorizon x #simIterations
+       PG_est_record  % #gen x #iterations x #scenarios
+       delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
+       flags % #simIterations
+       epsilons_all % #branch x #horizonPrediction x #scenarios x simIterations
+       u_mpc % #gen+1 x #simIterations
+       
+       xK_new % the new state received at each iteration of the simulation
+       xK_extend % a column vector
+       
+       result
+       infeas
+       
+        % elements received
+        state
+        disturbancePowerTransit
+        disturbancePowerAvailable
+        
+        countControls
+    end
+        
+    methods
+        
+        function buildReal_state(obj)
+            numberOfDelayedCurtCtrl = obj.c * obj.tau_c;
+            numberOfDelayedBatteryCtrl = obj.b * obj.tau_b;
+            totalNumberOfCtrlVar = numberOfDelayedCurtCtrl + numberOfDelayedBatteryCtrl;
+            numberOfExtendedStateVar =  obj.numberOfStateOperatorCol + totalNumberOfCtrlVar;
+            obj.Real_state = NaN(numberOfExtendedStateVar, numberOfIterations);
+        end
+        
+        function setxK_new(obj, state)
+            obj.xK_new = state;
+        end
+        
+        function initialize_xK_extend(obj, state)
+            noCurtControlAfter = zeros(obj.c * obj.tau_c, 1);
+            noBatteryControlAfter = zeros(obj.b * obj.tau_b, 1);
+            
+            obj.xK_extend(:,1) = [state ; ...
+                               noCurtControlAfter;...
+                               noBatteryControlAfter];
+        end
+        
+        function initializeReal_state(obj)
+            % dependency: initialize_xK_extend runs first
+            obj.Real_state(:,1) = obj.xK_extend;
+        end
+        
         function initializePastCurtControls(obj)
             obj.ucK_delay = zeros(obj.c, obj.tau_c);
         end
@@ -599,28 +709,43 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         function initializePastBattControls(obj)
             obj.ubK_delay = zeros(obj.b, obj.tau_b);
         end
-
-        %% methods from the Controller interface
-        function object = getControl(obj)
-            curtControl = obj.ucK_new;
-            battControl = obj.ubK_new;
-            object = ControlOfZone(curtControl, battControl);
+        
+        function recallWhatIsDone(obj)
+            %{
+            at each step:
+            DeltaPC: delayed controls known, the extra remaining controls
+            not computed yet are = 0 for the rest of the prediction horizon
+            
+            thus, all PC of the prediction horizon are computable
+            
+            DeltaPA considered constant for the moment on the whole
+            prediction horizon
+            
+            thus, all PA of the prediction horizon are computable
+            
+            the initial PG is known from the current state.
+            thus all the DeltaPG and PG are computable for the prediction horizon
+            
+            DeltaPT: for now they are considered null for the whole
+            prediction horizon
+            later it will be changed
+            %}
         end
-
+        
         function receiveState(obj, stateOfZone)
             obj.state = stateOfZone;
         end
-    
+        
         function receiveDisturbancePowerTransit(obj, disturbancePowerTransit)
             obj.disturbancePowerTransit = disturbancePowerTransit;
             % 08/06/2022: Sorin advises the controller should not consider any disturbance form outside the zone currently
             obj.disturbancePowerTransit = zeros(obj.numberOfBuses, 1);
         end
-
+        
         function receiveDisturbancePowerAvailable(obj, disturbancePowerAvailable)
             obj.disturbancePowerAvailable = disturbancePowerAvailable;
         end
-
+        
         function computeControl(obj)
             obj.countControls = obj.countControls + 1;
             realState = obj.state;
@@ -628,7 +753,13 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             realDeltaPT = obj.disturbancePowerTransit;
             obj.operateOneOperation(realState, realDeltaPA, realDeltaPT);
         end
-
+        
+        function object = getControl(obj)
+            curtControl = obj.ucK_new;
+            battControl = obj.ubK_new;
+            object = ControlOfZone(curtControl, battControl);
+        end
+        
         function operateOneOperation(obj, realState, realDeltaPA, realDeltaPT)
             arguments
                 obj
@@ -677,7 +808,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.PC_est(:,1) = PC;
             obj.PG_est(:,1) = PG;
         end
-
+        
         function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
             % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
             areAllDeltaPANonNegative = all(realDeltaPA >= 0);
@@ -694,7 +825,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 end
             end
         end
-
+        
         function computeCorrectDisturbanceOfGen(obj, genIndex, deltaPAOfGen)
             realPAOfGen = obj.PA_est(genIndex,1);
             % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
@@ -710,7 +841,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 obj.Delta_PA_est(genIndex, n+2 : obj.N) = 0;
             end
         end
-
+        
         function setPA_over_horizon(obj)
             %{
             Cautious, the original equation:
@@ -726,19 +857,19 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
             end
         end
-
+        
         function setDelta_PC_est_over_horizon(obj)
             numberOfStepsAfterDelay = obj.N - obj.tau_c;
             noCurtControlAfter = zeros(obj.c, numberOfStepsAfterDelay);
             obj.Delta_PC_est = [obj.ucK_delay noCurtControlAfter];
         end
-
+        
         function setPC_est_over_horizon(obj)
             for k = 1: obj.N
                 obj.PC_est(:,k+1) = obj.PC_est(:,k) + obj.Delta_PC_est(:,k);
             end
         end
-
+        
         function setDelta_PG_and_PG_est_over_horizon(obj)
             for k = 1: obj.N
                 f = obj.PA_est(:,k+1) - obj.PG_est(:,k) + obj.Delta_PC_est(:,k);
@@ -760,11 +891,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 %}
             end
         end
-
+        
         function setDelta_PT_over_horizon(obj, realDeltaPT)
             obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.N);
         end
-
+        
         function set_xK_extend(obj, realState)
             stateVector = realState.getStateAsVector();
             stateVectorMinusPA = stateVector(1: end-obj.c);
@@ -775,12 +906,12 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                              pastCurtControlVector ; ...
                              pastBattControlVector];
         end
-
+        
         function doControl(obj)
             [obj.result, obj.infeas] = obj.controller{obj.xK_extend, ...
                 obj.Delta_PG_est, obj.Delta_PT_est};
         end
-
+        
         function checkSolvingFeasibility(obj)
             if obj.infeas ~= 0
                 disp(yalmiperror(obj.infeas))
@@ -790,7 +921,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         function saveInfeas(obj)
             obj.flags(end+1) = obj.infeas;
         end
-
+        
         function interpretResult(obj)
             optimalControlOverHorizon = obj.result{1};
             optimalNextControl = optimalControlOverHorizon(:,1);
@@ -821,8 +952,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             battControl = obj.ubK_new;
             memory.saveControl(curtControl, battControl);
         end
+        
     end
-
-
-
+    
 end
