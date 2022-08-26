@@ -72,16 +72,16 @@ classdef Zone < handle
             obj.setTelecom();
             obj.setResult(simulationWindow, duration);
             
-            isControllerMPC = true;
+            isControllerMPC = false;
             isControllerLimiter = false;
-            isControllerMixedLogicalModel = false;
+            isControllerMixedLogicalModel = true;
             if isControllerMPC
                 obj.setModelPredictiveController();
             elseif isControllerLimiter
                 obj.setControllerSetting();
                 obj.setController();
             elseif isControllerMixedLogicalModel
-                %TODO
+                obj.setMixedLogicalDynamicalModelPredictiveController();
             else
                 except = MException('The choice of controller is incorrect, ',...
                     'one of the controller must be selected in Zone.m');
@@ -190,7 +190,8 @@ classdef Zone < handle
                 minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
         end
         
-        function setMixedLogicalDynamicalModelPredictiveController()
+        function setMixedLogicalDynamicalModelPredictiveController(obj)
+            % almost a copy of setModelPredictiveController, minus the constructor
             delayCurt = obj.delayInIterations.getDelayCurt();
             delayBatt = obj.delayInIterations.getDelayBatt();
             delayTelecom = obj.delayInIterations.getDelayController2Zone();
@@ -198,7 +199,10 @@ classdef Zone < handle
             % TODO: add to mpc.json the following info
             horizonInSeconds = 50;
             numberOfScenarios = 1;
-
+            
+            obj.controller = MixedLogicalDynamicalModelPredictiveController(obj.name, delayCurt, delayBatt, delayTelecom, ...
+                controlCycleInSeconds, horizonInSeconds, numberOfScenarios);
+            
             amplifierQ_ep1 = 10^7;
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             minPowerBattery = obj.topology.getMinPowerBattery();
@@ -206,7 +210,9 @@ classdef Zone < handle
             maxEnergyBattery = 800;
             flowLimit = obj.setting.getBranchFlowLimit();
             maxEpsilon = 0.05;
-            % TODO add the constructor
+            
+            obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
+                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
         end
 
         function initializePowerAvailable(obj)
