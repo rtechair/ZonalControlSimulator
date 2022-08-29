@@ -33,7 +33,7 @@ classdef ZoneSetting < handle
         timeSeriesFilename
         startGenInSeconds
         
-        batteryConstantPowerReduction % corresponds to the product T*cb in the paper
+        batteryConstantPowerReduction
         
         delayCurtInSeconds
         delayBattInSeconds

@@ -191,28 +191,44 @@ classdef Zone < handle
         end
         
         function setMixedLogicalDynamicalModelPredictiveController(obj)
-            % almost a copy of setModelPredictiveController, minus the constructor
-            delayCurt = obj.delayInIterations.getDelayCurt();
-            delayBatt = obj.delayInIterations.getDelayBatt();
-            delayTelecom = obj.delayInIterations.getDelayController2Zone();
-            controlCycleInSeconds = obj.setting.getControlCycleInSeconds();
-            % TODO: add to mpc.json the following info
+            basecaseName = 'case6468rte_zone_VG_VTV_BLA';
+            busId = obj.setting.getBusId();
+            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
+            timestep = obj.setting.controlCycleInSeconds();
+
+            delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
+            delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
+            delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
+            % TODO: add to the json file the information about hte horizon
             horizonInSeconds = 50;
-            numberOfScenarios = 1;
-            
-            obj.controller = MixedLogicalDynamicalModelPredictiveController(obj.name, delayCurt, delayBatt, delayTelecom, ...
-                controlCycleInSeconds, horizonInSeconds, numberOfScenarios);
-            
-            amplifierQ_ep1 = 10^7;
+            horizonInIterations = ceil( horizonInSeconds / timestep);
+
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+
+            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
+
+            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
+            model = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
+
+            operatorStateExtended = model.getOperatorStateExtended();
+            operatorControlExtended = model.getOperatorControlExtended();
+            operatorNextPowerGenerationExtended = model.getOperatorNextPowerGenerationExtended();
+            operatorDisturbanceExtended = model.getOperatorDisturbanceExtended();
+
             maxPowerGeneration = obj.topology.getMaxPowerGeneration();
             minPowerBattery = obj.topology.getMinPowerBattery();
             maxPowerBattery = obj.topology.getMaxPowerBattery();
-            maxEnergyBattery = 800;
+            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
             flowLimit = obj.setting.getBranchFlowLimit();
-            maxEpsilon = 0.05;
             
-            obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
-                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
+            obj.controller = MixedLogicalDynamicalModelPredictiveController(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
+                operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
+                numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
         end
 
         function initializePowerAvailable(obj)
