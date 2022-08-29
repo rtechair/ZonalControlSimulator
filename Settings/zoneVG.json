@@ -15,12 +15,12 @@
     "controlCycleInSeconds": 5,
     "DelayInSeconds":
     {
-        "curtailment": 40,
-        "battery": 0,
+        "curtailment": 45,
+        "battery": 1,
         "Telecom":
         {
             "timeSeries2Zone":0,
-            "controller2Zone":5,
+            "controller2Zone":0,
             "zone2Controller":0
         }
     },
