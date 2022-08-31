@@ -151,8 +151,12 @@ classdef MpcWithUncertainty < Controller
             % obj.setUselessObjectiveSearchingForFeasibility(); % CAUTIOUS
             % obj.setObjective_penalizeControl();
             % obj.setObjective_penalizeControlAndEpsilon();
-            obj.setObjective_penalizeSumSquaredControlAndEpsilon();
+            %obj.setObjective_penalizeSumSquaredControlAndEpsilon();
             
+            %obj.setObjective_Paper();
+            % obj.setObjective_curtCtrlCost_overflowCost();
+            obj.setObjective_overflow_curtCtrl_battCtrl_Penalty();
+
             obj.setSolver();
             obj.setController();
             
@@ -605,9 +609,122 @@ classdef MpcWithUncertainty < Controller
             [er, ec] = size(obj.epsilon);
             for k = 1:er
                 for l = 1:ec
-                    obj.objective = obj.objective + coefEpsilon * obj.epsilon(k,l)^2;
+                    obj.objective = obj.objective + coefEpsilon * obj.epsilon(k,l)^2; % TODO: it seems the indices k and l are not in the correct order
                 end
             end
+        end
+
+        function setObjective_Paper(obj)
+            overflowCost = obj.N * sum( obj.minPB .^ 2);
+            batteryStateCost = 1;
+            
+            overflowObj = 0;
+            for k = 1:obj.N
+                for l = 1:obj.numberOfBranches
+                    overflowObj = overflowObj + obj.epsilon(l,k,1);
+                end
+            end
+            overflowObj = overflowCost * overflowObj;
+
+            curtCtrlObj = 0;
+            for k= 1:obj.N
+                partialObj = 0;
+                for g = 1:obj.c
+                    partialObj = partialObj + obj.u(g, k);
+                end
+                curtCtrlObj = curtCtrlObj + (obj.N - k + 1) * overflowCost * partialObj;
+            end
+            % curtCtrlCostArray = fliplr(1:obj.N);
+            % curtCtrl = obj.u(obj.c, obj.N);
+            % sumCurtCtrlPerTimestep = sum(curtCtrl);
+            
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+            state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+            battStateObj = 0;
+            for k = 1:obj.N
+                for b_index = 1:obj.b
+                    battStateObj = battStateObj + state_battery(b_index,k) ^ 2;
+                end
+            end
+            battStateObj = battStateObj * batteryStateCost;
+            
+            battStateObj2 = batteryStateCost * sum( state_battery .^ 2 ,"all"); % TODO : to compare if there is a difference with the previous formulation
+
+            obj.objective = overflowObj + curtCtrlObj +  battStateObj2;
+
+            % ISSUE: the peanlization of the battery state leads the
+            % controller to draw immediately the battery power to 0 when
+            % there is no congestion, thus the battery discharge control
+            % should be restricted
+        end
+
+        function setObjective_curtCtrlCost_overflowCost(obj)
+            % new method
+            overflowCost = obj.N * sum(obj.minPB .^ 2);
+            overflowObj = overflowCost * sum(obj.epsilon,"all");
+            
+            N_to_1 = fliplr(1:obj.N); % = [N, N-1, ..., 1]
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.epsilon(:,:,1))';
+
+            obj.objective = overflowObj + curtCtrlObj;
+
+            %{ 
+            % old method:
+            overflowCost = obj.N * sum( obj.minPB .^ 2);
+            
+            overflowObj = 0;
+            for k = 1:obj.N
+                for l = 1:obj.numberOfBranches
+                    overflowObj = overflowObj + obj.epsilon(l,k,1);
+                end
+            end
+            overflowObj = overflowCost * overflowObj;
+
+            curtCtrlObj = 0;
+            for k= 1:obj.N
+                partialObj = 0;
+                for g = 1:obj.c
+                    partialObj = partialObj + obj.u(g, k);
+                end
+                curtCtrlObj = curtCtrlObj + (obj.N - k + 1) * overflowCost * partialObj;
+            end
+
+            obj.objective = overflowObj + curtCtrlObj;
+            %}
+        end
+
+        function setObjective_overflow_curtCtrl_battCtrl_Penalty(obj)
+            overflowCost = obj.N * sum( obj.minPB .^ 2);
+            
+            overflowObj = 0;
+            for k = 1:obj.N
+                for l = 1:obj.numberOfBranches
+                    overflowObj = overflowObj + obj.epsilon(l,k,1);
+                end
+            end
+            overflowObj = overflowCost * overflowObj;
+
+            curtCtrlObj = 0;
+            for k= 1:obj.N
+                partialCurtObj = 0;
+                for g = 1:obj.c
+                    partialCurtObj = partialCurtObj + obj.u(g, k);
+                end
+                curtCtrlObj = curtCtrlObj + (obj.N - k + 1) * overflowCost * partialCurtObj;
+            end
+            
+            indexFirstDeltaPB = obj.c + 1;
+            battCtrlObj = 0;
+            for k = 1:obj.N
+                partialBattObj = 0;
+                for b_index = indexFirstDeltaPB : indexFirstDeltaPB+obj.b -1
+                    partialBattObj = partialBattObj + obj.u(b_index, k) ^2;
+                end
+                battCtrlObj = battCtrlObj + (obj.N - k + 1) * overflowCost / 100 * partialBattObj;
+            end
+                        
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj;
         end
         
         function setUselessObjectiveSearchingForFeasibility(obj)
