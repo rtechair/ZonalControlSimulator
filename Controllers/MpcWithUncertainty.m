@@ -153,8 +153,8 @@ classdef MpcWithUncertainty < Controller
             % obj.setObjective_penalizeControlAndEpsilon();
             %obj.setObjective_penalizeSumSquaredControlAndEpsilon();
             
-            %obj.setObjective_Paper();
-            % obj.setObjective_curtCtrlCost_overflowCost();
+            % obj.setObjective_Paper();
+            % obj.setObjective_curtCtrl_overflow_Penalty();
             obj.setObjective_overflow_curtCtrl_battCtrl_Penalty();
 
             obj.setSolver();
@@ -615,29 +615,16 @@ classdef MpcWithUncertainty < Controller
         end
 
         function setObjective_Paper(obj)
+            % Set the cost function to be:
+            % overflowEpsilon + DeltaPC + PBˆ2
             overflowCost = obj.N * sum( obj.minPB .^ 2);
             batteryStateCost = 1;
             
-            overflowObj = 0;
-            for k = 1:obj.N
-                for l = 1:obj.numberOfBranches
-                    overflowObj = overflowObj + obj.epsilon(l,k,1);
-                end
-            end
-            overflowObj = overflowCost * overflowObj;
+            overflowObj = overflowCost * sum(obj.epsilon,"all");
 
-            curtCtrlObj = 0;
-            for k= 1:obj.N
-                partialObj = 0;
-                for g = 1:obj.c
-                    partialObj = partialObj + obj.u(g, k);
-                end
-                curtCtrlObj = curtCtrlObj + (obj.N - k + 1) * overflowCost * partialObj;
-            end
-            % curtCtrlCostArray = fliplr(1:obj.N);
-            % curtCtrl = obj.u(obj.c, obj.N);
-            % sumCurtCtrlPerTimestep = sum(curtCtrl);
-            
+            N_to_1 = fliplr(1:obj.N);
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:))';
+
             indexFirstPB = obj.numberOfBranches + obj.c + 1;
             indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
             state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
@@ -659,38 +646,31 @@ classdef MpcWithUncertainty < Controller
             % should be restricted
         end
 
-        function setObjective_curtCtrlCost_overflowCost(obj)
+        function setObjective_curtCtrl_overflow_Penalty(obj)
             % Set the cost function to be:
             % overflowEpsilon + DeltaPC
             overflowCost = obj.N * sum(obj.minPB .^ 2);
             overflowObj = overflowCost * sum(obj.epsilon,"all");
             
             N_to_1 = fliplr(1:obj.N);
-            curtCtrlObj = overflowCost * N_to_1 * sum(obj.epsilon(:,:,1))';
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:))';
 
             obj.objective = overflowObj + curtCtrlObj;
         end
 
         function setObjective_overflow_curtCtrl_battCtrl_Penalty(obj)
+            % Set the cost function to be:
+            % overflowEpsilon + DeltaPC + DeltaPB^2
             overflowCost = obj.N * sum( obj.minPB .^ 2);
-            
-            overflowObj = 0;
-            for k = 1:obj.N
-                for l = 1:obj.numberOfBranches
-                    overflowObj = overflowObj + obj.epsilon(l,k,1);
-                end
-            end
-            overflowObj = overflowCost * overflowObj;
+            overflowObj = overflowCost * sum(obj.epsilon, "all");
 
-            curtCtrlObj = 0;
-            for k= 1:obj.N
-                partialCurtObj = 0;
-                for g = 1:obj.c
-                    partialCurtObj = partialCurtObj + obj.u(g, k);
-                end
-                curtCtrlObj = curtCtrlObj + (obj.N - k + 1) * overflowCost * partialCurtObj;
-            end
+            N_to_1 = fliplr(1:obj.N);
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:))';
             
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            battCtrlObj = overflowCost / 100 * N_to_1 * sum(battCtrl)';
+            %{
             indexFirstDeltaPB = obj.c + 1;
             battCtrlObj = 0;
             for k = 1:obj.N
@@ -700,7 +680,7 @@ classdef MpcWithUncertainty < Controller
                 end
                 battCtrlObj = battCtrlObj + (obj.N - k + 1) * overflowCost / 100 * partialBattObj;
             end
-                        
+            %}
             obj.objective = overflowObj + curtCtrlObj + battCtrlObj;
         end
         
