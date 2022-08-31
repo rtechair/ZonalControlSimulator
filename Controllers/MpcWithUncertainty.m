@@ -154,8 +154,8 @@ classdef MpcWithUncertainty < Controller
             %obj.setObjective_penalizeSumSquaredControlAndEpsilon();
             
             % obj.setObjective_Paper();
-            % obj.setObjective_curtCtrl_overflow_Penalty();
-            obj.setObjective_overflow_curtCtrl_battCtrl_Penalty();
+            obj.setObjective_curtCtrl_overflow_Penalty();
+            % obj.setObjective_overflow_curtCtrl_battCtrl_Penalty();
 
             obj.setSolver();
             obj.setController();
@@ -623,7 +623,7 @@ classdef MpcWithUncertainty < Controller
             overflowObj = overflowCost * sum(obj.epsilon,"all");
 
             N_to_1 = fliplr(1:obj.N);
-            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:))';
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
 
             indexFirstPB = obj.numberOfBranches + obj.c + 1;
             indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
@@ -653,7 +653,7 @@ classdef MpcWithUncertainty < Controller
             overflowObj = overflowCost * sum(obj.epsilon,"all");
             
             N_to_1 = fliplr(1:obj.N);
-            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:))';
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
 
             obj.objective = overflowObj + curtCtrlObj;
         end
@@ -665,11 +665,13 @@ classdef MpcWithUncertainty < Controller
             overflowObj = overflowCost * sum(obj.epsilon, "all");
 
             N_to_1 = fliplr(1:obj.N);
-            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:))';
+            curtCtrlObj = overflowCost * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
+            
             
             battIdxRange = (obj.c + 1) : (obj.c + obj.b);
             battCtrl = obj.u(battIdxRange, :);
-            battCtrlObj = overflowCost / 100 * N_to_1 * sum(battCtrl)';
+            battCtrlObj = overflowCost / 100 * N_to_1 * sum(battCtrl .^ 2, 1)';
+            
             %{
             indexFirstDeltaPB = obj.c + 1;
             battCtrlObj = 0;
@@ -681,6 +683,7 @@ classdef MpcWithUncertainty < Controller
                 battCtrlObj = battCtrlObj + (obj.N - k + 1) * overflowCost / 100 * partialBattObj;
             end
             %}
+            
             obj.objective = overflowObj + curtCtrlObj + battCtrlObj;
         end
         
