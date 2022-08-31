@@ -660,38 +660,15 @@ classdef MpcWithUncertainty < Controller
         end
 
         function setObjective_curtCtrlCost_overflowCost(obj)
-            % new method
+            % Set the cost function to be:
+            % overflowEpsilon + DeltaPC
             overflowCost = obj.N * sum(obj.minPB .^ 2);
             overflowObj = overflowCost * sum(obj.epsilon,"all");
             
-            N_to_1 = fliplr(1:obj.N); % = [N, N-1, ..., 1]
+            N_to_1 = fliplr(1:obj.N);
             curtCtrlObj = overflowCost * N_to_1 * sum(obj.epsilon(:,:,1))';
 
             obj.objective = overflowObj + curtCtrlObj;
-
-            %{ 
-            % old method:
-            overflowCost = obj.N * sum( obj.minPB .^ 2);
-            
-            overflowObj = 0;
-            for k = 1:obj.N
-                for l = 1:obj.numberOfBranches
-                    overflowObj = overflowObj + obj.epsilon(l,k,1);
-                end
-            end
-            overflowObj = overflowCost * overflowObj;
-
-            curtCtrlObj = 0;
-            for k= 1:obj.N
-                partialObj = 0;
-                for g = 1:obj.c
-                    partialObj = partialObj + obj.u(g, k);
-                end
-                curtCtrlObj = curtCtrlObj + (obj.N - k + 1) * overflowCost * partialObj;
-            end
-
-            obj.objective = overflowObj + curtCtrlObj;
-            %}
         end
 
         function setObjective_overflow_curtCtrl_battCtrl_Penalty(obj)
