@@ -153,9 +153,12 @@ classdef MpcWithUncertainty < Controller
             % obj.setObjective_penalizeControlAndEpsilon();
             %obj.setObjective_penalizeSumSquaredControlAndEpsilon();
             
-            % obj.setObjective_Paper();
-            obj.setObjective_curtCtrl_overflow_Penalty();
+            % obj.setObjective_overflow_curtCtrl_battState_Penalty();
+            % obj.setObjective_overflow_curtCtrl_Penalty();
             % obj.setObjective_overflow_curtCtrl_battCtrl_Penalty();
+            %obj.setObjective_inspiration1();
+            % obj.setObjective_inspiration2();
+            obj.setObjective_Alessio();
 
             obj.setSolver();
             obj.setController();
@@ -614,7 +617,7 @@ classdef MpcWithUncertainty < Controller
             end
         end
 
-        function setObjective_Paper(obj)
+        function setObjective_overflow_curtCtrl_battState_Penalty(obj)
             % Set the cost function to be:
             % overflowEpsilon + DeltaPC + PBˆ2
             overflowCost = obj.N * sum( obj.minPB .^ 2);
@@ -628,17 +631,10 @@ classdef MpcWithUncertainty < Controller
             indexFirstPB = obj.numberOfBranches + obj.c + 1;
             indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
             state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
-            battStateObj = 0;
-            for k = 1:obj.N
-                for b_index = 1:obj.b
-                    battStateObj = battStateObj + state_battery(b_index,k) ^ 2;
-                end
-            end
-            battStateObj = battStateObj * batteryStateCost;
             
-            battStateObj2 = batteryStateCost * sum( state_battery .^ 2 ,"all"); % TODO : to compare if there is a difference with the previous formulation
+            battStateObj = batteryStateCost * sum( state_battery .^ 2 ,"all");
 
-            obj.objective = overflowObj + curtCtrlObj +  battStateObj2;
+            obj.objective = overflowObj + curtCtrlObj +  battStateObj;
 
             % ISSUE: the peanlization of the battery state leads the
             % controller to draw immediately the battery power to 0 when
@@ -646,7 +642,7 @@ classdef MpcWithUncertainty < Controller
             % should be restricted
         end
 
-        function setObjective_curtCtrl_overflow_Penalty(obj)
+        function setObjective_overflow_curtCtrl_Penalty(obj)
             % Set the cost function to be:
             % overflowEpsilon + DeltaPC
             overflowCost = obj.N * sum(obj.minPB .^ 2);
@@ -672,19 +668,87 @@ classdef MpcWithUncertainty < Controller
             battCtrl = obj.u(battIdxRange, :);
             battCtrlObj = overflowCost / 100 * N_to_1 * sum(battCtrl .^ 2, 1)';
             
-            %{
-            indexFirstDeltaPB = obj.c + 1;
-            battCtrlObj = 0;
-            for k = 1:obj.N
-                partialBattObj = 0;
-                for b_index = indexFirstDeltaPB : indexFirstDeltaPB+obj.b -1
-                    partialBattObj = partialBattObj + obj.u(b_index, k) ^2;
-                end
-                battCtrlObj = battCtrlObj + (obj.N - k + 1) * overflowCost / 100 * partialBattObj;
-            end
-            %}
-            
             obj.objective = overflowObj + curtCtrlObj + battCtrlObj;
+        end
+
+        function setObjective_inspiration1(obj)
+            % 200 * overflow + 10_000 * DeltaPC + DeltaPB^2 + 0.1 * PB^2
+                coefOverflow = 200;
+                coefCurtCtrl = 10^4;
+                coefBattCtrl = 1;
+                coefBattState = 0.1;
+
+                overflowObj = coefOverflow * sum( obj.epsilon,"all");
+                
+                curtCtrlObj = coefCurtCtrl * sum(obj.u(1:obj.c,:), "all");
+            
+                battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+                battCtrl = obj.u(battIdxRange, :);
+                battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
+
+                indexFirstPB = obj.numberOfBranches + obj.c + 1;
+                indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+                state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+            
+                battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
+
+                obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_inspiration2(obj)
+            % 100 * DeltaPC + 1 * PB^2
+            % DeltaPB <= 5/100 PBmax
+            coefCurtCtrl = 10^5;
+            coefBattState = 1;
+            
+            curtCtrlObj = coefCurtCtrl * sum(obj.u(1:obj.c,:), "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+            state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+        
+            battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
+
+            obj.objective = curtCtrlObj + battStateObj;
+        end
+
+        function setObjective_inspiration3(obj)
+            coefCurtCtrl = 10^4;
+            coefBattCtrl = 1;
+            coefBattState = 10;
+
+            curtCtrlObj = coefCurtCtrl * sum(obj.u(1:obj.c,:), "all");
+
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+            state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+        
+            battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
+
+        end
+
+        function setObjective_Alessio(obj)
+            coefOverflow = 10^4;
+                coefCurtCtrl = 10^4;
+                coefBattCtrl = 1;
+                coefBattState = 10^(-2);
+
+                overflowObj = coefOverflow * sum( obj.epsilon,"all");
+
+                curtCtrlObj = coefCurtCtrl * sum(obj.u(1:obj.c,:), "all");
+
+                battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+                battCtrl = obj.u(battIdxRange, :);
+                battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
+
+                indexFirstPB = obj.numberOfBranches + obj.c + 1;
+                indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+                state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+            
+                battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
+
+                obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
         end
         
         function setUselessObjectiveSearchingForFeasibility(obj)
