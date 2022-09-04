@@ -142,7 +142,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 R(:,:,k) = blkdiag( lambda(k) * eye(c) , theta(k) * eye(b) );
                 beta(k) = 10^4;
             end
-            threshold = 0*ones(nbranchNEW,1); % [MW] TODO: useless!
+            threshold = 0*ones(nbranchNEW,1);
 
             A_new = obj.operatorStateExtended;
             B_new = obj.operatorControlExtended;
@@ -158,13 +158,12 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             dk = sdpvar(h+c,N,'full'); % vector of disturbance
 
             constraints = [];
-            objective   = 0;
+            % objective   = 0;
             nbr = 1:nbranchNEW;
             constraints = [constraints, (epsilon1 >= 0) : ['epsilon ']];
              
             for k = 1:obj.tau_b
-                objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1) ...
-                                        + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k);
+                %objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1) + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k);
             
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)) : ['dynamics ' num2str(k)]];
                 
@@ -174,10 +173,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             end
             
             for k = obj.tau_b+1:obj.tau_c
+                %{
                 objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1)...
                                         + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k)...
                                         + beta(k) * epsilon1(:,k-obj.tau_b)' * epsilon1(:,k-obj.tau_b);
-            
+                %}
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
@@ -192,8 +192,10 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             end
             
             for k = obj.tau_c+1:N
+               %{
                 objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1)...
                                         + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k);
+               %}
                 
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
@@ -223,7 +225,155 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 constraints = [constraints, (zeros(c,1) <= x_mpc(nbranchNEW+c+2*b+ (1:c),k+1) <= M*ones(c,1)) : ['lousy warning PG ' num2str(k)]];
                 constraints = [constraints, (zeros(c,1) <= x_mpc(nbranchNEW+2*c+2*b+ (1:c),k+1) <= M*ones(c,1)) : ['lousy warning PA ' num2str(k)]];
             end
+            
+            
+            isObjective_overflow_curtCtrl_battState_Penalty = false;
+            isObjective_overflow_curtCtrl_Penalty = false;
+            isObjective_overflow_curtCtrl_battCtrl_Penalty = false;
+            
+            isObjective_inspiration1 = false;
+            isObjective_inspiration2 = false;
+            isObjective_Hung = false;
+            isObjective_Alessio = true;
 
+            if isObjective_overflow_curtCtrl_battState_Penalty
+                % overflow + DeltaPC + PB^2
+                overflowCost = N * sum(minPowerBattery .^ 2);
+                overflowObj = overflowCost * sum(epsilon1, "all");
+                
+                N_to_1 = fliplr(1 : N);
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = overflowCost * N_to_1 * sum(curtCtrl, 1)';
+
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + obj.numberOfBuses;
+                PB = x_mpc(idxFirstPB:idxLastPB, 2:end);
+                battStateCost = 1; 
+                battStateObj = battStateCost * sum(PB .^ 2, "all");
+                objective = overflowObj + curtCtrlObj + battStateObj;
+            end
+            if isObjective_overflow_curtCtrl_Penalty
+                % copied from MpcWithUncertainty>setObjective_curtCtrl_overflow_Penalty
+                overflowCost = N * sum(minPowerBattery .^ 2);
+                overflowObj = overflowCost * sum(epsilon1, "all");
+                N_to_1 = fliplr(1 : N);
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = overflowCost * N_to_1 * sum(curtCtrl, 1)';
+                objective = overflowObj + curtCtrlObj;
+            end
+            if isObjective_overflow_curtCtrl_battCtrl_Penalty
+                % copied from setObjective_overflow_curtCtrl_battCtrl_Penalty
+                overflowCost = N * sum(minPowerBattery .^ 2);
+                overflowObj = overflowCost * sum(epsilon1, "all");
+                N_to_1 = fliplr(1 : N);
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = overflowCost * N_to_1 * sum(curtCtrl, 1)';
+
+                battIdxRange = (c + 1) : (c + b);
+                battCtrl = u_mpc(battIdxRange, :);
+                battCtrlObj = overflowCost / 100 * N_to_1 * sum(battCtrl .^ 2, 1)';
+                objective = overflowObj + curtCtrlObj + battCtrlObj;
+            end
+            if isObjective_inspiration1
+                % 200 * overflow + 10_000 * DeltaPC + DeltaPB^2 + 0.1 * PB^2
+                coefOverflow = 200;
+                coefCurtCtrl = 10^4;
+                coefBattCtrl = 1;
+                coefBattState = 0.1;
+
+                overflowObj = coefOverflow * sum( epsilon1,"all");
+
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = coefCurtCtrl * sum(curtCtrl, "all");
+
+                battCtrl = u_mpc (c+1 : c+b, :);
+                battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
+
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battStateObj = coefBattState * sum(battState .^ 2, "all");
+                
+                objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+            end
+            if isObjective_inspiration2
+                % 100 * DeltaPC + PB^2
+                % add constraint DeltaPB <= maxPB * 5% ; i.e. PB can
+                % increase by 5% max when the use of battery is reduced
+                coefCurtCtrl = 100;
+                coefBattState = 1;
+                battPercent = 5/100;
+                battCtrlThreshold = battPercent * maxPowerBattery;
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = coefCurtCtrl * sum(curtCtrl, "all");
+
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battStateObj = coefBattState * sum(battState .^ 2, "all");
+                
+                objective = curtCtrlObj + battStateObj;
+
+                battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+                battCtrl = u_mpc(battIdxRange, :);
+                % constraintMaxPositiveDeltaPB = ( battCtrl <= battCtrlThreshold );
+                % constraints = [constraints, constraintMaxPositiveDeltaPB];
+            end
+            if isObjective_Hung
+                coefOverflow = 10^4;
+                coefCurtCtrl = 1;
+                coefBattCtrl = 1;
+                coefCurtState = 1;
+                coefBattState = 10^(-3);
+                
+                overflowObj = coefOverflow * sum(epsilon1 .^ 2, "all");
+
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = coefCurtCtrl * sum(curtCtrl .^ 2, "all");
+                
+                battCtrl = u_mpc (c+1 : c+b, :);
+                battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
+                
+                idxFirstPC = obj.numberOfBranches + 1;
+                idxLastPC = obj.numberOfBranches + c;
+                curtState = x_mpc(idxFirstPC : idxLastPC, 2:end);
+                curtStateObj = coefCurtState * sum(curtState .^ 2, "all");
+
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battStateObj = coefBattState * sum(battState .^ 2, "all");
+
+                objective = overflowObj + curtCtrlObj + battCtrlObj + curtStateObj + battStateObj;
+            end
+
+            
+            if isObjective_Alessio
+                coefOverflow = 10^4;
+                coefCurtCtrl = 10^4;
+                coefBattCtrl = 1;
+                coefBattState = 10^(-2);
+
+                overflowObj = coefOverflow * sum(epsilon1, "all");
+                
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = coefCurtCtrl * sum(curtCtrl, "all");
+
+                battCtrl = u_mpc (c+1 : c+b, :);
+                battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
+
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battStateObj = coefBattState * sum(battState .^ 2, "all");
+                
+                objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+            end
+        
+
+            
+            
+            
 
             % in the following, where starts setOtherElements method
             parameters      = {x_mpc(:,1), dk};
@@ -277,8 +427,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             % obj.setUselessObjectiveSearchingForFeasibility(); % CAUTIOUS
             % obj.setObjective_penalizeControl();
             % obj.setObjective_penalizeControlAndEpsilon();
-            obj.setObjective_penalizeSumSquaredControlAndEpsilon();
-            
+            %obj.setObjective_penalizeSumSquaredControlAndEpsilon();
+            disp("you use the method setOtherElements, do not use it")
             obj.setSolver();
             obj.setController();
             
