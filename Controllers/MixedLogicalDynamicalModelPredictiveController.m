@@ -173,11 +173,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             end
             
             for k = obj.tau_b+1:obj.tau_c
-                %{
-                objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1)...
-                                        + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k)...
-                                        + beta(k) * epsilon1(:,k-obj.tau_b)' * epsilon1(:,k-obj.tau_b);
-                %}
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
@@ -234,7 +229,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             isObjective_inspiration1 = false;
             isObjective_inspiration2 = false;
             isObjective_Hung = false;
-            isObjective_Alessio = true;
+            isObjective_Alessio = false;
+            isObjective_Alessio2 = true;
 
             if isObjective_overflow_curtCtrl_battState_Penalty
                 % overflow + DeltaPC + PB^2
@@ -362,6 +358,32 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 battCtrl = u_mpc (c+1 : c+b, :);
                 battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
 
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battStateObj = coefBattState * sum(battState .^ 2, "all");
+                
+                objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+            end
+
+            if isObjective_Alessio2
+                coefOverflow = 10^4;
+                coefCurtCtrl = 10^4;
+                coefBattCtrl = 1;
+                coefBattState = 10^(-2);
+
+                overflowObj = coefOverflow * sum(epsilon1, "all");
+                
+                % preference for late curtailment controls
+                N_to_1 = fliplr(1 : N);
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = coefCurtCtrl * N_to_1 * sum(curtCtrl, 1)';
+
+                % preference for early battery controls
+                one_to_N = 1:N;
+                battCtrl = u_mpc (c+1 : c+b, :);
+                battCtrlObj = coefBattCtrl * one_to_N * sum(battCtrl .^ 2, 1)';
+                
                 idxFirstPB = obj.numberOfBranches + c + 1;
                 idxLastPB = obj.numberOfBranches + c + b;
                 battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
