@@ -730,25 +730,51 @@ classdef MpcWithUncertainty < Controller
 
         function setObjective_Alessio(obj)
             coefOverflow = 10^4;
-                coefCurtCtrl = 10^4;
-                coefBattCtrl = 1;
-                coefBattState = 10^(-2);
+            coefCurtCtrl = 10^4;
+            coefBattCtrl = 1;
+            coefBattState = 10^(-2);
 
-                overflowObj = coefOverflow * sum( obj.epsilon,"all");
+            overflowObj = coefOverflow * sum( obj.epsilon,"all");
 
-                curtCtrlObj = coefCurtCtrl * sum(obj.u(1:obj.c,:), "all");
+            curtCtrlObj = coefCurtCtrl * sum(obj.u(1:obj.c,:), "all");
 
-                battIdxRange = (obj.c + 1) : (obj.c + obj.b);
-                battCtrl = obj.u(battIdxRange, :);
-                battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            battCtrlObj = coefBattCtrl * sum(battCtrl .^ 2, "all");
 
-                indexFirstPB = obj.numberOfBranches + obj.c + 1;
-                indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
-                state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
-            
-                battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+            state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+        
+            battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
 
-                obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_Alessio2(obj)
+            coefOverflow = 10^4;
+            coefCurtCtrl = 10^4;
+            coefBattCtrl = 1;
+            coefBattState = 10^(-2);
+
+            overflowObj = coefOverflow * sum( obj.epsilon,"all");
+
+            N_to_1 = fliplr(1:obj.N);
+            curtCtrlObj = coefCurtCtrl * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
+
+            % Preference for early battery controls
+            one_to_N = 1:obj.N;
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            battCtrlObj = coefBattCtrl * one_to_N * sum(battCtrl .^ 2, 1)';
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+            state_battery = obj.x(indexFirstPB:indexLastPB, 2:end);
+        
+            battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
         end
         
         function setUselessObjectiveSearchingForFeasibility(obj)
