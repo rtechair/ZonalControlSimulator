@@ -7,7 +7,8 @@
         "StartPossibilityForGeneratorInSeconds":
         {
             "1": [975, 925, 875, 800],
-            "2": [750, 550, 600, 500]
+            "2": [750, 550, 600, 500],
+            "3": [740, 600, 650, 1000]
         },
         "startSelected": 2
     },
