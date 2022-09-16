@@ -158,7 +158,8 @@ classdef MpcWithUncertainty < Controller
             % obj.setObjective_overflow_curtCtrl_battCtrl_Penalty();
             %obj.setObjective_inspiration1();
             % obj.setObjective_inspiration2();
-            obj.setObjective_Alessio();
+            % obj.setObjective_Alessio();
+            obj.setObjective_Alessio2();
 
             obj.setSolver();
             obj.setController();
@@ -759,6 +760,7 @@ classdef MpcWithUncertainty < Controller
 
             overflowObj = coefOverflow * sum( obj.epsilon,"all");
 
+            % preference for late curtailment controls
             N_to_1 = fliplr(1:obj.N);
             curtCtrlObj = coefCurtCtrl * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
 
