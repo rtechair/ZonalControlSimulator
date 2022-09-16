@@ -130,19 +130,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             xmax = [flowLimit *ones(nbranchNEW,1) ; maxPowerGeneration ; maxPowerBattery ; maxEnergyBattery];
             
             N = horizonInIterations;
-            Q = blkdiag( zeros(nbranchNEW) , eye(c) , 10^(-3)*eye(b) , zeros(b) , zeros(c) , zeros(c) , zeros(c*obj.tau_c) , zeros(b*obj.tau_b) );
-            
-            lambda = zeros(1,N);
-            theta = zeros(1,N);
-            beta = zeros(1,N);
-            R = zeros(c+b,c+b,N);
-            for k = 1:N
-                lambda(k) = 1; %10*(2+1/(1+k^3)); % weight of curtailment variation
-                theta(k) = 1; %-1+k^3; % weight of battery power variation
-                R(:,:,k) = blkdiag( lambda(k) * eye(c) , theta(k) * eye(b) );
-                beta(k) = 10^4;
-            end
-            threshold = 0*ones(nbranchNEW,1);
 
             A_new = obj.operatorStateExtended;
             B_new = obj.operatorControlExtended;
@@ -158,13 +145,10 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             dk = sdpvar(h+c,N,'full'); % vector of disturbance
 
             constraints = [];
-            % objective   = 0;
             nbr = 1:nbranchNEW;
             constraints = [constraints, (epsilon1 >= 0) : ['epsilon ']];
              
             for k = 1:obj.tau_b
-                %objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1) + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k);
-            
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)) : ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
@@ -178,8 +162,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
                 constraints = [constraints, (u_mpc(:,k) >= umin): ['control min ' num2str(k)]];
                 
-                constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr) - threshold(nbr)  + epsilon1(nbr,k-obj.tau_b)) : ['branch max ' num2str(k)]];
-                constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr) + threshold(nbr)  - epsilon1(nbr,k-obj.tau_b)) : ['branch min ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr)  + epsilon1(nbr,k-obj.tau_b)) : ['branch max ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr)  - epsilon1(nbr,k-obj.tau_b)) : ['branch min ' num2str(k)]];
                 
                 constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) <= xmax(nbranchNEW+c+(1:2*b)) ) : ['battery max ' num2str(k)]];
                 constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) >= xmin(nbranchNEW+c+(1:2*b)) ) : ['battery min ' num2str(k)]];
@@ -187,18 +171,13 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             end
             
             for k = obj.tau_c+1:N
-               %{
-                objective   = objective + x_mpc(:,k+1)' * Q * x_mpc(:,k+1)...
-                                        + u_mpc(:,k)' * R(:,:,k) * u_mpc(:,k);
-               %}
-                
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
                 constraints = [constraints, (u_mpc(:,k) >= umin): ['control min ' num2str(k)]];
                 
-                constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr) - threshold(nbr)  ) : ['branch max ' num2str(k)]];
-                constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr) + threshold(nbr)  ) : ['branch min ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr) ) : ['branch max ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr)  ) : ['branch min ' num2str(k)]];
                 
                 constraints = [constraints, ( x_mpc(nbranchNEW+(1:c),k+1) <= xmax(nbranchNEW+(1:c)) ) : ['curtailment max ' num2str(k)]];
                 constraints = [constraints, ( x_mpc(nbranchNEW+(1:c),k+1) >= xmin(nbranchNEW+(1:c)) ) : ['curtailment min ' num2str(k)]];
