@@ -209,7 +209,9 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             isObjective_inspiration2 = false;
             isObjective_Hung = false;
             isObjective_Alessio = false;
-            isObjective_Alessio2 = true;
+            isObjective_Alessio2 = false;
+            isObjective_Sorin = false;
+            isObjective_Sorin_NoBattery = true;
 
             if isObjective_overflow_curtCtrl_battState_Penalty
                 % overflow + DeltaPC + PB^2
@@ -370,9 +372,34 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 
                 objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
             end
-        
 
-            
+            if isObjective_Sorin
+                coefOverflow = 10^4;
+                coefCurtCtrl = 10^4;
+                coefBattCtrl = 1;
+                coefBattState = 10^(-2);
+
+                overflowObj = coefOverflow * sum(epsilon1, "all");
+                
+                % preference for late curtailment controls
+                N_to_1 = fliplr(1 : N);
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = coefCurtCtrl * N_to_1 * sum(curtCtrl, 1)';
+
+                % preference for battery controls on the 1st step
+                battCtrl = u_mpc (c+1 : c+b, :);
+                % battCtrlObj = coefBattCtrl * sum(battCtrl(:,1) .^ 2, 1)';
+                battCtrlObj = coefBattCtrl * battCtrl(:,1) .^ 2;
+                constraintNoBatteryCtrlAfter1Step = battCtrl(:, 2:end) == 0;
+                constraints = [constraints, constraintNoBatteryCtrlAfter1Step];
+
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battStateObj = coefBattState * sum(battState .^ 2, "all");
+                
+                objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+            end
             
             
 
