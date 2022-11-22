@@ -1,6 +1,6 @@
 {
 	"basecase":"case6468rte_zone_VG_VTV_BLA.m",
-	"durationInSeconds": 600,
+	"durationInSeconds": 1200,
 	"windowInSeconds":5,
 	"Zone":
 	{
