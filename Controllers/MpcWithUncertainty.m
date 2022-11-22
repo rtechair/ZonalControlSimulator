@@ -160,6 +160,26 @@ classdef MpcWithUncertainty < Controller
             % obj.setObjective_inspiration2();
             % obj.setObjective_Alessio();
             obj.setObjective_Alessio2();
+           %obj.setObjectiveSorin();
+           % obj.setObjectiveSorinNoBattery();
+
+           isObjective_Guillaume1 = false;
+           isObjective_Guillaume2 = false;
+           isObjective_Guillaume3 = false;
+           isObjective_Guillaume1_NoBattery = false;
+            
+           if isObjective_Guillaume1
+               obj.setObjective_Guillaume1();
+           end
+           if isObjective_Guillaume2
+               obj.setObjective_Guillaume2();
+           end
+           if isObjective_Guillaume3
+               obj.setObjective_Guillaume3();
+           end
+           if isObjective_Guillaume1_NoBattery
+               obj.setObjective_Guillaume1_NoBattery();
+           end
 
             obj.setSolver();
             obj.setController();
@@ -777,6 +797,115 @@ classdef MpcWithUncertainty < Controller
             battStateObj = coefBattState * sum( state_battery .^ 2 ,"all");
 
             obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjectiveSorin(obj)
+            coefOverflow = 10^6;
+            coefCurtCtrl = 10^4;
+            coefBattCtrl = 1;
+            coefBattState = 10^(-2);
+            
+            overflowObj = coefOverflow * sum( obj.epsilon,"all");
+
+            % preference for late curtailment controls
+            N_to_1 = fliplr(1:obj.N);
+            curtCtrlObj = coefCurtCtrl * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
+
+            % preference for battery controls on the 1st step
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            battCtrlObj = coefBattCtrl * battCtrl(:, 1) .^ 2; % cautious, it works because there is only 1 battery
+            constraintNoBatteryControlAfter1 = battCtrl(:, 2:end) == 0;
+            obj.constraints = [obj.constraints, constraintNoBatteryControlAfter1];
+
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.numberOfBuses;
+            batteryState = obj.x(indexFirstPB:indexLastPB, 2:end);
+            battStateObj = coefBattState * sum( batteryState .^ 2 ,"all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjectiveSorinNoBattery(obj)
+            coefOverflow = 10^6;
+            coefCurtCtrl = 10^4;
+            overflowObj = coefOverflow * sum( obj.epsilon,"all");
+
+            % preference for late curtailment controls
+            N_to_1 = fliplr(1:obj.N);
+            curtCtrlObj = coefCurtCtrl * N_to_1 * sum(obj.u(1:obj.c,:), 1)';
+
+            obj.objective = overflowObj + curtCtrlObj;
+
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            obj.constraints = [obj.constraints, battCtrl == 0];
+        end
+
+        function setObjective_Guillaume1(obj)
+            highCoef = obj.N * obj.minPB^2;
+            overflowObj = highCoef * sum( obj.epsilon,"all");
+            
+            curtCtrl = obj.u(1:obj.c, :);
+            curtCtrlObj = highCoef * sum(curtCtrl, "all");
+
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            battCtrlObj = sum(battCtrl .^2, "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.b;
+            batteryState = obj.x(indexFirstPB:indexLastPB, obj.b+1:end);
+            battStateObj = sum( batteryState .^ 2 ,"all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_Guillaume2(obj)
+            highCoef = obj.N * obj.minPB^2;
+            overflowObj = highCoef * sum( obj.epsilon,"all");
+            
+            curtCtrl = obj.u(1:obj.c, :);
+            curtCtrlObj = highCoef * sum(curtCtrl, "all");
+
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            allButFirstBattCtrl = battCtrl(:, 2:end);
+            battCtrlObj = highCoef * sum(allButFirstBattCtrl .^2, "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.b;
+            batteryState = obj.x(indexFirstPB:indexLastPB, obj.b+1:end);
+            battStateObj = sum( batteryState .^ 2 ,"all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_Guillaume3(obj)
+            highCoef = obj.N * obj.minPB^2;
+            overflowObj = highCoef * sum( obj.epsilon,"all");
+            
+            curtCtrl = obj.u(1:obj.c, :);
+            curtCtrlObj = highCoef * sum(curtCtrl, "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.c + 1;
+            indexLastPB = obj.numberOfBranches + obj.c + obj.b;
+            batteryState = obj.x(indexFirstPB:indexLastPB, obj.b+1:end);
+            battStateObj = sum( batteryState .^ 2 ,"all");
+
+            obj.objective = overflowObj + curtCtrlObj + battStateObj;
+        end
+
+        function setObjective_Guillaume1_NoBattery(obj)
+            overflowObj = sum( obj.epsilon,"all");
+            curtCtrl = obj.u(1:obj.c, :);
+            curtCtrlObj = sum(curtCtrl, "all");
+            obj.objective = overflowObj + curtCtrlObj;
+
+            battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+            battCtrl = obj.u(battIdxRange, :);
+            obj.constraints = [obj.constraints, battCtrl == 0];
         end
         
         function setUselessObjectiveSearchingForFeasibility(obj)
