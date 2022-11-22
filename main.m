@@ -35,8 +35,9 @@ transmission = TransmissionSimulation('simulation.json');
 transmission.runSimulation();
 
 isTopologyShown = false;
-isModelResultShown = true;
-isSimulationResultShown = false;
+isModelResultShown = false;
+isSimulationResultShown = true;
+isSimulationResultSaved = false;
 
 if isTopologyShown
     transmission.plotZonesTopology();
@@ -48,4 +49,9 @@ end
 
 if isSimulationResultShown
     transmission.plotZonesSimulationResult();
+end
+
+if isSimulationResultSaved
+    simulationResult = transmission.zones{1,1}.simulationResult;
+    save("result.mat", "simulationResult");
 end
