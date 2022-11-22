@@ -72,11 +72,11 @@ classdef Zone < handle
             obj.setTelecom();
             obj.setResult(simulationWindow, duration);
             
-            isControllerMPC = false;
+            isControllerApproximateLinearModel = false;
             isControllerLimiter = false;
             isControllerMixedLogicalModel = true;
-            if isControllerMPC
-                obj.setModelPredictiveController();
+            if isControllerApproximateLinearModel
+                obj.setApproximateLinearMPC();
             elseif isControllerLimiter
                 obj.setControllerSetting();
                 obj.setController();
@@ -165,8 +165,7 @@ classdef Zone < handle
                 delayCurt, maxPowerGeneration);
         end
         
-        % WARMING: this is an attempt at an MPC
-        function setModelPredictiveController(obj)
+        function setApproximateLinearMPC(obj)
             delayCurt = obj.delayInIterations.getDelayCurt();
             delayBatt = obj.delayInIterations.getDelayBatt();
             delayTelecom = obj.delayInIterations.getDelayController2Zone();
