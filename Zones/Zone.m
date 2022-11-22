@@ -78,8 +78,8 @@ classdef Zone < handle
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC();
             elseif isControllerLimiter
-                obj.setControllerSetting();
-                obj.setController();
+                obj.setControllerLimiterSetting();
+                obj.setControllerLimiter();
             elseif isControllerMixedLogicalModel
                 obj.setMixedLogicalDynamicalModelPredictiveController();
             else
@@ -135,21 +135,16 @@ classdef Zone < handle
             obj.simulationResult = buildSimulationResult(obj.setting, obj.topology, obj.delayInIterations, duration, ...
                 obj.name, simulationWindow);
         end
-        
-        % WARNING: the following function is for the limiter,
-        % it can not be used for other types of controllers.
-        % Hence, it will be later modified TODO
+
         function limiterFilename = getLimiterFilename(obj)
             limiterFilename = ['limiter' obj.name '.json'];
         end
         
-        function setControllerSetting(obj)
+        function setControllerLimiterSetting(obj)
            obj.controllerSetting = decodeJsonFile(obj.getLimiterFilename());
         end
         
-        % WARNING: actually this function sets a limiter as the controller
-        % TODO: handle the case when it is not the limiter
-        function setController(obj)
+        function setControllerLimiter(obj)
             branchFlowLimit = obj.setting.getBranchFlowLimit();
             numberOfBattOn = obj.topology.getNumberOfBattOn();
             increasingEchelon = obj.controllerSetting.IncreaseCurtPercentEchelon;
