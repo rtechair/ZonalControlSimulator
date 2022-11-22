@@ -213,8 +213,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             isObjective_Sorin = false;
             isObjective_Sorin_NoBattery = false;
 
-            isObjective_Guillaume_1 = true;
-            isObjective_Guillaume_2 = false;
+            isObjective_Guillaume1 = false;
+            isObjective_Guillaume2 = false;
+            isObjective_Guillaume3 = false;
+            isObjective_Guillaume1_NoBattery = true;
+            
 
             if isObjective_overflow_curtCtrl_battState_Penalty
                 % overflow + DeltaPC + PB^2
@@ -431,7 +434,9 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 constraints = [constraints, constraintNoBatteryCtrl];
              end
             
-            if isObjective_Guillaume_1
+            if isObjective_Guillaume1
+                % Alessio's desired behavior, i.e. battery controls spread
+                % over the horizon
                 highCoef = N * minPowerBattery^2;
 
                 overflowObj = highCoef * sum(epsilon1, "all");
@@ -444,13 +449,14 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 
                 idxFirstPB = obj.numberOfBranches + c + 1;
                 idxLastPB = obj.numberOfBranches + c + b;
-                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
+                battState = x_mpc(idxFirstPB : idxLastPB, b+1:end);
                 battStateObj = sum(battState .^ 2, "all");
                 
                 objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
             end
 
-            if isObjective_Guillaume_2
+            if isObjective_Guillaume2
+                % Sorin's desired behavior, i.e. battery controls at 1st step
                 highCoef = N * minPowerBattery^2;
 
                 overflowObj = highCoef * sum(epsilon1, "all");
@@ -464,11 +470,39 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 
                 idxFirstPB = obj.numberOfBranches + c + 1;
                 idxLastPB = obj.numberOfBranches + c + b;
-                battState = x_mpc(idxFirstPB : idxLastPB, 2:end);
-                battStateObj = lowCoef * sum(battState .^ 2, "all");
+                battState = x_mpc(idxFirstPB : idxLastPB, b+1:end);
+                battStateObj = sum(battState .^ 2, "all");
                 
                 objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
             end
+
+            if isObjective_Guillaume3
+                % No cost on the battery control.
+                highCoef = N * minPowerBattery^2;
+
+                overflowObj = highCoef * sum(epsilon1, "all");
+
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = highCoef * sum(curtCtrl, "all");
+                
+                idxFirstPB = obj.numberOfBranches + c + 1;
+                idxLastPB = obj.numberOfBranches + c + b;
+                battState = x_mpc(idxFirstPB : idxLastPB, b+1:end);
+                battStateObj = sum(battState .^ 2, "all");
+                
+                objective = overflowObj + curtCtrlObj + battStateObj;
+            end
+
+             if isObjective_Guillaume1_NoBattery
+                overflowObj = sum(epsilon1, "all");
+                curtCtrl = u_mpc(1:c, :);
+                curtCtrlObj = sum(curtCtrl, "all");
+                objective = overflowObj + curtCtrlObj;
+
+                battCtrl = u_mpc (c+1 : c+b, :);
+                constraintNoBatteryCtrl = battCtrl ==0;
+                constraints = [constraints, constraintNoBatteryCtrl];
+             end
 
             % in the following, where starts setOtherElements method
             parameters      = {x_mpc(:,1), dk};
