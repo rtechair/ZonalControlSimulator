@@ -47,6 +47,7 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
         % Parameter
         
         maxPG
+        maxPastDeltaPA
         sdp_setting
         controller
 
@@ -107,6 +108,10 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
             obj.tau_b = delayBattery + delayTelecom;
             
             obj.N = horizonInIterations;
+            obj.maxPG = maxPowerGeneration;
+            obj.maxPastDeltaPA = zeros(obj.numberOfGen, 1);
+            obj.PC_est = zeros(obj.numberOfGen, 1);
+            obj.PG_est = maxPowerGeneration;
             
             % adapt, overcome
             n = numberOfBranches + 3*numberOfGen + 2*numberOfBatt;
@@ -118,7 +123,11 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
             obj.c = numberOfGen;
             obj.b = numberOfBatt;
 
-            umin_c = zeros(c,1);
+            % umin and umax are required currently, the state constraints
+            % are not accurate and only the curtailment state to be absurb
+            % after the delay. Thus the constraints on the controls are
+            % required.
+            umin_c = - maxPowerGeneration;
             umin_b = minPowerBattery - maxPowerBattery;
             umin = [umin_c ; umin_b];
 
@@ -135,7 +144,6 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
             B_new = obj.operatorControlExtended;
             Bz_new = obj.operatorNextPowerGenerationExtended;
             D_new = obj.operatorDisturbanceExtended;
-
 
             % mpc_controller_design
             u_mpc = sdpvar(b+c,N,'full');  % input trajectory: u0,...,u_{N-1} (columns of U)
@@ -213,8 +221,8 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
             isObjective_Sorin = false;
             isObjective_Sorin_NoBattery = false;
 
-            isObjective_Guillaume1 = false;
-            isObjective_Guillaume2 = true;
+            isObjective_Guillaume1 = true;
+            isObjective_Guillaume2 = false;
             isObjective_Guillaume3 = false;
             isObjective_Guillaume1_NoBattery = false;
             
@@ -651,10 +659,11 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
                 realDeltaPA (:,1)
                 realDeltaPT (:,1)
             end
-            
+           
+            obj.updateMaxPastDeltaPA(realDeltaPA)
             obj.decomposeState(realState);
             
-            obj.setDelta_PA_est_constant_over_horizon(realDeltaPA);
+            obj.setDelta_PA_est_constant_over_horizon();
             obj.setPA_over_horizon();
             
             obj.setDelta_PT_over_horizon(realDeltaPT);
@@ -673,65 +682,58 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
             obj.updatePastBattControls();
         end
         
+        function updateMaxPastDeltaPA(obj, realDeltaPA)
+            for g = 1:obj.numberOfGen
+                if obj.maxPastDeltaPA(g,1) < realDeltaPA(g,1)
+                    obj.maxPastDeltaPA(g,1) = realDeltaPA(g,1);
+                end
+            end
+        end
+
         function decomposeState(obj, state)
             arguments
                 obj
                 state StateOfZone
             end
+            
+            %previousPA_est = obj.PA_est(:,1);
+            previousPC_est = obj.PC_est(:,1);
+            previousPG_est = obj.PG_est(:,1);
+            
+
             PC = state.getPowerCurtailment();
             PG = state.getPowerGeneration();
-            PA = state.getPowerAvailable();
-            obj.PA_est(:,1) = PA;
+            %PA = state.getPowerAvailable();
+            
+            threshold = 0.01;
+            
+            for g = 1:obj.numberOfGen
+                isPreviousGenerationLimitedByCurtailment = abs(previousPG_est(g,1) - obj.maxPG(g,1) + previousPC_est(g,1)) <= threshold;
+                isCurrentGenerationLimitedByCurtailment = abs(PG(g,1) - obj.maxPG(g,1) + PC(g,1) ) <= threshold;
+                if isPreviousGenerationLimitedByCurtailment && isCurrentGenerationLimitedByCurtailment
+                    obj.PA_est(g,1) = obj.maxPG(g,1);
+                    obj.Delta_PA_est(g,1) = 0;
+                else
+                    obj.PA_est(g,1) = PG(g,1);
+                    obj.Delta_PA_est(g,1) = obj.maxPastDeltaPA(g,1);
+                end
+            end
+            
+            %obj.PA_est(:,1) = PA;
             obj.PC_est(:,1) = PC;
             obj.PG_est(:,1) = PG;
         end
         
-        function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
-            % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
-            areAllDeltaPANonNegative = all(realDeltaPA >= 0);
-            if areAllDeltaPANonNegative
-                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.N);
-            else
-                for g = 1:obj.c
-                    deltaPAOfGen = realDeltaPA(g,1);
-                    if deltaPAOfGen >= 0
-                        obj.Delta_PA_est(g,1:obj.N) = deltaPAOfGen;
-                    else
-                        obj.computeCorrectDisturbanceOfGen(g, deltaPAOfGen);
-                    end
-                end
-            end
+        function setDelta_PA_est_constant_over_horizon(obj)
+            obj.Delta_PA_est(:,2:obj.N) = repmat(obj.Delta_PA_est(:,1), 1, obj.N-1);
         end
         
-        function computeCorrectDisturbanceOfGen(obj, genIndex, deltaPAOfGen)
-            realPAOfGen = obj.PA_est(genIndex,1);
-            % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
-            n = floor(realPAOfGen / -deltaPAOfGen);
-            if n >= obj.N
-                obj.Delta_PA_est(genIndex, 1:obj.N) = deltaPAOfGen;
-            else
-                obj.Delta_PA_est(genIndex, 1:n) = deltaPAOfGen;
-                
-                DeltaPAToReachZero = - realPAOfGen - deltaPAOfGen * n;
-                obj.Delta_PA_est(genIndex, n + 1) = DeltaPAToReachZero;
-                
-                obj.Delta_PA_est(genIndex, n+2 : obj.N) = 0;
-            end
-        end
         
         function setPA_over_horizon(obj)
-            %{
-            Cautious, the original equation:
-                obj.PA_est(:,k+1) = obj.PA_est(:,k) + obj.Delta_PA_est(:,k)
-            is not used.
-            This is due to the unaccuracy of floating-point data.
-            Using the original equation would result in approximate PA at
-            each iteration which are then used for the computation of the
-            following iteration. Summing these approximations can lead to
-            having some PA < 0 while PA = 0 is desired.
-            %}
             for k = 1:obj.N
-                obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
+                for g = 1:obj.numberOfGen
+                    obj.PA_est(g,k+1) = max(0, min(obj.maxPG(g,1), obj.PA_est(g,k) + obj.Delta_PA_est(g,k) ) );
+                end
             end
         end
         
@@ -740,7 +742,10 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
         end
         
         function set_xK_extend(obj, realState)
+            % the PA needs to be adapted due to the hypotheses
+            realState.setPowerAvailable(obj.PA_est(:,1));
             stateVector = realState.getStateAsVector();
+            
             pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
             pastBattControlVector = reshape(obj.ubK_delay, [], 1);
             

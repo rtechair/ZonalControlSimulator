@@ -214,9 +214,9 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             isObjective_Sorin_NoBattery = false;
 
             isObjective_Guillaume1 = false;
-            isObjective_Guillaume2 = false;
+            isObjective_Guillaume2 = true;
             isObjective_Guillaume3 = false;
-            isObjective_Guillaume1_NoBattery = true;
+            isObjective_Guillaume1_NoBattery = false;
             
 
             if isObjective_overflow_curtCtrl_battState_Penalty
