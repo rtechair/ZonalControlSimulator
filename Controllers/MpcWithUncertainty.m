@@ -404,8 +404,8 @@ classdef MpcWithUncertainty < Controller
         %% CONSTRAINT
         
         function setConstraints(obj)
-            upperBoundEpsilonBeforeDelayCurt = obj.epsilon(:, 1:obj.tau_c) <= obj.epsilon_max;
-            upperBoundEpsilonBeforeDelayCurt = upperBoundEpsilonBeforeDelayCurt : 'upper bound epsilon before delay curt';
+            %upperBoundEpsilonBeforeDelayCurt = obj.epsilon(:, 1:obj.tau_c) <= obj.epsilon_max;
+            %upperBoundEpsilonBeforeDelayCurt = upperBoundEpsilonBeforeDelayCurt : 'upper bound epsilon before delay curt';
             
             noEpsilonAfterDelayCurt = obj.epsilon(:, obj.tau_c+1 : end) == 0;
             noEpsilonAfterDelayCurt = noEpsilonAfterDelayCurt : 'epsilon = 0 after delay curt';
