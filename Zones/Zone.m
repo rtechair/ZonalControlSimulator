@@ -190,6 +190,30 @@ classdef Zone < handle
             obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
                 minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
         end
+
+        function setApproximateLinearMPC_PAunknown_DeltaPCreal(obj)
+            delayCurt = obj.delayInIterations.getDelayCurt();
+            delayBatt = obj.delayInIterations.getDelayBatt();
+            delayTelecom = obj.delayInIterations.getDelayController2Zone();
+            controlCycleInSeconds = obj.setting.getControlCycleInSeconds();
+            % TODO: add to mpc.json the following info
+            horizonInSeconds = 50;
+            numberOfScenarios = 1;
+            
+            obj.controller = ApproximateLinearMPC_PAunknown_DeltaPCreal(obj.name, delayCurt, delayBatt, delayTelecom, ...
+                controlCycleInSeconds, horizonInSeconds, numberOfScenarios);
+            
+            amplifierQ_ep1 = 10^7;
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 800;
+            flowLimit = obj.setting.getBranchFlowLimit();
+            maxEpsilon = 0.05;
+            
+            obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
+                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
+        end
         
         function setMixedLogicalDynamicalModelPredictiveController(obj)
             basecaseName = 'case6468rte_zone_VG_VTV_BLA';
