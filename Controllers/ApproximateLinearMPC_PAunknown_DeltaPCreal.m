@@ -89,7 +89,7 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
     
     
     methods
-        function obj = MpcWithUncertainty(zoneName, delayCurtailment, delayBattery, delayTelecom, ...
+        function obj = ApproximateLinearMPC_PAunknown_DeltaPCreal(zoneName, delayCurtailment, delayBattery, delayTelecom, ...
                 controlCycle, predictionHorizonInSeconds, numberOfScenarios)
             zoneOperatorsFilename = ['operatorsZone' zoneName '.mat'];
             obj.loadOperators(zoneOperatorsFilename);
@@ -281,7 +281,7 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
         end
         
         function setMinControlCurt(obj)
-            obj.umin_c = zeros(obj.c, 1);
+            obj.umin_c = - obj.maxPG;
         end
         
         function setMaxControlCurt(obj)
