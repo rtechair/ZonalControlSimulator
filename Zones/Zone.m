@@ -76,6 +76,8 @@ classdef Zone < handle
             isControllerLimiter = false;
             isControllerMixedLogicalModel = true;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = false;
+            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = false;
+
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC();
             elseif isControllerLimiter
@@ -85,6 +87,8 @@ classdef Zone < handle
                 obj.setMixedLogicalDynamicalModelPredictiveController();
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal
                 obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal();
+            elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA
+                obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA();
             else
                 except = MException('The choice of controller is incorrect, ',...
                     'one of the controller must be selected in Zone.m');
@@ -267,6 +271,49 @@ classdef Zone < handle
                 operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
+        end
+
+        function setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA(obj)
+            basecaseName = 'case6468rte_zone_VG_VTV_BLA';
+            busId = obj.setting.getBusId();
+            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
+            timestep = obj.setting.controlCycleInSeconds();
+
+            delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
+            delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
+            delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
+            % TODO: add to the json file the information about hte horizon
+            horizonInSeconds = 50;
+            horizonInIterations = ceil( horizonInSeconds / timestep);
+
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+
+            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
+
+            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
+            model = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
+
+            operatorStateExtended = model.getOperatorStateExtended();
+            operatorControlExtended = model.getOperatorControlExtended();
+            operatorNextPowerGenerationExtended = model.getOperatorNextPowerGenerationExtended();
+            operatorDisturbanceExtended = model.getOperatorDisturbanceExtended();
+
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
+            flowLimit = obj.setting.getBranchFlowLimit();
+
+            coefficientDeltaPA = 0.25;
+
+            obj.controller = MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
+                operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
+                numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, coefficientDeltaPA);
         end
 
         function initializePowerAvailable(obj)
