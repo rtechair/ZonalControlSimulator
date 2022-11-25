@@ -77,6 +77,7 @@ classdef Zone < handle
             isControllerMixedLogicalModel = true;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = false;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = false;
+            isApproximateLinearMPC_PAunknown_DeltaPCreal = false;
 
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC();
@@ -89,6 +90,8 @@ classdef Zone < handle
                 obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal();
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA
                 obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA();
+            elseif isApproximateLinearMPC_PAunknown_DeltaPCreal
+                obj.setApproximateLinearMPC_PAunknown_DeltaPCreal();
             else
                 except = MException('The choice of controller is incorrect, ',...
                     'one of the controller must be selected in Zone.m');
