@@ -82,6 +82,7 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
         
         flowLimit
         maxPG
+        maxPastDeltaPA
         maxEB
         sdp_setting
         controller
@@ -118,6 +119,10 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
             obj.setCostControlUse();
             obj.setCostRefDeviationEp1(amplifierQ_ep1);
             obj.setMaxPowerGeneration(maxPowerGeneration);
+            obj.maxPastDeltaPA = zeros(obj.c,1);
+            obj.PC_est = zeros(obj.c, 1);
+            obj.PG_est = maxPowerGeneration;
+
             obj.setMinControlCurt();
             obj.setMaxControlCurt();
             
@@ -404,8 +409,8 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
         %% CONSTRAINT
         
         function setConstraints(obj)
-            upperBoundEpsilonBeforeDelayCurt = obj.epsilon(:, 1:obj.tau_c) <= obj.epsilon_max;
-            upperBoundEpsilonBeforeDelayCurt = upperBoundEpsilonBeforeDelayCurt : 'upper bound epsilon before delay curt';
+            % upperBoundEpsilonBeforeDelayCurt = obj.epsilon(:, 1:obj.tau_c) <= obj.epsilon_max;
+            %upperBoundEpsilonBeforeDelayCurt = upperBoundEpsilonBeforeDelayCurt : 'upper bound epsilon before delay curt';
             
             noEpsilonAfterDelayCurt = obj.epsilon(:, obj.tau_c+1 : end) == 0;
             noEpsilonAfterDelayCurt = noEpsilonAfterDelayCurt : 'epsilon = 0 after delay curt';
@@ -1065,10 +1070,10 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
                 realDeltaPA (:,1)
                 realDeltaPT (:,1)
             end
-            
+            obj.updateMaxPastDeltaPA(realDeltaPA)
             obj.decomposeState(realState);
             
-            obj.setDelta_PA_est_constant_over_horizon(realDeltaPA);
+            obj.setDelta_PA_est_constant_over_horizon();
             obj.setPA_over_horizon();
             
             obj.setDelta_PC_est_over_horizon();
@@ -1091,68 +1096,55 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
             obj.updatePastBattControls();
         end
         
+        function updateMaxPastDeltaPA(obj, realDeltaPA)
+            for g = 1:obj.c
+                if obj.maxPastDeltaPA(g,1) < realDeltaPA(g,1)
+                    obj.maxPastDeltaPA(g,1) = realDeltaPA(g,1);
+                end
+            end
+        end
+
         function decomposeState(obj, state)
             arguments
                 obj
                 state StateOfZone
             end
-            Fij = state.getPowerFlow();
+            
+            previousPC_est = obj.PC_est(:,1);
+            previousPG_est = obj.PG_est(:,1); % don't forget to initialize PC_est and PG_est in the constructor
+
             PC = state.getPowerCurtailment();
-            PB = state.getPowerBattery();
-            EB = state.getEnergyBattery();
             PG = state.getPowerGeneration();
-            PA = state.getPowerAvailable();
-            obj.PA_est(:,1) = PA;
+            % PA = state.getPowerAvailable();
+
+            threshold = 0.01;
+            
+            for g = 1:obj.c
+                isPreviousGenerationLimitedByCurtailment = abs(previousPG_est(g,1) - obj.maxPG(g,1) + previousPC_est(g,1)) <= threshold;
+                isCurrentGenerationLimitedByCurtailment = abs(PG(g,1) - obj.maxPG(g,1) + PC(g,1) ) <= threshold;
+                if isPreviousGenerationLimitedByCurtailment && isCurrentGenerationLimitedByCurtailment
+                    obj.PA_est(g,1) = obj.maxPG(g,1);
+                    obj.Delta_PA_est(g,1) = 0;
+                else
+                    obj.PA_est(g,1) = PG(g,1);
+                    obj.Delta_PA_est(g,1) = obj.maxPastDeltaPA(g,1);
+                end
+            end
+
+            % obj.PA_est(:,1) = PA;
             obj.PC_est(:,1) = PC;
             obj.PG_est(:,1) = PG;
         end
-        
-        function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
-            % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
-            areAllDeltaPANonNegative = all(realDeltaPA >= 0);
-            if areAllDeltaPANonNegative
-                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.N);
-            else
-                for g = 1:obj.c
-                    deltaPAOfGen = realDeltaPA(g,1);
-                    if deltaPAOfGen >= 0
-                        obj.Delta_PA_est(g,1:obj.N) = deltaPAOfGen;
-                    else
-                        obj.computeCorrectDisturbanceOfGen(g, deltaPAOfGen);
-                    end
-                end
-            end
-        end
-        
-        function computeCorrectDisturbanceOfGen(obj, genIndex, deltaPAOfGen)
-            realPAOfGen = obj.PA_est(genIndex,1);
-            % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
-            n = floor(realPAOfGen / -deltaPAOfGen);
-            if n >= obj.N
-                obj.Delta_PA_est(genIndex, 1:obj.N) = deltaPAOfGen;
-            else
-                obj.Delta_PA_est(genIndex, 1:n) = deltaPAOfGen;
-                
-                DeltaPAToReachZero = - realPAOfGen - deltaPAOfGen * n;
-                obj.Delta_PA_est(genIndex, n + 1) = DeltaPAToReachZero;
-                
-                obj.Delta_PA_est(genIndex, n+2 : obj.N) = 0;
-            end
+
+        function setDelta_PA_est_constant_over_horizon(obj)
+            obj.Delta_PA_est(:,2:obj.N) = repmat(obj.Delta_PA_est(:,1), 1, obj.N-1);
         end
         
         function setPA_over_horizon(obj)
-            %{
-            Cautious, the original equation:
-                obj.PA_est(:,k+1) = obj.PA_est(:,k) + obj.Delta_PA_est(:,k)
-            is not used.
-            This is due to the unaccuracy of floating-point data.
-            Using the original equation would result in approximate PA at
-            each iteration which are then used for the computation of the
-            following iteration. Summing these approximations can lead to
-            having some PA < 0 while PA = 0 is desired.
-            %}
             for k = 1:obj.N
-                obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
+                for g = 1:obj.c
+                    obj.PA_est(g,k+1) = max(0, min(obj.maxPG(g,1), obj.PA_est(g,k) + obj.Delta_PA_est(g,k) ) );
+                end
             end
         end
         
@@ -1171,22 +1163,10 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
         function setDelta_PG_and_PG_est_over_horizon(obj)
             for k = 1: obj.N
                 f = obj.PA_est(:,k+1) - obj.PG_est(:,k) + obj.Delta_PC_est(:,k);
-                % f = obj.PA_est(:,k) - obj.PG_est(:,k) + obj.Delta_PA_est(:,k) + obj.Delta_PC_est(:,k);
+
                 g = obj.maxPG - obj.PC_est(:,k) - obj.PG_est(:,k);
                 obj.Delta_PG_est(:,k) = min(f, g);
                 obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
-                %{
-                This is an attempt at improving the numerical computation
-                of the disturbance Delta_PG_est in order to solve the
-                numerical approximation responsible for PG < 0 in the MPC
-                if f <= g
-                    obj.PG_est(:,k+1) = obj.PA_est(:,k+1);
-                    obj.Delta_PG_est(:,k) = f;
-                else
-                    obj.Delta_PG_est(:,k) = min(f, g);
-                    obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
-                end
-                %}
             end
         end
         
@@ -1195,6 +1175,8 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
         end
         
         function set_xK_extend(obj, realState)
+            realState.setPowerAvailable(obj.PA_est(:,1));
+
             stateVector = realState.getStateAsVector();
             stateVectorMinusPA = stateVector(1: end-obj.c);
             pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
