@@ -164,11 +164,11 @@ classdef ApproximateLinearMPC_PAunknown_DeltaPCreal < Controller
             %obj.setObjective_inspiration1();
             % obj.setObjective_inspiration2();
             % obj.setObjective_Alessio();
-            obj.setObjective_Alessio2();
+            %obj.setObjective_Alessio2();
            %obj.setObjectiveSorin();
            % obj.setObjectiveSorinNoBattery();
 
-           isObjective_Guillaume1 = false;
+           isObjective_Guillaume1 = true;
            isObjective_Guillaume2 = false;
            isObjective_Guillaume3 = false;
            isObjective_Guillaume1_NoBattery = false;

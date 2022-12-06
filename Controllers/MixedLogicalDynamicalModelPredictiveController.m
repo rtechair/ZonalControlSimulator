@@ -213,8 +213,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             isObjective_Sorin = false;
             isObjective_Sorin_NoBattery = false;
 
-            isObjective_Guillaume1 = false;
-            isObjective_Guillaume2 = true;
+            isObjective_Guillaume1 = true;
+            isObjective_Guillaume2 = false;
             isObjective_Guillaume3 = false;
             isObjective_Guillaume1_NoBattery = false;
             
