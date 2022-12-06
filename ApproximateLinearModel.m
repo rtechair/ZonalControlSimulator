@@ -28,18 +28,23 @@ classdef ApproximateLinearModel < handle
 
             batteryCoef
             timestep
+            delayCurt
+            delayBatt
 
             operatorState
             operatorControlCurtailment
             operatorControlBattery
             operatorDisturbancePowerGeneration
             operatorDisturbancePowerTransit
+
+            
         end
 
         methods
             % look at buildMathemathicalModel
             function obj = ApproximateLinearModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
-                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep)
+                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep,...
+                    delayCurt, delayBatt)
                 arguments
                     numberOfBuses (1,1) {mustBeInteger, mustBePositive}
                     numberOfBranches (1,1) {mustBeInteger, mustBePositive}
@@ -50,6 +55,8 @@ classdef ApproximateLinearModel < handle
                     branchPerBusOfBattPTDF
                     batteryCoef
                     timestep    (1,1) {mustBeInteger, mustBePositive}
+                    delayCurt
+                    delayBatt
                 end
                 obj.numberOfBuses = numberOfBuses;
                 obj.numberOfBranches = numberOfBranches;
@@ -62,6 +69,8 @@ classdef ApproximateLinearModel < handle
 
                 obj.batteryCoef = batteryCoef;
                 obj.timestep = timestep;
+                obj.delayCurt = delayCurt;
+                obj.delayBatt = delayBatt;
 
                 obj.setOperatorState();
                 obj.setOperatorControlCurtailment();
@@ -125,7 +134,7 @@ classdef ApproximateLinearModel < handle
                 % EB(k+1) -= T*diag(cb)*DeltaPB(k-delayBatt), i.e. matrix -Ab in the paper
                 firstRow = obj.numberOfBranches + obj.numberOfGen + obj.numberOfBatt + 1;
                 rowRange = firstRow : firstRow + obj.numberOfBatt - 1;
-                obj.operatorControlBattery(rowRange, :) = - obj.timestep * xdiag(obj.batteryCoef);
+                obj.operatorControlBattery(rowRange, :) = - obj.timestep * diag(obj.batteryCoef);
             end
 
             function setOperatorDisturbancePowerGeneration(obj)
