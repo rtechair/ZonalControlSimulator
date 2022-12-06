@@ -74,10 +74,11 @@ classdef Zone < handle
             
             isControllerApproximateLinearModel = false;
             isControllerLimiter = false;
-            isControllerMixedLogicalModel = true;
-            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = false;
+            isControllerMixedLogicalModel = false;
+            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = true;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = false;
             isApproximateLinearMPC_PAunknown_DeltaPCreal = false;
+            isApproximateLinearMPC_iterative = false;
 
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC();
@@ -92,6 +93,8 @@ classdef Zone < handle
                 obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA();
             elseif isApproximateLinearMPC_PAunknown_DeltaPCreal
                 obj.setApproximateLinearMPC_PAunknown_DeltaPCreal();
+            elseif isApproximateLinearMPC_iterative
+                obj.setApproximateLinearMPC_iterative();
             else
                 except = MException('The choice of controller is incorrect, ',...
                     'one of the controller must be selected in Zone.m');
@@ -204,6 +207,30 @@ classdef Zone < handle
             numberOfScenarios = 1;
             
             obj.controller = ApproximateLinearMPC_PAunknown_DeltaPCreal(obj.name, delayCurt, delayBatt, delayTelecom, ...
+                controlCycleInSeconds, horizonInSeconds, numberOfScenarios);
+            
+            amplifierQ_ep1 = 10^7;
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 800;
+            flowLimit = obj.setting.getBranchFlowLimit();
+            maxEpsilon = 0.05;
+            
+            obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
+                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
+        end
+
+        function setApproximateLinearMPC_iterative(obj)
+            delayCurt = obj.delayInIterations.getDelayCurt();
+            delayBatt = obj.delayInIterations.getDelayBatt();
+            delayTelecom = obj.delayInIterations.getDelayController2Zone();
+            controlCycleInSeconds = obj.setting.getControlCycleInSeconds();
+            % TODO: add to mpc.json the following info
+            horizonInSeconds = 50;
+            numberOfScenarios = 1;
+            
+            obj.controller = ApproximateLinearMPC_iterative(obj.name, delayCurt, delayBatt, delayTelecom, ...
                 controlCycleInSeconds, horizonInSeconds, numberOfScenarios);
             
             amplifierQ_ep1 = 10^7;
@@ -342,6 +369,7 @@ classdef Zone < handle
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, coefficientDeltaPA);
         end
+        
 
         function initializePowerAvailable(obj)
             obj.simulationEvolution.setInitialPowerAvailable(obj.simulationTimeSeries);
