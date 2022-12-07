@@ -37,7 +37,10 @@ classdef ApproximateLinearModel < handle
             operatorDisturbancePowerGeneration
             operatorDisturbancePowerTransit
 
-            
+            operatorStateExtended
+            operatorControlExtended
+            operatorDisturbancePowerGenerationExtended
+            operatorDisturbancePowerTransitExtended
         end
 
         methods
@@ -77,6 +80,10 @@ classdef ApproximateLinearModel < handle
                 obj.setOperatorControlBattery();
                 obj.setOperatorDisturbancePowerGeneration();
                 obj.setOperatorDisturbancePowerTransit();
+
+                obj.setOperatorExtendedState();
+                obj.setOperatorExtendedControl();
+                obj.setOperatorExtendedDisturbance();
             end
 
             function setOperatorState(obj)
@@ -155,6 +162,51 @@ classdef ApproximateLinearModel < handle
                 obj.operatorDisturbancePowerTransit(1: obj.numberOfBranches, :) = obj.branchPerBusPTDF;
             end
 
+            function setOperatorExtendedState(obj)
+                block1 = blkdiag([obj.operatorState, obj.operatorControlCurtailment], eye(obj.numberOfGen * (obj.delayCurt - 1) ) );
+                numberOfRows = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
+                extendedBlock1 = [block1 ;
+                                               zeros(obj.numberOfGen, numberOfRows + obj.numberOfGen * obj.delayCurt)];
+                newCol = [ obj.operatorControlBattery;
+                                 zeros(obj.numberOfGen * obj.delayCurt, obj.numberOfBatt)];
+                newFirstBlock = [extendedBlock1 newCol];
+                combineBlock = blkdiag(newFirstBlock, eye(obj.numberOfBatt * (obj.delayBatt - 1)) );
+                obj.operatorStateExtended = [combineBlock;
+                                                                zeros(obj.numberOfBatt, numberOfRows + obj.numberOfGen * obj.delayCurt + obj.numberOfBatt * obj.delayBatt)];
+            end
+
+            function setOperatorExtendedControl(obj)
+                operatorExtendedCtrlCurt = obj.getOperatorExtendedCtrlCurt();
+                operatorExtendedCtrlBatt = obj.getOperatorExtendedCtrlBatt();
+                obj.operatorControlExtended = [operatorExtendedCtrlCurt operatorExtendedCtrlBatt];
+            end
+
+            function value = getOperatorExtendedCtrlCurt(obj)
+                numberOfCol = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
+                block1 = zeros(numberOfCol, obj.numberOfGen);
+                block2 = zeros(obj.numberOfGen * (obj.delayCurt - 1), obj.numberOfGen);
+                block3 = eye(obj.numberOfGen);
+                block4 = zeros(obj.numberOfBatt * obj.delayBatt, obj.numberOfGen);
+                value = [block1; block2; block3; block4];
+            end
+
+            function value = getOperatorExtendedCtrlBatt(obj)
+                numberOfCol = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
+                block1 = zeros(numberOfCol, obj.numberOfBatt);
+                block2 = zeros(obj.numberOfGen * obj.delayCurt, obj.numberOfBatt);
+                block3 = zeros(obj.numberOfBatt * (obj.delayBatt - 1), obj.numberOfBatt);
+                block4 = eye(obj.numberOfBatt);
+                value = [block1; block2; block3; block4];
+            end
+
+            function setOperatorExtendedDisturbance(obj)
+                tmpNumberOfRows = obj.numberOfBatt * obj.delayBatt + obj.numberOfGen * obj.delayCurt;
+                obj.operatorDisturbancePowerGenerationExtended = [obj.operatorDisturbancePowerGeneration;
+                                                                                                       zeros(tmpNumberOfRows, obj.numberOfGen)];
+                obj.operatorDisturbancePowerTransitExtended = [obj.operatorDisturbancePowerTransit;
+                                                                                                zeros(tmpNumberOfRows, obj.numberOfBuses)];
+            end
+
             function A = getOperatorState(obj)
                 A = obj.operatorState;
             end
@@ -173,6 +225,22 @@ classdef ApproximateLinearModel < handle
 
             function Dn = getOperatorDisturbancePowerTransit(obj)
                 Dn = obj.operatorDisturbancePowerTransit;
+            end
+
+            function value = getOperatorStateExtended(obj)
+                value = obj.operatorStateExtended;
+            end
+
+            function value = getOperatorControlExtended(obj)
+                value = obj.operatorControlExtended;
+            end
+
+            function value = getOperatorDisturbancePowerGenerationExtended(obj)
+                value = obj.operatorDisturbancePowerGenerationExtended;
+            end
+
+            function value = getOperatorDisturbancePowerTransitExtended(obj)
+                value = obj.operatorDisturbancePowerTransitExtended;
             end
 
         end
