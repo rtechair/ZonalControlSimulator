@@ -72,16 +72,19 @@ classdef Zone < handle
             obj.setTelecom();
             obj.setResult(simulationWindow, duration);
             
-            isControllerApproximateLinearModel = false;
+            isControllerApproximateLinearModel = true;
+            isControllerMpcWithUncertainty = false;
             isControllerLimiter = false;
             isControllerMixedLogicalModel = false;
-            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = true;
+            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = false;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = false;
             isApproximateLinearMPC_PAunknown_DeltaPCreal = false;
             isApproximateLinearMPC_iterative = false;
 
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC();
+            elseif isControllerMpcWithUncertainty
+                obj.setMpcWithUnceritainty();
             elseif isControllerLimiter
                 obj.setControllerLimiterSetting();
                 obj.setControllerLimiter();
@@ -173,7 +176,7 @@ classdef Zone < handle
                 delayCurt, maxPowerGeneration);
         end
         
-        function setApproximateLinearMPC(obj)
+        function setMpcWithUnceritainty(obj)
             delayCurt = obj.delayInIterations.getDelayCurt();
             delayBatt = obj.delayInIterations.getDelayBatt();
             delayTelecom = obj.delayInIterations.getDelayController2Zone();
@@ -243,6 +246,47 @@ classdef Zone < handle
             
             obj.controller.setOtherElements(amplifierQ_ep1, maxPowerGeneration, ...
                 minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon);
+        end
+
+        function setApproximateLinearMPC(obj)
+            basecaseName = 'case6468rte_zone_VG_VTV_BLA';
+            busId = obj.setting.getBusId();
+            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
+            timestep = obj.setting.controlCycleInSeconds();
+
+            delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
+            delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
+            delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
+            % TODO: add to the json file the information about hte horizon
+            horizonInSeconds = 50;
+            horizonInIterations = ceil( horizonInSeconds / timestep);
+
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+
+            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
+
+            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
+            model = ApproximateLinearModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
+
+            operatorStateExtended = model.getOperatorStateExtended;
+            operatorControlExtended = model.getOperatorControlExtended;
+            operatorDisturbancePowerGenerationExtended = model.getOperatorDisturbancePowerGenerationExtended;
+            operatorDisturbancePowerTransitExtended= model.getOperatorDisturbancePowerTransitExtended;
+            
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
+            flowLimit = obj.setting.getBranchFlowLimit();
+            
+            obj.controller = ApproximateLinearMPC(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
+                operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
+                numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
         end
         
         function setMixedLogicalDynamicalModelPredictiveController(obj)
