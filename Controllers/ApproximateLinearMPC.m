@@ -172,27 +172,11 @@ classdef ApproximateLinearMPC < Controller
         
         function computeControl(obj)
             obj.countControls = obj.countControls + 1;
-            realState = obj.state;
+
             realDeltaPA = obj.disturbancePowerAvailable;
             realDeltaPT = obj.disturbancePowerTransit;
-            obj.operateOneOperation(realState, realDeltaPA, realDeltaPT);
-        end
-        
-        function object = getControl(obj)
-            curtControl = obj.ucK_new;
-            battControl = obj.ubK_new;
-            object = ControlOfZone(curtControl, battControl);
-        end
-        
-        function operateOneOperation(obj, realState, realDeltaPA, realDeltaPT)
-            arguments
-                obj
-                realState StateOfZone
-                realDeltaPA (:,1)
-                realDeltaPT (:,1)
-            end
-            
-            obj.decomposeState(realState);
+
+            obj.initializeStateEstimation();
             
             obj.setDelta_PA_est_constant_over_horizon(realDeltaPA);
             obj.setPA_over_horizon();
@@ -204,7 +188,7 @@ classdef ApproximateLinearMPC < Controller
 
             obj.setDelta_PG_and_PG_est_over_horizon();
             
-            obj.set_xK_extend(realState);
+            obj.set_xK_extend();
             
             obj.doControl();
             
@@ -212,20 +196,21 @@ classdef ApproximateLinearMPC < Controller
             obj.interpretResult();
             
             obj.saveInfeas();
-            obj.saveEpsilon();
             
             obj.updatePastCurtControls();
             obj.updatePastBattControls();
         end
         
-        function decomposeState(obj, state)
-            arguments
-                obj
-                state StateOfZone
-            end
-            obj.PA_est(:,1) = state.getPowerAvailable();
-            obj.PC_est(:,1) = state.getPowerCurtailment();
-            obj.PG_est(:,1) = state.getPowerGeneration();
+        function object = getControl(obj)
+            curtControl = obj.ucK_new;
+            battControl = obj.ubK_new;
+            object = ControlOfZone(curtControl, battControl);
+        end
+        
+        function initializeStateEstimation(obj)
+            obj.PA_est(:,1) = obj.state.getPowerAvailable();
+            obj.PC_est(:,1) = obj.state.getPowerCurtailment();
+            obj.PG_est(:,1) = obj.state.getPowerGeneration();
         end
         
         function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
@@ -281,8 +266,8 @@ classdef ApproximateLinearMPC < Controller
             obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
         end
         
-        function set_xK_extend(obj, realState)
-            stateVector = realState.getStateAsVector();
+        function set_xK_extend(obj)
+            stateVector = obj.state.getStateAsVector();
             stateVectorMinusPA = stateVector(1: end-obj.numberOfGen);
             pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
             pastBattControlVector = reshape(obj.ubK_delay, [], 1);
