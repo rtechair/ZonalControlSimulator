@@ -132,13 +132,7 @@ classdef ApproximateLinearMPC < Controller
         end
         
         %% CLOSED LOOP SIMULATION
-        function initializePastCurtControls(obj)
-            obj.ucK_delay = zeros(obj.numberOfGen, obj.delayCurt);
-        end
         
-        function initializePastBattControls(obj)
-            obj.ubK_delay = zeros(obj.numberOfBatt, obj.delayBatt);
-        end
         
         function receiveState(obj, stateOfZone)
             obj.state = stateOfZone;
@@ -174,7 +168,7 @@ classdef ApproximateLinearMPC < Controller
             
             obj.set_xK_extend();
             
-            obj.doControl();
+            obj.solveOptimizationProblem();
             
             obj.checkSolvingFeasibility();
             obj.interpretResult();
@@ -190,120 +184,23 @@ classdef ApproximateLinearMPC < Controller
             battControl = obj.ubK_new;
             object = ControlOfZone(curtControl, battControl);
         end
-        
-        function initializeStateEstimation(obj)
-            obj.PA_est(:,1) = obj.state.getPowerAvailable();
-            obj.PC_est(:,1) = obj.state.getPowerCurtailment();
-            obj.PG_est(:,1) = obj.state.getPowerGeneration();
-        end
-        
-        function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
-            % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
-            areAllDeltaPANonNegative = all(realDeltaPA >= 0);
-            if areAllDeltaPANonNegative
-                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
-            else
-                for g = 1:obj.numberOfGen
-                    deltaPAOfGen = realDeltaPA(g,1);
-                    if deltaPAOfGen >= 0
-                        obj.Delta_PA_est(g,1:obj.horizon) = deltaPAOfGen;
-                    else
-                        obj.computeCorrectDisturbanceOfGen(g, deltaPAOfGen);
-                    end
-                end
-            end
-        end
-        
-        function computeCorrectDisturbanceOfGen(obj, genIndex, deltaPAOfGen)
-            realPAOfGen = obj.PA_est(genIndex,1);
-            % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
-            n = floor(realPAOfGen / -deltaPAOfGen);
-            if n >= obj.horizon
-                obj.Delta_PA_est(genIndex, 1:obj.horizon) = deltaPAOfGen;
-            else
-                obj.Delta_PA_est(genIndex, 1:n) = deltaPAOfGen;
-                
-                DeltaPAToReachZero = - realPAOfGen - deltaPAOfGen * n;
-                obj.Delta_PA_est(genIndex, n + 1) = DeltaPAToReachZero;
-                
-                obj.Delta_PA_est(genIndex, n+2 : obj.horizon) = 0;
-            end
-        end
-        
-        function setPA_over_horizon(obj)
-            %{
-            Cautious, the original equation:
-                obj.PA_est(:,k+1) = obj.PA_est(:,k) + obj.Delta_PA_est(:,k)
-            is not used.
-            This is due to the unaccuracy of floating-point data.
-            Using the original equation would result in approximate PA at
-            each iteration which are then used for the computation of the
-            following iteration. Summing these approximations can lead to
-            having some PA < 0 while PA = 0 is desired.
-            %}
-            for k = 1:obj.horizon
-                obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
-            end
-        end
-        
-        function setDelta_PT_over_horizon(obj, realDeltaPT)
-            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
-        end
-        
-        function set_xK_extend(obj)
-            stateVector = obj.state.getStateAsVector();
-            stateVectorMinusPA = stateVector(1: end-obj.numberOfGen);
-            pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
-            pastBattControlVector = reshape(obj.ubK_delay, [], 1);
-            
-            obj.xK_extend = [stateVectorMinusPA ; ...
-                             pastCurtControlVector ; ...
-                             pastBattControlVector];
-        end
-        
-        function doControl(obj)
-            [obj.result, obj.infeas] = obj.controller{obj.xK_extend, obj.Delta_PG_est, obj.Delta_PT_est};
-        end
-        
-        function checkSolvingFeasibility(obj)
-            if obj.infeas ~= 0
-                disp(yalmiperror(obj.infeas))
-            end
-        end
-        
-        function saveInfeas(obj)
-            obj.infeasibilityHistory(end+1) = obj.infeas;
-        end
-        
-        function interpretResult(obj)
-            optimalControlOverHorizon = obj.result{1};
-            optimalNextControl = optimalControlOverHorizon(:,1);
-            rangeGen = 1:obj.numberOfGen;
-            optimalCurtControl = optimalNextControl(rangeGen,1);
-            obj.ucK_new = optimalCurtControl;
-            rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
-            optimalBattControl = optimalNextControl(rangeBatt,1);
-            obj.ubK_new = optimalBattControl;
-        end
-        
-        function updatePastCurtControls(obj)
-            leftCurtControls = obj.ucK_delay(:,2 :obj.delayCurt);
-            obj.ucK_delay = [leftCurtControls obj.ucK_new];
-        end
-        
-        function updatePastBattControls(obj)
-            leftBattControls = obj.ubK_delay(:, 2: obj.delayBatt);
-            obj.ubK_delay = [leftBattControls obj.ubK_new];
-        end
 
         function saveControl(obj, memory)
             curtControl = obj.ucK_new;
             battControl = obj.ubK_new;
             memory.saveControl(curtControl, battControl);
         end
+    end
 
+    methods (Access = protected)
 
-        %% new code:
+        function initializePastCurtControls(obj)
+            obj.ucK_delay = zeros(obj.numberOfGen, obj.delayCurt);
+        end
+        
+        function initializePastBattControls(obj)
+            obj.ubK_delay = zeros(obj.numberOfBatt, obj.delayBatt);
+        end
 
         function setYalmipVar(obj)
             yalmip('clear');
@@ -538,6 +435,112 @@ classdef ApproximateLinearMPC < Controller
                 obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
             end
         end
+
+        function initializeStateEstimation(obj)
+            obj.PA_est(:,1) = obj.state.getPowerAvailable();
+            obj.PC_est(:,1) = obj.state.getPowerCurtailment();
+            obj.PG_est(:,1) = obj.state.getPowerGeneration();
+        end
+        
+        function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
+            % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
+            areAllDeltaPANonNegative = all(realDeltaPA >= 0);
+            if areAllDeltaPANonNegative
+                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
+            else
+                for g = 1:obj.numberOfGen
+                    deltaPAOfGen = realDeltaPA(g,1);
+                    if deltaPAOfGen >= 0
+                        obj.Delta_PA_est(g,1:obj.horizon) = deltaPAOfGen;
+                    else
+                        obj.computeCorrectDisturbanceOfGen(g, deltaPAOfGen);
+                    end
+                end
+            end
+        end
+        
+        function computeCorrectDisturbanceOfGen(obj, genIndex, deltaPAOfGen)
+            realPAOfGen = obj.PA_est(genIndex,1);
+            % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
+            n = floor(realPAOfGen / -deltaPAOfGen);
+            if n >= obj.horizon
+                obj.Delta_PA_est(genIndex, 1:obj.horizon) = deltaPAOfGen;
+            else
+                obj.Delta_PA_est(genIndex, 1:n) = deltaPAOfGen;
+                
+                DeltaPAToReachZero = - realPAOfGen - deltaPAOfGen * n;
+                obj.Delta_PA_est(genIndex, n + 1) = DeltaPAToReachZero;
+                
+                obj.Delta_PA_est(genIndex, n+2 : obj.horizon) = 0;
+            end
+        end
+        
+        function setPA_over_horizon(obj)
+            %{
+            Cautious, the original equation:
+                obj.PA_est(:,k+1) = obj.PA_est(:,k) + obj.Delta_PA_est(:,k)
+            is not used.
+            This is due to the unaccuracy of floating-point data.
+            Using the original equation would result in approximate PA at
+            each iteration which are then used for the computation of the
+            following iteration. Summing these approximations can lead to
+            having some PA < 0 while PA = 0 is desired.
+            %}
+            for k = 1:obj.horizon
+                obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
+            end
+        end
+        
+        function setDelta_PT_over_horizon(obj, realDeltaPT)
+            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
+        end
+        
+        function set_xK_extend(obj)
+            stateVector = obj.state.getStateAsVector();
+            stateVectorMinusPA = stateVector(1: end-obj.numberOfGen);
+            pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
+            pastBattControlVector = reshape(obj.ubK_delay, [], 1);
+            
+            obj.xK_extend = [stateVectorMinusPA ; ...
+                             pastCurtControlVector ; ...
+                             pastBattControlVector];
+        end
+        
+        function solveOptimizationProblem(obj)
+            [obj.result, obj.infeas] = obj.controller{obj.xK_extend, obj.Delta_PG_est, obj.Delta_PT_est};
+        end
+        
+        function checkSolvingFeasibility(obj)
+            if obj.infeas ~= 0
+                disp(yalmiperror(obj.infeas))
+            end
+        end
+        
+        function saveInfeas(obj)
+            obj.infeasibilityHistory(end+1) = obj.infeas;
+        end
+        
+        function interpretResult(obj)
+            optimalControlOverHorizon = obj.result{1};
+            optimalNextControl = optimalControlOverHorizon(:,1);
+            rangeGen = 1:obj.numberOfGen;
+            optimalCurtControl = optimalNextControl(rangeGen,1);
+            obj.ucK_new = optimalCurtControl;
+            rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
+            optimalBattControl = optimalNextControl(rangeBatt,1);
+            obj.ubK_new = optimalBattControl;
+        end
+        
+        function updatePastCurtControls(obj)
+            leftCurtControls = obj.ucK_delay(:,2 :obj.delayCurt);
+            obj.ucK_delay = [leftCurtControls obj.ucK_new];
+        end
+        
+        function updatePastBattControls(obj)
+            leftBattControls = obj.ubK_delay(:, 2: obj.delayBatt);
+            obj.ubK_delay = [leftBattControls obj.ubK_new];
+        end
     
     end
+
 end
