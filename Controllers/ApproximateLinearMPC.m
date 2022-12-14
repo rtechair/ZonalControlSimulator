@@ -44,7 +44,6 @@ classdef ApproximateLinearMPC < Controller
         controller
 
         %% Closed-loop simulation
-        real_short_state
        ucK_delay % over the prediction horizon
        ucK_new % new curt control decided now by the controller, but will be applied after delay
        ubK_delay % over the prediction horizon
@@ -59,8 +58,6 @@ classdef ApproximateLinearMPC < Controller
        PG_est_record  % #gen x #iterations x #scenarios
        delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
        flags % #simIterations
-       epsilons_all % #branch x #horizonPrediction  x number of simulation steps
-       u_mpc % #gen+1 x #simIterations
        
        xK_new % the new state received at each iteration of the simulation
        xK_extend % a column vector
@@ -324,10 +321,6 @@ classdef ApproximateLinearMPC < Controller
             rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
             optimalBattControl = optimalNextControl(rangeBatt,1);
             obj.ubK_new = optimalBattControl;
-        end
-        
-        function saveEpsilon(obj)
-            obj.epsilons_all(end+1,:,:) = obj.result{2};
         end
         
         function updatePastCurtControls(obj)
