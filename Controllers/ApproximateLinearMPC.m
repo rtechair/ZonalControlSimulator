@@ -59,7 +59,6 @@ classdef ApproximateLinearMPC < Controller
        delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
        flags % #simIterations
        
-       xK_new % the new state received at each iteration of the simulation
        xK_extend % a column vector
        
        result
@@ -139,11 +138,6 @@ classdef ApproximateLinearMPC < Controller
         end
         
         %% CLOSED LOOP SIMULATION
-        %{
-        function setxK_new(obj, state)
-            obj.xK_new = state;
-        end
-        %}
         %{
         function initialize_xK_extend(obj, state)
             noCurtControlAfter = zeros(obj.numberOfGen * obj.delayCurt, 1);
