@@ -18,6 +18,7 @@ limitations under the License.
 classdef ApproximateLinearMPC < Controller
     
     properties (SetAccess = private)
+        %% Parameters
         numberOfBuses
         numberOfBranches
         numberOfGen
@@ -25,6 +26,19 @@ classdef ApproximateLinearMPC < Controller
         delayCurt
         delayBatt
         horizon
+
+        maxPowerGeneration
+        minControlCurt
+        maxControlCurt
+        minControlBatt
+        maxControlBatt
+        minPowerBattery
+        maxPowerBattery
+        maxEnergyBattery
+        maxFlow
+
+        minExtendedControl
+        maxExtendedControl
 
         operatorStateExtended
         operatorControlExtended
@@ -55,9 +69,7 @@ classdef ApproximateLinearMPC < Controller
        PC_est
        PG_est       % #gen x #iterations
        Delta_PG_est % #gen x predictionHorizon x #simIterations
-       PG_est_record  % #gen x #iterations x #scenarios
-       delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
-       flags % #simIterations
+       infeasibilityHistory % #simIterations
        
        xK_extend % a column vector
        
@@ -70,22 +82,6 @@ classdef ApproximateLinearMPC < Controller
         disturbancePowerAvailable
         
         countControls
-
-        maxPowerGeneration
-        minControlCurt
-        maxControlCurt
-        minControlBatt
-        maxControlBatt
-        minPowerBattery
-        maxPowerBattery
-        maxEnergyBattery
-        maxFlow
-
-        minExtendedControl
-        maxExtendedControl
-        minExtendedState
-        maxExtendedState
-
     end
     
     
@@ -93,7 +89,7 @@ classdef ApproximateLinearMPC < Controller
         function obj = ApproximateLinearMPC(delayCurtailment, delayBattery, delayTelecom, ...
                 horizonInIterations, ...
                 operatorStateExtended, operatorControlExtended, operatorDisturbancePowerGenerationExtended, operatorDisturbancePowerTransitExtended, ...
-                numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ... % following: where starts setOtherElements
+                numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit)
             
             obj.operatorStateExtended = operatorStateExtended;
@@ -108,10 +104,8 @@ classdef ApproximateLinearMPC < Controller
             
             obj.delayCurt = delayCurtailment + delayTelecom;
             obj.delayBatt = delayBattery + delayTelecom;
-            
             obj.horizon = horizonInIterations;
 
-            %% new code
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.minControlCurt = zeros(obj.numberOfGen, 1);
             obj.maxControlCurt = obj.maxPowerGeneration;
@@ -138,16 +132,6 @@ classdef ApproximateLinearMPC < Controller
         end
         
         %% CLOSED LOOP SIMULATION
-        %{
-        function initialize_xK_extend(obj, state)
-            noCurtControlAfter = zeros(obj.numberOfGen * obj.delayCurt, 1);
-            noBatteryControlAfter = zeros(obj.numberOfBatt * obj.delayBatt, 1);
-            
-            obj.xK_extend(:,1) = [state ; ...
-                               noCurtControlAfter;...
-                               noBatteryControlAfter];
-        end
-        %}
         function initializePastCurtControls(obj)
             obj.ucK_delay = zeros(obj.numberOfGen, obj.delayCurt);
         end
@@ -288,7 +272,7 @@ classdef ApproximateLinearMPC < Controller
         end
         
         function saveInfeas(obj)
-            obj.flags(end+1) = obj.infeas;
+            obj.infeasibilityHistory(end+1) = obj.infeas;
         end
         
         function interpretResult(obj)
