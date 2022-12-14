@@ -30,8 +30,8 @@ classdef ApproximateLinearMPC < Controller
 
         operatorStateExtended
         operatorControlExtended
-        operatorNextPowerGenerationExtended
-        operatorDisturbanceExtended
+        operatorDisturbancePowerGenerationExtended
+        operatorDisturbancePowerTransitExtended
         
         % Parameters
         
@@ -46,7 +46,6 @@ classdef ApproximateLinearMPC < Controller
         objective
         % Parameter
         
-        maxPG
         sdp_setting
         controller
 
@@ -82,21 +81,36 @@ classdef ApproximateLinearMPC < Controller
         disturbancePowerAvailable
         
         countControls
+
+        maxPowerGeneration
+        minControlCurt
+        maxControlCurt
+        minControlBatt
+        maxControlBatt
+        minPowerBattery
+        maxPowerBattery
+        maxEnergyBattery
+        maxFlow
+
+        minExtendedControl
+        maxExtendedControl
+        minExtendedState
+        maxExtendedState
+
     end
     
     
     methods
         function obj = ApproximateLinearMPC(delayCurtailment, delayBattery, delayTelecom, ...
                 horizonInIterations, ...
-                operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
+                operatorStateExtended, operatorControlExtended, operatorDisturbancePowerGenerationExtended, operatorDisturbancePowerTransitExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ... % following: where starts setOtherElements
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit)
             
             obj.operatorStateExtended = operatorStateExtended;
             obj.operatorControlExtended = operatorControlExtended;
-            obj.operatorNextPowerGenerationExtended = operatorNextPowerGenerationExtended;
-            obj.operatorDisturbanceExtended = operatorDisturbanceExtended;
-
+            obj.operatorDisturbancePowerGenerationExtended = operatorDisturbancePowerGenerationExtended;
+            obj.operatorDisturbancePowerTransitExtended = operatorDisturbancePowerTransitExtended;
             
             obj.numberOfBuses = numberOfBuses;
             obj.numberOfBranches = numberOfBranches;
@@ -107,7 +121,48 @@ classdef ApproximateLinearMPC < Controller
             obj.tau_b = delayBattery + delayTelecom;
             
             obj.N = horizonInIterations;
+
+            %% new code
+            % Q, R, Q_ep1: useless
+            obj.maxPowerGeneration = maxPowerGeneration;
+            obj.minControlCurt = zeros(obj.numberOfGen, 1);
+            obj.maxControlCurt = obj.maxPowerGeneration;
+
+            obj.minPowerBattery = minPowerBattery;
+            obj.maxPowerBattery = maxPowerBattery;
+            obj.minControlBatt = obj.minPowerBattery - obj.maxPowerBattery;
+            obj.maxControlBatt = obj.maxPowerBattery - obj.minPowerBattery;
+            obj.maxEnergyBattery = maxEnergyBattery;
+            obj.maxFlow = flowLimit;
+
+            obj.setMinControl();
+            obj.setMaxControl();
+            %obj.setMinState();
+            %obj.setMaxState();
             
+            obj.setYalmipVar();
+            obj.setConstraints();
+            obj.setObjective();
+            obj.setSolver();
+            obj.setController();
+
+            % still to do
+            %{
+            parameters      = {x_mpc(:,1), dk};
+            outputs         = {u_mpc ,  x_mpc , epsilon1 , d_mpc};
+            solverName = 'cplex'; %'cplex'
+            options         = sdpsettings('solver',solverName);
+            obj.controller      = optimizer(constraints, objective , options , parameters, outputs);
+            obj.ucK_delay = zeros(c, obj.tau_c); % initializePastCurtControls
+            obj.ubK_delay = zeros(b, obj.tau_b); % initializePastBattControls
+            %}
+            obj.ucK_delay = zeros(obj.numberOfGen, obj.tau_c);
+            obj.ubK_delay = zeros(obj.numberOfBatt, obj.tau_b);
+            obj.countControls = 0;
+
+        end
+
+        function followupOfConstructor(obj)
             % adapt, overcome
             n = numberOfBranches + 3*numberOfGen + 2*numberOfBatt;
             nbranchNEW = numberOfBranches;
@@ -567,18 +622,7 @@ classdef ApproximateLinearMPC < Controller
             obj.countControls = 0;
             
         end
-        
-        %% OBJECTIVE
-        
-        function setController(obj)
-            if (obj.Ns == 1)
-                parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
-            else
-                disp("Ns is different from 1, not logical.")
-            end
-            outputs = {obj.u,obj.epsilon,obj.x};
-            obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
-        end
+ 
         
         
         %% CLOSED LOOP SIMULATION
@@ -658,10 +702,15 @@ classdef ApproximateLinearMPC < Controller
             obj.setPA_over_horizon();
             
             obj.setDelta_PT_over_horizon(realDeltaPT);
+
+            obj.setDelta_PC_est_over_horizon();
+            obj.setPC_est_over_horizon();
+
+            obj.setDelta_PG_and_PG_est_over_horizon();
             
-            obj.set_xK_extend(realState);
+            obj.set_xK_extend(realState); %check it is the correct state, without the PA that is given.
             
-            obj.doControl();
+            obj.doControl(); % check this is the correct input
             
             obj.checkSolvingFeasibility();
             obj.interpretResult();
@@ -741,19 +790,17 @@ classdef ApproximateLinearMPC < Controller
         
         function set_xK_extend(obj, realState)
             stateVector = realState.getStateAsVector();
+            stateVectorMinusPA = stateVector(1: end-obj.numberOfGen);
             pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
             pastBattControlVector = reshape(obj.ubK_delay, [], 1);
             
-            obj.xK_extend = [stateVector ; ...
+            obj.xK_extend = [stateVectorMinusPA ; ...
                              pastCurtControlVector ; ...
                              pastBattControlVector];
         end
         
         function doControl(obj)
-            dk_extend = [ zeros(obj.numberOfBuses, obj.N);
-                obj.Delta_PA_est];
-            [obj.result, obj.infeas] = obj.controller{obj.xK_extend, ...
-                dk_extend};
+            [obj.result, obj.infeas] = obj.controller{obj.xK_extend, obj.Delta_PG_est, obj.Delta_PT_est};
         end
         
         function checkSolvingFeasibility(obj)
@@ -796,7 +843,310 @@ classdef ApproximateLinearMPC < Controller
             battControl = obj.ubK_new;
             memory.saveControl(curtControl, battControl);
         end
-        
-    end
+
+
+        %% new code:
+
+        function setYalmipVar(obj)
+            yalmip('clear');
+            numberOfExtendedStateVar = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt + obj.numberOfGen*obj.tau_c + obj.numberOfBatt * obj.tau_b;
+            obj.x = sdpvar(numberOfExtendedStateVar, obj.N + 1, 'full');
+            obj.u = sdpvar(obj.numberOfGen + obj.numberOfBatt, obj.N, 'full');
+            obj.dk_in = sdpvar(obj.numberOfGen, obj.N, 'full');
+            obj.dk_out = sdpvar(obj.numberOfBuses, obj.N, 'full');
+            obj.epsilon = sdpvar(obj.numberOfBranches, obj.N, 'full');
+        end
+
+        function setMinControl(obj)
+            obj.minExtendedControl = [obj.minControlCurt ; obj.minControlBatt];
+        end
+
+        function setMaxControl(obj)
+            obj.maxExtendedControl = [obj.maxControlCurt ; obj.maxControlBatt];
+        end
+
+        %{
+        function setMinState(obj)
+            minFlowOnBranches = - obj.maxFlow * ones(obj.numberOfBranches, 1);
+            minPowerCurtailment = zeros(obj.numberOfGen, 1);
+            minEnergyBattery = zeros(obj.numberOfBatt, 1);
+            minPowerGeneration = min(obj.numberOfGen, 1);
+
+            minState = [minFlowOnBranches ; minPowerCurtailment ; obj.minPowerBattery ; minEnergyBattery ; minPowerGeneration];
+            minExtendedControlCurt = repmat(obj.minControlCurt, obj.tau_c, 1);
+            minExtendedControlBatt = repmat(obj.minControlBatt, obj.tau_b, 1);
+            obj.minExtendedState = [minState ; minExtendedControlCurt ; minExtendedControlBatt];
+        end
+        %}
+        %{
+        function setMaxState(obj)
+            maxFlowOnBranches = obj.maxFlow * ones(obj.numberOfBranches, 1);
+            maxPowerCurtailment = obj.maxPowerGeneration;
+
+            maxState = [maxFlowOnBranches ; maxPowerCurtailment ; obj.maxPowerBattery ; obj.maxEnergyBattery ; obj.maxPowerGeneration];
+            maxExtendedControlCurt = repmat(obj.maxControlCurt, obj.tau_c, 1);
+            maxExtendedControlBatt = repmat(obj.maxControlBatt, obj.tau_b, 1);
+            obj.maxExtendedState = [maxState ; maxExtendedControlCurt ; maxExtendedControlBatt];
+        end
+        %}
+
+        function setConstraints(obj)
+            obj.constraints = [];
+            obj.setConstraintNoOverflowAfterDelayCurt();
+            obj.setConstraintLowerBoundControl();
+            obj.setConstraintUpperBoundControl();
+            obj.setConstraintNonNegativeOverflow();
+            obj.setConstraintDynamicalEvolution();
+            
+            obj.setConstraintLowerBoundFlow();
+            obj.setConstraintUpperBoundFlow();
+            obj.setConstraintMinPowerCurtailment();
+            obj.setConstraintMaxPowerCurtailment();
+            %obj.setConstraintMaxPowerCurtailment2();
+            obj.setConstraintMinPowerBattery();
+            obj.setConstraintMaxPowerBattery();
+        end
+
+        function setConstraintNoOverflowAfterDelayCurt(obj)
+            noOverflowAfterDelayCurt = obj.epsilon(:, obj.tau_c+1 : end) == 0;
+            name = 'no overflow after curt delay';
+            obj.constraints = [obj.constraints, noOverflowAfterDelayCurt:name];
+        end
+
+        function setConstraintLowerBoundControl(obj)
+            minExtendedControlOverHorizon = repmat(obj.minExtendedControl, 1, obj.N);
+            constraint = obj.u >= minExtendedControlOverHorizon;
+            name = 'lower bound control';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintUpperBoundControl(obj)
+            maxControloverHorizon = repmat(obj.maxExtendedControl, 1, obj.N);
+            constraint = obj.u <= maxControloverHorizon;
+            name = 'upper bound control u';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintNonNegativeOverflow(obj)
+            constraint = obj.epsilon >= 0;
+            name = 'overflow >= 0';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintDynamicalEvolution(obj)
+            constraint = ...
+                obj.x(:, 2:end) == obj.operatorStateExtended * obj.x(:, 1: end-1) + obj.operatorControlExtended * obj.u + obj.operatorDisturbancePowerGenerationExtended * obj.dk_in + obj.operatorDisturbancePowerTransitExtended * obj.dk_out;
+            name = 'dynamics';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintLowerBoundFlow(obj)
+            flowVar = obj.x(1:obj.numberOfBranches, 2:end);
+            constraint = flowVar >=  - obj.maxFlow * ones(obj.numberOfBranches, obj.N) - obj.epsilon;
+            name = 'lower bound flow';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintUpperBoundFlow(obj)
+            flowVar = obj.x(1:obj.numberOfBranches, 2:end);
+            constraint = flowVar <=  obj.maxFlow * ones(obj.numberOfBranches, obj.N) + obj.epsilon;
+            name = 'upper bound flow';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintMinPowerCurtailment(obj)
+            start = obj.numberOfBranches + 1;
+            finish = start + obj.numberOfGen - 1;
+            powerCurtailmentVar = obj.x(start:finish, 2:end);
+            constraint = powerCurtailmentVar >= 0;
+            name = 'PC >= 0';
+            obj.constraints = [ obj.constraints, constraint:name];
+        end
+
+        function setConstraintMaxPowerCurtailment(obj)
+            start = obj.numberOfBranches + 1;
+            finish = start + obj.numberOfGen - 1;
+            powerCurtailmentVar = obj.x(start:finish, 2:end);
+            maxPowerGenerationOverHorizon = repmat(obj.maxPowerGeneration, 1, obj.N);
+            constraint = powerCurtailmentVar <= maxPowerGenerationOverHorizon;
+            name = 'PC <= maxPG';
+            obj.constraints = [ obj.constraints, constraint:name];
+
+        end
+
+        %{
+        function setConstraintMaxPowerCurtailment2(obj)
+            start = obj.numberOfBranches + 1;
+            finish = start + obj.numberOfGen - 1;
+            lastPowerCurtailmentVar = obj.x(start:finish, end);
+            start = obj.N - obj.tau_c;
+            laterPowerCurtailmentControlVar = obj.u(1:obj.numberOfGen, start:end);
+            blockOfMaxPowerGeneration = repmat(obj.maxPowerGeneration, 1, obj.tau_c + 1);
+            constraint = lastPowerCurtailmentVar + sum(laterPowerCurtailmentControlVar, 2) <= blockOfMaxPowerGeneration; 
+            name = 'PC <= maxPG, for later stages';
+            obj.constraints = [ obj.constraints, constraint:name];
+        end
+        %}
+
+        function setConstraintMinPowerBattery(obj)
+            start = obj.numberOfBranches + obj.numberOfGen + 1;
+            finish = start + obj.numberOfBatt - 1;
+            powerBatteryVar = obj.x(start:finish, 2:end);
+            minPowerBatteryOverHorizon = repmat(obj.minPowerBattery, 1, obj.N);
+            constraint = powerBatteryVar >= minPowerBatteryOverHorizon;
+            name = 'PB >= minPB';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        function setConstraintMaxPowerBattery(obj)
+            start = obj.numberOfBranches + obj.numberOfGen + 1;
+            finish = start + obj.numberOfBatt - 1;
+            powerBatteryVar = obj.x(start:finish, 2:end);
+            maxPowerBatteryOverHorizon = repmat(obj.maxPowerBattery, 1, obj.N);
+            constraint = powerBatteryVar <= maxPowerBatteryOverHorizon;
+            name = 'PB <= maxPB';
+            obj.constraints = [obj.constraints, constraint:name];
+        end
+
+        %{
+        function setConstraintLowerBoundState(obj)
+            minExtendedStateOverHorizon = repmat(obj.minExtendedState,1, obj.N);
+            constraint = minExtendedStateOverHorizon <= obj.x;
+            constraintName = 'minState';
+            obj.constraints = [obj.constraints, constraint:constraintName];
+        end
+
+        function setConstraintUpperBoundState(obj)
+            maxExtendedStateOverHorizon = repmat(obj.maxExtendedState, 1, obj.N);
+            constraintName = 'maxState';
+            constraint = obj.x <= maxExtendedStateOverHorizon;
+            obj.constraints = [obj.constraints, constraint:constraintName];
+        end
+        %}
+
+        function setObjective(obj)
+            isObjective_Guillaume1 = true;
+            isObjective_Guillaume2 = false;
+            isObjective_Guillaume3 = false;
+            isObjective_Guillaume1_NoBattery = false;
+
+            if isObjective_Guillaume1
+                obj.setObjective_Guillaume1();
+            elseif isObjective_Guillaume2
+                obj.setObjective_Guillaume2();
+            elseif isObjective_Guillaume3
+                obj.setObjective_Guillaume3();
+            elseif isObjective_Guillaume1_NoBattery
+                obj.setObjective_Guillaume1_NoBattery();
+            else
+                print('No objective selected. Select an objective');
+            end
+
+        end
+
+        function setObjective_Guillaume1(obj)
+            highCoef = obj.N * obj.minPowerBattery^2;
+            overflowObj = highCoef * sum(obj.epsilon, "all");
+
+            curtCtrl = obj.u(1:obj.numberOfGen, :);
+            curtCtrlObj = highCoef * sum(curtCtrl, "all");
+
+            battIdxRange = (obj.numberOfGen + 1) : (obj.numberOfGen + obj.numberOfBatt);
+            battCtrl = obj.u(battIdxRange, :);
+            battCtrlObj = sum(battCtrl .^ 2, "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.numberOfGen + 1;
+            indexLastPB = obj.numberOfBranches + obj.numberOfGen + obj.numberOfBatt;
+            batteryState = obj.x(indexFirstPB:indexLastPB, obj.numberOfBatt+1 :end);
+            battStateObj = sum(batteryState .^2, "all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_Guillaume2(obj)
+            highCoef = obj.N * obj.minPowerBattery^2;
+            overflowObj = highCoef * sum(obj.epsilon, "all");
+
+            curtCtrl = obj.u(1:obj.numberOfGen, :);
+            curtCtrlObj = highCoef * sum(curtCtrl, "all");
+
+            battIdxRange = (obj.numberOfGen + 1) : (obj.numberOfGen + obj.numberOfBatt);
+            battCtrl = obj.u(battIdxRange, :);
+            allButFirstBattCtrl = battCtrl(:, 2:end);
+            battCtrlObj = highCoef * sum(allButFirstBattCtrl .^ 2, "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.numberOfGen + 1;
+            indexLastPB = obj.numberOfBranches + obj.numberOfGen + obj.numberOfBatt;
+            batteryState = obj.x(indexFirstPB:indexLastPB, obj.numberOfBatt+1 :end);
+            battStateObj = sum(batteryState .^2, "all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_Guillaume3(obj)
+            highCoef = obj.N * obj.minPowerBattery^2;
+            overflowObj = highCoef * sum(obj.epsilon, "all");
+
+            curtCtrl = obj.u(1:obj.numberOfGen, :);
+            curtCtrlObj = highCoef * sum(curtCtrl, "all");
+
+            indexFirstPB = obj.numberOfBranches + obj.numberOfGen + 1;
+            indexLastPB = obj.numberOfBranches + obj.numberOfGen + obj.numberOfBatt;
+            batteryState = obj.x(indexFirstPB:indexLastPB, obj.numberOfBatt+1 :end);
+            battStateObj = sum(batteryState .^2, "all");
+
+            obj.objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
+        end
+
+        function setObjective_Guillaume1_NoBattery(obj)
+            overflowObj = sum(obj.epsilon, "all");
+            curtCtrl = obj.u(1:obj.numberOfGen, :);
+            curtCtrlObj = sum(curtCtrl, "all");
+            obj.objective = overflowObj + curtCtrlObj;
+
+            battIdxRange = (obj.numberOfGen + 1 ) : (obj.numberOfGen + obj.numberOfBatt);
+            battCtrl = obj.u(battIdxRange, :);
+            obj.constraints = [obj.constraints, battCtrl == 0];
+        end
+
+        function setSolver(obj, solverName)
+            arguments
+                obj
+                solverName string = [];
+            end
+            if isempty(solverName)
+                obj.sdp_setting = [];
+            else
+                obj.sdp_setting = sdpsettings('solver', solverName);
+            end
+        end
+
+        function setController(obj)
+            parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
+            outputs = {obj.u, obj.epsilon, obj.x};
+            obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
+        end
+
+        function setDelta_PC_est_over_horizon(obj)
+            numberOfStepsAfterDelay = obj.N - obj.tau_c;
+            noCurtControlAfter = zeros(obj.numberOfGen, numberOfStepsAfterDelay);
+            obj.Delta_PC_est = [obj.ucK_delay, noCurtControlAfter];
+        end
+
+        function setPC_est_over_horizon(obj)
+            for k = 1: obj.N
+                obj.PC_est(:,k+1) = obj.PC_est(:,k) + obj.Delta_PC_est(:,k);
+            end
+        end
+
+        function setDelta_PG_and_PG_est_over_horizon(obj)
+            for k = 1: obj.N
+                f = obj.PA_est(:,k+1) - obj.PG_est(:,k) + obj.Delta_PC_est(:,k);
+                g = obj.maxPowerGeneration - obj.PC_est(:,k) - obj.PG_est(:,k);
+                obj.Delta_PG_est(:,k) = min(f, g);
+                obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
+            end
+        end
     
+    end
 end
