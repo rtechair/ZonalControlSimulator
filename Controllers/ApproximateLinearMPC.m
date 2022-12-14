@@ -45,7 +45,6 @@ classdef ApproximateLinearMPC < Controller
 
         %% Closed-loop simulation
         real_short_state
-       Real_state % = real extended state, #( horizon + c*delayCurt + b*delayBatt) x #simIterations
        ucK_delay % over the prediction horizon
        ucK_new % new curt control decided now by the controller, but will be applied after delay
        ubK_delay % over the prediction horizon
@@ -144,14 +143,6 @@ classdef ApproximateLinearMPC < Controller
         
         %% CLOSED LOOP SIMULATION
         %{
-        function buildReal_state(obj)
-            numberOfDelayedCurtCtrl = obj.numberOfGen * obj.delayCurt;
-            numberOfDelayedBatteryCtrl = obj.numberOfBatt * obj.delayBatt;
-            totalNumberOfCtrlVar = numberOfDelayedCurtCtrl + numberOfDelayedBatteryCtrl;
-            numberOfExtendedStateVar =  obj.numberOfStateOperatorCol + totalNumberOfCtrlVar;
-            obj.Real_state = NaN(numberOfExtendedStateVar, numberOfIterations);
-        end
-        
         function setxK_new(obj, state)
             obj.xK_new = state;
         end
@@ -164,12 +155,6 @@ classdef ApproximateLinearMPC < Controller
             obj.xK_extend(:,1) = [state ; ...
                                noCurtControlAfter;...
                                noBatteryControlAfter];
-        end
-        %}
-        %{
-        function initializeReal_state(obj)
-            % dependency: initialize_xK_extend runs first
-            obj.Real_state(:,1) = obj.xK_extend;
         end
         %}
         function initializePastCurtControls(obj)
