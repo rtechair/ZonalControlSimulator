@@ -25,8 +25,6 @@ classdef ApproximateLinearMPC < Controller
         tau_c
         tau_b
         N
-        c
-        b
 
         operatorStateExtended
         operatorControlExtended
@@ -66,7 +64,7 @@ classdef ApproximateLinearMPC < Controller
        PG_est_record  % #gen x #iterations x #scenarios
        delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
        flags % #simIterations
-       epsilons_all % #branch x #horizonPrediction x #scenarios x simIterations
+       epsilons_all % #branch x #horizonPrediction  x number of simulation steps
        u_mpc % #gen+1 x #simIterations
        
        xK_new % the new state received at each iteration of the simulation
@@ -123,7 +121,6 @@ classdef ApproximateLinearMPC < Controller
             obj.N = horizonInIterations;
 
             %% new code
-            % Q, R, Q_ep1: useless
             obj.maxPowerGeneration = maxPowerGeneration;
             obj.minControlCurt = zeros(obj.numberOfGen, 1);
             obj.maxControlCurt = obj.maxPowerGeneration;
@@ -137,8 +134,6 @@ classdef ApproximateLinearMPC < Controller
 
             obj.setMinControl();
             obj.setMaxControl();
-            %obj.setMinState();
-            %obj.setMaxState();
             
             obj.setYalmipVar();
             obj.setConstraints();
@@ -169,9 +164,6 @@ classdef ApproximateLinearMPC < Controller
             h = numberOfBuses;
             c = numberOfGen;
             b = numberOfBatt;
-
-            obj.c = numberOfGen;
-            obj.b = numberOfBatt;
 
             umin_c = zeros(c,1);
             umin_b = minPowerBattery - maxPowerBattery;
@@ -363,7 +355,7 @@ classdef ApproximateLinearMPC < Controller
                 
                 objective = curtCtrlObj + battStateObj;
 
-                battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+                battIdxRange = (c + 1) : (c + b);
                 battCtrl = u_mpc(battIdxRange, :);
                 % constraintMaxPositiveDeltaPB = ( battCtrl <= battCtrlThreshold );
                 % constraints = [constraints, constraintMaxPositiveDeltaPB];
@@ -627,8 +619,8 @@ classdef ApproximateLinearMPC < Controller
         
         %% CLOSED LOOP SIMULATION
         function buildReal_state(obj)
-            numberOfDelayedCurtCtrl = obj.c * obj.tau_c;
-            numberOfDelayedBatteryCtrl = obj.b * obj.tau_b;
+            numberOfDelayedCurtCtrl = obj.numberOfGen * obj.tau_c;
+            numberOfDelayedBatteryCtrl = obj.numberOfBatt * obj.tau_b;
             totalNumberOfCtrlVar = numberOfDelayedCurtCtrl + numberOfDelayedBatteryCtrl;
             numberOfExtendedStateVar =  obj.numberOfStateOperatorCol + totalNumberOfCtrlVar;
             obj.Real_state = NaN(numberOfExtendedStateVar, numberOfIterations);
@@ -639,8 +631,8 @@ classdef ApproximateLinearMPC < Controller
         end
         
         function initialize_xK_extend(obj, state)
-            noCurtControlAfter = zeros(obj.c * obj.tau_c, 1);
-            noBatteryControlAfter = zeros(obj.b * obj.tau_b, 1);
+            noCurtControlAfter = zeros(obj.numberOfGen * obj.tau_c, 1);
+            noBatteryControlAfter = zeros(obj.numberOfBatt * obj.tau_b, 1);
             
             obj.xK_extend(:,1) = [state ; ...
                                noCurtControlAfter;...
@@ -653,11 +645,11 @@ classdef ApproximateLinearMPC < Controller
         end
         
         function initializePastCurtControls(obj)
-            obj.ucK_delay = zeros(obj.c, obj.tau_c);
+            obj.ucK_delay = zeros(obj.numberOfGen, obj.tau_c);
         end
         
         function initializePastBattControls(obj)
-            obj.ubK_delay = zeros(obj.b, obj.tau_b);
+            obj.ubK_delay = zeros(obj.numberOfBatt, obj.tau_b);
         end
         
         function receiveState(obj, stateOfZone)
@@ -741,7 +733,7 @@ classdef ApproximateLinearMPC < Controller
             if areAllDeltaPANonNegative
                 obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.N);
             else
-                for g = 1:obj.c
+                for g = 1:obj.numberOfGen
                     deltaPAOfGen = realDeltaPA(g,1);
                     if deltaPAOfGen >= 0
                         obj.Delta_PA_est(g,1:obj.N) = deltaPAOfGen;
@@ -816,10 +808,10 @@ classdef ApproximateLinearMPC < Controller
         function interpretResult(obj)
             optimalControlOverHorizon = obj.result{1};
             optimalNextControl = optimalControlOverHorizon(:,1);
-            rangeGen = 1:obj.c;
+            rangeGen = 1:obj.numberOfGen;
             optimalCurtControl = optimalNextControl(rangeGen,1);
             obj.ucK_new = optimalCurtControl;
-            rangeBatt = obj.c+1 : obj.c+obj.b;
+            rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
             optimalBattControl = optimalNextControl(rangeBatt,1);
             obj.ubK_new = optimalBattControl;
         end
