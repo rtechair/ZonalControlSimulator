@@ -341,49 +341,42 @@ classdef ApproximateLinearMPC < Controller
 
         function setConstraintNoOverflowAfterDelayCurt(obj)
             noOverflowAfterDelayCurt = obj.epsilon(:, obj.delayCurt+1 : end) == 0;
-            name = 'no overflow after curt delay';
-            obj.constraints = [obj.constraints, noOverflowAfterDelayCurt:name];
+            obj.constraints = [obj.constraints, noOverflowAfterDelayCurt];
         end
 
         function setConstraintLowerBoundControl(obj)
             minExtendedControlOverHorizon = repmat(obj.minExtendedControl, 1, obj.horizon);
             constraint = obj.u >= minExtendedControlOverHorizon;
-            name = 'lower bound control';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintUpperBoundControl(obj)
             maxControloverHorizon = repmat(obj.maxExtendedControl, 1, obj.horizon);
             constraint = obj.u <= maxControloverHorizon;
-            name = 'upper bound control u';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintNonNegativeOverflow(obj)
             constraint = obj.epsilon >= 0;
-            name = 'overflow >= 0';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintDynamicalEvolution(obj)
             constraint = ...
                 obj.x(:, 2:end) == obj.operatorStateExtended * obj.x(:, 1: end-1) + obj.operatorControlExtended * obj.u + obj.operatorDisturbancePowerGenerationExtended * obj.dk_in + obj.operatorDisturbancePowerTransitExtended * obj.dk_out;
-            name = 'dynamics';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintLowerBoundFlow(obj)
             flowVar = obj.x(1:obj.numberOfBranches, 2:end);
             constraint = flowVar >=  - obj.maxFlow * ones(obj.numberOfBranches, obj.horizon) - obj.epsilon;
-            name = 'lower bound flow';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintUpperBoundFlow(obj)
             flowVar = obj.x(1:obj.numberOfBranches, 2:end);
             constraint = flowVar <=  obj.maxFlow * ones(obj.numberOfBranches, obj.horizon) + obj.epsilon;
-            name = 'upper bound flow';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintMinPowerCurtailment(obj)
@@ -391,8 +384,7 @@ classdef ApproximateLinearMPC < Controller
             finish = start + obj.numberOfGen - 1;
             powerCurtailmentVar = obj.x(start:finish, 2:end);
             constraint = powerCurtailmentVar >= 0;
-            name = 'PC >= 0';
-            obj.constraints = [ obj.constraints, constraint:name];
+            obj.constraints = [ obj.constraints, constraint];
         end
 
         function setConstraintMaxPowerCurtailment(obj)
@@ -401,8 +393,7 @@ classdef ApproximateLinearMPC < Controller
             powerCurtailmentVar = obj.x(start:finish, 2:end);
             maxPowerGenerationOverHorizon = repmat(obj.maxPowerGeneration, 1, obj.horizon);
             constraint = powerCurtailmentVar <= maxPowerGenerationOverHorizon;
-            name = 'PC <= maxPG';
-            obj.constraints = [ obj.constraints, constraint:name];
+            obj.constraints = [ obj.constraints, constraint];
 
         end
 
@@ -412,8 +403,7 @@ classdef ApproximateLinearMPC < Controller
             powerBatteryVar = obj.x(start:finish, 2:end);
             minPowerBatteryOverHorizon = repmat(obj.minPowerBattery, 1, obj.horizon);
             constraint = powerBatteryVar >= minPowerBatteryOverHorizon;
-            name = 'PB >= minPB';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setConstraintMaxPowerBattery(obj)
@@ -422,8 +412,7 @@ classdef ApproximateLinearMPC < Controller
             powerBatteryVar = obj.x(start:finish, 2:end);
             maxPowerBatteryOverHorizon = repmat(obj.maxPowerBattery, 1, obj.horizon);
             constraint = powerBatteryVar <= maxPowerBatteryOverHorizon;
-            name = 'PB <= maxPB';
-            obj.constraints = [obj.constraints, constraint:name];
+            obj.constraints = [obj.constraints, constraint];
         end
 
         function setObjective(obj)
