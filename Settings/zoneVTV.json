@@ -3,7 +3,7 @@
     "branchFlowLimit": 45,
     "TimeSeries":
     {
-        "filename": "tauxDeChargeMTJLMA2juillet2018.txt",
+        "filename": "loadingRate2.txt",
         "StartPossibilityForGeneratorInSeconds":
         {
             "1": [975, 925, 875],
