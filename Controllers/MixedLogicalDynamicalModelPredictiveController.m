@@ -22,8 +22,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         numberOfBranches
         numberOfGen
         numberOfBatt
-        tau_c
-        tau_b
+        delayCurt
+        delayBatt
         N
         c
         b
@@ -52,7 +52,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
 
         %% Closed-loop simulation
         real_short_state
-       Real_state % = real extended state, #( n + c*tau_c + b*tau_b) x #simIterations
+       Real_state % = real extended state, #( n + c*delayCurt + b*delayBatt) x #simIterations
        ucK_delay % over the prediction horizon
        ucK_new % new curt control decided now by the controller, but will be applied after delay
        ubK_delay % over the prediction horizon
@@ -103,8 +103,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.numberOfGen = numberOfGen;
             obj.numberOfBatt = numberOfBatt;
             
-            obj.tau_c = delayCurtailment + delayTelecom;
-            obj.tau_b = delayBattery + delayTelecom;
+            obj.delayCurt = delayCurtailment + delayTelecom;
+            obj.delayBatt = delayBattery + delayTelecom;
             
             obj.N = horizonInIterations;
             
@@ -139,8 +139,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
 
             % mpc_controller_design
             u_mpc = sdpvar(b+c,N,'full');  % input trajectory: u0,...,u_{N-1} (columns of U)
-            x_mpc = sdpvar(n+b*obj.tau_b+c*obj.tau_c,N+1,'full'); % state trajectory: x0,x1,...,xN (columns of X)
-            epsilon1 = sdpvar(nbranchNEW,obj.tau_c - obj.tau_b,'full'); % perturbation scale %constraints = [epsilon >=0];
+            x_mpc = sdpvar(n+b*obj.delayBatt+c*obj.delayCurt,N+1,'full'); % state trajectory: x0,x1,...,xN (columns of X)
+            epsilon1 = sdpvar(nbranchNEW,obj.delayCurt - obj.delayBatt,'full'); % perturbation scale %constraints = [epsilon >=0];
             d_mpc = binvar(c,N,'full');
             dk = sdpvar(h+c,N,'full'); % vector of disturbance
 
@@ -148,7 +148,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             nbr = 1:nbranchNEW;
             constraints = [constraints, (epsilon1 >= 0) : ['epsilon ']];
              
-            for k = 1:obj.tau_b
+            for k = 1:obj.delayBatt
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)) : ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
@@ -156,21 +156,21 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 
             end
             
-            for k = obj.tau_b+1:obj.tau_c
+            for k = obj.delayBatt+1:obj.delayCurt
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
                 constraints = [constraints, (u_mpc(:,k) >= umin): ['control min ' num2str(k)]];
                 
-                constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr)  + epsilon1(nbr,k-obj.tau_b)) : ['branch max ' num2str(k)]];
-                constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr)  - epsilon1(nbr,k-obj.tau_b)) : ['branch min ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr)  + epsilon1(nbr,k-obj.delayBatt)) : ['branch max ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr)  - epsilon1(nbr,k-obj.delayBatt)) : ['branch min ' num2str(k)]];
                 
                 constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) <= xmax(nbranchNEW+c+(1:2*b)) ) : ['battery max ' num2str(k)]];
                 constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) >= xmin(nbranchNEW+c+(1:2*b)) ) : ['battery min ' num2str(k)]];
                 
             end
             
-            for k = obj.tau_c+1:N
+            for k = obj.delayCurt+1:N
                 constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
@@ -511,8 +511,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             options         = sdpsettings('solver',solverName);
             obj.controller      = optimizer(constraints, objective , options , parameters, outputs);
 
-            obj.ucK_delay = zeros(c, obj.tau_c); % initializePastCurtControls
-            obj.ubK_delay = zeros(b, obj.tau_b); % initializePastBattControls
+            obj.ucK_delay = zeros(c, obj.delayCurt); % initializePastCurtControls
+            obj.ubK_delay = zeros(b, obj.delayBatt); % initializePastBattControls
             obj.countControls = 0;
             
         end
@@ -583,8 +583,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         
         %% CLOSED LOOP SIMULATION
         function buildReal_state(obj)
-            numberOfDelayedCurtCtrl = obj.c * obj.tau_c;
-            numberOfDelayedBatteryCtrl = obj.b * obj.tau_b;
+            numberOfDelayedCurtCtrl = obj.c * obj.delayCurt;
+            numberOfDelayedBatteryCtrl = obj.b * obj.delayBatt;
             totalNumberOfCtrlVar = numberOfDelayedCurtCtrl + numberOfDelayedBatteryCtrl;
             numberOfExtendedStateVar =  obj.numberOfStateOperatorCol + totalNumberOfCtrlVar;
             obj.Real_state = NaN(numberOfExtendedStateVar, numberOfIterations);
@@ -595,8 +595,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function initialize_xK_extend(obj, state)
-            noCurtControlAfter = zeros(obj.c * obj.tau_c, 1);
-            noBatteryControlAfter = zeros(obj.b * obj.tau_b, 1);
+            noCurtControlAfter = zeros(obj.c * obj.delayCurt, 1);
+            noBatteryControlAfter = zeros(obj.b * obj.delayBatt, 1);
             
             obj.xK_extend(:,1) = [state ; ...
                                noCurtControlAfter;...
@@ -609,11 +609,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function initializePastCurtControls(obj)
-            obj.ucK_delay = zeros(obj.c, obj.tau_c);
+            obj.ucK_delay = zeros(obj.c, obj.delayCurt);
         end
         
         function initializePastBattControls(obj)
-            obj.ubK_delay = zeros(obj.b, obj.tau_b);
+            obj.ubK_delay = zeros(obj.b, obj.delayBatt);
         end
         
         function receiveState(obj, stateOfZone)
@@ -782,12 +782,12 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function updatePastCurtControls(obj)
-            leftCurtControls = obj.ucK_delay(:,2 :obj.tau_c);
+            leftCurtControls = obj.ucK_delay(:,2 :obj.delayCurt);
             obj.ucK_delay = [leftCurtControls obj.ucK_new];
         end
         
         function updatePastBattControls(obj)
-            leftBattControls = obj.ubK_delay(:, 2: obj.tau_b);
+            leftBattControls = obj.ubK_delay(:, 2: obj.delayBatt);
             obj.ubK_delay = [leftBattControls obj.ubK_new];
         end
 
