@@ -47,7 +47,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         controller
 
         %% Closed-loop simulation
-       Real_state % = real extended state, #( n + c*delayCurt + b*delayBatt) x #simIterations
        ucK_delay % over the prediction horizon
        ucK_new % new curt control decided now by the controller, but will be applied after delay
        ubK_delay % over the prediction horizon
@@ -57,12 +56,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
        Delta_PT_est
        PA_est
        PC_est
-       PG_est       % #gen x #iterations
-       Delta_PG_est % #gen x predictionHorizon x #simIterations
-       PG_est_record  % #gen x #iterations x #scenarios
-       delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
        infeasibilityHistory % #simIterations
-       epsilons_all % #branch x #horizonPrediction x #scenarios x simIterations
+       epsilons_all % #branch x #horizonPrediction x simIterations
        u_mpc % #gen+1 x #simIterations
        
        xK_extend % a column vector
@@ -91,7 +86,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.operatorNextPowerGenerationExtended = operatorNextPowerGenerationExtended;
             obj.operatorDisturbanceExtended = operatorDisturbanceExtended;
 
-            
             obj.numberOfBuses = numberOfBuses;
             obj.numberOfBranches = numberOfBranches;
             obj.numberOfGen = numberOfGen;
@@ -99,7 +93,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             
             obj.delayCurt = delayCurtailment + delayTelecom;
             obj.delayBatt = delayBattery + delayTelecom;
-            
             obj.horizon = horizonInIterations;
             
             % adapt, overcome
@@ -108,8 +101,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             h = numberOfBuses;
             c = numberOfGen;
             b = numberOfBatt;
-
-            obj.numberOfBatt = numberOfBatt;
 
             umin_c = zeros(c,1);
             umin_b = minPowerBattery - maxPowerBattery;
@@ -497,7 +488,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 constraints = [constraints, constraintNoBatteryCtrl];
              end
 
-            % in the following, where starts setOtherElements method
             parameters      = {x_mpc(:,1), dk};
             outputs         = {u_mpc ,  x_mpc , epsilon1 , d_mpc};
             solverName = 'cplex'; %'cplex'
@@ -508,22 +498,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.initializePastBattControls();
             obj.countControls = 0;
         end
-        
-        function setOtherElements(obj, amplifierQ_ep1, maxPowerGeneration, ...
-                minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon)
-            
-
-            obj.setController();
-        end
-        
-        %% OBJECTIVE
-        
-        function setController(obj)
-            parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
-            outputs = {obj.u,obj.epsilon,obj.x};
-            obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
-        end
-        
         
         %% CLOSED LOOP SIMULATION
         function initializePastCurtControls(obj)
@@ -596,12 +570,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 obj
                 state StateOfZone
             end
-            PC = state.getPowerCurtailment();
-            PG = state.getPowerGeneration();
-            PA = state.getPowerAvailable();
-            obj.PA_est(:,1) = PA;
-            obj.PC_est(:,1) = PC;
-            obj.PG_est(:,1) = PG;
+            obj.PA_est(:,1) = state.getPowerAvailable();
+            obj.PC_est(:,1) = state.getPowerCurtailment();
         end
         
         function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
