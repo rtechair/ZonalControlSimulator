@@ -47,7 +47,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         controller
 
         %% Closed-loop simulation
-        real_short_state
        Real_state % = real extended state, #( n + c*delayCurt + b*delayBatt) x #simIterations
        ucK_delay % over the prediction horizon
        ucK_new % new curt control decided now by the controller, but will be applied after delay
@@ -62,11 +61,10 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
        Delta_PG_est % #gen x predictionHorizon x #simIterations
        PG_est_record  % #gen x #iterations x #scenarios
        delta_PG_disturbances % #gen x (#predictionHorizon * #scenarios) x #simIterations
-       flags % #simIterations
+       infeasibilityHistory % #simIterations
        epsilons_all % #branch x #horizonPrediction x #scenarios x simIterations
        u_mpc % #gen+1 x #simIterations
        
-       xK_new % the new state received at each iteration of the simulation
        xK_extend % a column vector
        
        result
@@ -506,103 +504,28 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             options         = sdpsettings('solver',solverName);
             obj.controller      = optimizer(constraints, objective , options , parameters, outputs);
 
-            obj.ucK_delay = zeros(c, obj.delayCurt); % initializePastCurtControls
-            obj.ubK_delay = zeros(b, obj.delayBatt); % initializePastBattControls
+            obj.initializePastCurtControls();
+            obj.initializePastBattControls();
             obj.countControls = 0;
-            
         end
         
         function setOtherElements(obj, amplifierQ_ep1, maxPowerGeneration, ...
                 minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, maxEpsilon)
-            obj.setCostRefDeviation();
-            obj.setCostControlUse();
-            obj.setCostRefDeviationEp1(amplifierQ_ep1);
-            obj.setMaxPowerGeneration(maxPowerGeneration);
-            obj.setMinControlCurt();
-            obj.setMaxControlCurt();
             
-            obj.setMinPowerBattery(minPowerBattery);
-            obj.setMaxPowerBattery(maxPowerBattery);
-            
-            obj.setMinControlBattery()
-            obj.setMaxControlBattery()
-            
-            obj.setMaxEnergyBattery(maxEnergyBattery);
-            obj.setFlowLimit(flowLimit);
-            
-            obj.setMaxEpsilon(maxEpsilon);
-            
-            obj.setYalmipVar();
-            obj.setOperatorExtendedState();
-            obj.setOperatorExtendedControl();
-            obj.setOperatorExtendedDisturbance();
-            obj.setMinControl();
-            obj.setMaxControl();
-            obj.setMinState();
-            obj.setMaxState();
-            
-            obj.resetConstraints();
-            obj.resetObjective();
-            
-            obj.setConstraints(); % CAUTIOUS
-            % obj.setMpcFormulation();
-            
-            % obj.setObjective(); % CAUTIOUS
-            % obj.setUselessObjectiveSearchingForFeasibility(); % CAUTIOUS
-            % obj.setObjective_penalizeControl();
-            % obj.setObjective_penalizeControlAndEpsilon();
-            %obj.setObjective_penalizeSumSquaredControlAndEpsilon();
-            disp("you use the method setOtherElements, do not use it")
-            obj.setSolver();
+
             obj.setController();
-            
-            obj.initializePastCurtControls();
-            obj.initializePastBattControls();
-            
-            obj.countControls = 0;
-            
         end
         
         %% OBJECTIVE
         
         function setController(obj)
-            if (obj.Ns == 1)
-                parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
-            else
-                disp("Ns is different from 1, not logical.")
-            end
+            parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
             outputs = {obj.u,obj.epsilon,obj.x};
             obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
         end
         
         
         %% CLOSED LOOP SIMULATION
-        function buildReal_state(obj)
-            numberOfDelayedCurtCtrl = obj.numberOfGen * obj.delayCurt;
-            numberOfDelayedBatteryCtrl = obj.numberOfBatt * obj.delayBatt;
-            totalNumberOfCtrlVar = numberOfDelayedCurtCtrl + numberOfDelayedBatteryCtrl;
-            numberOfExtendedStateVar =  obj.numberOfStateOperatorCol + totalNumberOfCtrlVar;
-            obj.Real_state = NaN(numberOfExtendedStateVar, numberOfIterations);
-        end
-        
-        function setxK_new(obj, state)
-            obj.xK_new = state;
-        end
-        
-        function initialize_xK_extend(obj, state)
-            noCurtControlAfter = zeros(obj.numberOfGen * obj.delayCurt, 1);
-            noBatteryControlAfter = zeros(obj.numberOfBatt * obj.delayBatt, 1);
-            
-            obj.xK_extend(:,1) = [state ; ...
-                               noCurtControlAfter;...
-                               noBatteryControlAfter];
-        end
-        
-        function initializeReal_state(obj)
-            % dependency: initialize_xK_extend runs first
-            obj.Real_state(:,1) = obj.xK_extend;
-        end
-        
         function initializePastCurtControls(obj)
             obj.ucK_delay = zeros(obj.numberOfGen, obj.delayCurt);
         end
@@ -758,7 +681,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function saveInfeas(obj)
-            obj.flags(end+1) = obj.infeas;
+            obj.infeasibilityHistory(end+1) = obj.infeas;
         end
         
         function interpretResult(obj)
