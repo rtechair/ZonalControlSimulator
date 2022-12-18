@@ -37,7 +37,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         dk_in
         dk_out
         u
-        epsilon
         
         constraints
         objective
@@ -57,8 +56,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
        PA_est
        PC_est
        infeasibilityHistory % #simIterations
-       epsilons_all % #branch x #horizonPrediction x simIterations
-       u_mpc % #gen+1 x #simIterations
+       epsilonHistory % #branch x #horizonPrediction x simIterations
        
        xK_extend % a column vector
        
@@ -524,36 +522,19 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         
         function computeControl(obj)
             obj.countControls = obj.countControls + 1;
-            realState = obj.state;
             realDeltaPA = obj.disturbancePowerAvailable;
             realDeltaPT = obj.disturbancePowerTransit;
-            obj.operateOneOperation(realState, realDeltaPA, realDeltaPT);
-        end
-        
-        function object = getControl(obj)
-            curtControl = obj.ucK_new;
-            battControl = obj.ubK_new;
-            object = ControlOfZone(curtControl, battControl);
-        end
-        
-        function operateOneOperation(obj, realState, realDeltaPA, realDeltaPT)
-            arguments
-                obj
-                realState StateOfZone
-                realDeltaPA (:,1)
-                realDeltaPT (:,1)
-            end
-            
-            obj.decomposeState(realState);
+
+            obj.initializeStateEstimation();
             
             obj.setDelta_PA_est_constant_over_horizon(realDeltaPA);
             obj.setPA_over_horizon();
             
             obj.setDelta_PT_over_horizon(realDeltaPT);
             
-            obj.set_xK_extend(realState);
+            obj.set_xK_extend();
             
-            obj.doControl();
+            obj.solveOptimizationProblem();
             
             obj.checkSolvingFeasibility();
             obj.interpretResult();
@@ -565,13 +546,15 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.updatePastBattControls();
         end
         
-        function decomposeState(obj, state)
-            arguments
-                obj
-                state StateOfZone
-            end
-            obj.PA_est(:,1) = state.getPowerAvailable();
-            obj.PC_est(:,1) = state.getPowerCurtailment();
+        function object = getControl(obj)
+            curtControl = obj.ucK_new;
+            battControl = obj.ubK_new;
+            object = ControlOfZone(curtControl, battControl);
+        end
+        
+        function initializeStateEstimation(obj)
+            obj.PA_est(:,1) = obj.state.getPowerAvailable();
+            obj.PC_est(:,1) = obj.state.getPowerCurtailment();
         end
         
         function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
@@ -627,8 +610,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
         end
         
-        function set_xK_extend(obj, realState)
-            stateVector = realState.getStateAsVector();
+        function set_xK_extend(obj)
+            stateVector = obj.state.getStateAsVector();
             pastCurtControlVector = reshape(obj.ucK_delay, [], 1);
             pastBattControlVector = reshape(obj.ubK_delay, [], 1);
             
@@ -637,7 +620,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                              pastBattControlVector];
         end
         
-        function doControl(obj)
+        function solveOptimizationProblem(obj)
             dk_extend = [ zeros(obj.numberOfBuses, obj.horizon);
                 obj.Delta_PA_est];
             [obj.result, obj.infeas] = obj.controller{obj.xK_extend, ...
@@ -666,7 +649,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function saveEpsilon(obj)
-            obj.epsilons_all(end+1,:,:) = obj.result{2};
+            obj.epsilonHistory(end+1,:,:) = obj.result{2};
         end
         
         function updatePastCurtControls(obj)
