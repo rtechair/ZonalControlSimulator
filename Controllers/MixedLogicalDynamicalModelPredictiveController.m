@@ -33,16 +33,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         operatorDisturbanceExtended
         
         %% Yalmip
-        x
-        dk_in
-        dk_out
-        u
-        
-        constraints
-        objective
-        
-        maxPG
-        sdp_setting
         controller
 
         %% Closed-loop simulation

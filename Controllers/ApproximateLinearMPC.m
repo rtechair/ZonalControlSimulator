@@ -84,7 +84,6 @@ classdef ApproximateLinearMPC < Controller
         countControls
     end
     
-    
     methods
         function obj = ApproximateLinearMPC(delayCurtailment, delayBattery, delayTelecom, ...
                 horizonInIterations, ...
@@ -132,8 +131,6 @@ classdef ApproximateLinearMPC < Controller
         end
         
         %% CLOSED LOOP SIMULATION
-        
-        
         function receiveState(obj, stateOfZone)
             obj.state = stateOfZone;
         end
