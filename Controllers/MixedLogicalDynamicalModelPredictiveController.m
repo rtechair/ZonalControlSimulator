@@ -18,22 +18,19 @@ limitations under the License.
 classdef MixedLogicalDynamicalModelPredictiveController < Controller
     
     properties (SetAccess = private)
+        %% Parameters
         numberOfBuses
         numberOfBranches
         numberOfGen
         numberOfBatt
         delayCurt
         delayBatt
-        N
-        c
-        b
+        horizon
 
         operatorStateExtended
         operatorControlExtended
         operatorNextPowerGenerationExtended
         operatorDisturbanceExtended
-        
-        % Parameters
         
         %% Yalmip
         x
@@ -44,7 +41,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         
         constraints
         objective
-        % Parameter
         
         maxPG
         sdp_setting
@@ -106,7 +102,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             obj.delayCurt = delayCurtailment + delayTelecom;
             obj.delayBatt = delayBattery + delayTelecom;
             
-            obj.N = horizonInIterations;
+            obj.horizon = horizonInIterations;
             
             % adapt, overcome
             n = numberOfBranches + 3*numberOfGen + 2*numberOfBatt;
@@ -115,8 +111,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             c = numberOfGen;
             b = numberOfBatt;
 
-            obj.c = numberOfGen;
-            obj.b = numberOfBatt;
+            obj.numberOfBatt = numberOfBatt;
 
             umin_c = zeros(c,1);
             umin_b = minPowerBattery - maxPowerBattery;
@@ -308,7 +303,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 
                 objective = curtCtrlObj + battStateObj;
 
-                battIdxRange = (obj.c + 1) : (obj.c + obj.b);
+                battIdxRange = (obj.numberOfGen + 1) : (obj.numberOfGen + obj.numberOfBatt);
                 battCtrl = u_mpc(battIdxRange, :);
                 % constraintMaxPositiveDeltaPB = ( battCtrl <= battCtrlThreshold );
                 % constraints = [constraints, constraintMaxPositiveDeltaPB];
@@ -583,8 +578,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         
         %% CLOSED LOOP SIMULATION
         function buildReal_state(obj)
-            numberOfDelayedCurtCtrl = obj.c * obj.delayCurt;
-            numberOfDelayedBatteryCtrl = obj.b * obj.delayBatt;
+            numberOfDelayedCurtCtrl = obj.numberOfGen * obj.delayCurt;
+            numberOfDelayedBatteryCtrl = obj.numberOfBatt * obj.delayBatt;
             totalNumberOfCtrlVar = numberOfDelayedCurtCtrl + numberOfDelayedBatteryCtrl;
             numberOfExtendedStateVar =  obj.numberOfStateOperatorCol + totalNumberOfCtrlVar;
             obj.Real_state = NaN(numberOfExtendedStateVar, numberOfIterations);
@@ -595,8 +590,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function initialize_xK_extend(obj, state)
-            noCurtControlAfter = zeros(obj.c * obj.delayCurt, 1);
-            noBatteryControlAfter = zeros(obj.b * obj.delayBatt, 1);
+            noCurtControlAfter = zeros(obj.numberOfGen * obj.delayCurt, 1);
+            noBatteryControlAfter = zeros(obj.numberOfBatt * obj.delayBatt, 1);
             
             obj.xK_extend(:,1) = [state ; ...
                                noCurtControlAfter;...
@@ -609,11 +604,11 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function initializePastCurtControls(obj)
-            obj.ucK_delay = zeros(obj.c, obj.delayCurt);
+            obj.ucK_delay = zeros(obj.numberOfGen, obj.delayCurt);
         end
         
         function initializePastBattControls(obj)
-            obj.ubK_delay = zeros(obj.b, obj.delayBatt);
+            obj.ubK_delay = zeros(obj.numberOfBatt, obj.delayBatt);
         end
         
         function receiveState(obj, stateOfZone)
@@ -690,12 +685,12 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
             areAllDeltaPANonNegative = all(realDeltaPA >= 0);
             if areAllDeltaPANonNegative
-                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.N);
+                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
             else
-                for g = 1:obj.c
+                for g = 1:obj.numberOfGen
                     deltaPAOfGen = realDeltaPA(g,1);
                     if deltaPAOfGen >= 0
-                        obj.Delta_PA_est(g,1:obj.N) = deltaPAOfGen;
+                        obj.Delta_PA_est(g,1:obj.horizon) = deltaPAOfGen;
                     else
                         obj.computeCorrectDisturbanceOfGen(g, deltaPAOfGen);
                     end
@@ -707,15 +702,15 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             realPAOfGen = obj.PA_est(genIndex,1);
             % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
             n = floor(realPAOfGen / -deltaPAOfGen);
-            if n >= obj.N
-                obj.Delta_PA_est(genIndex, 1:obj.N) = deltaPAOfGen;
+            if n >= obj.horizon
+                obj.Delta_PA_est(genIndex, 1:obj.horizon) = deltaPAOfGen;
             else
                 obj.Delta_PA_est(genIndex, 1:n) = deltaPAOfGen;
                 
                 DeltaPAToReachZero = - realPAOfGen - deltaPAOfGen * n;
                 obj.Delta_PA_est(genIndex, n + 1) = DeltaPAToReachZero;
                 
-                obj.Delta_PA_est(genIndex, n+2 : obj.N) = 0;
+                obj.Delta_PA_est(genIndex, n+2 : obj.horizon) = 0;
             end
         end
         
@@ -730,13 +725,13 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             following iteration. Summing these approximations can lead to
             having some PA < 0 while PA = 0 is desired.
             %}
-            for k = 1:obj.N
+            for k = 1:obj.horizon
                 obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
             end
         end
         
         function setDelta_PT_over_horizon(obj, realDeltaPT)
-            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.N);
+            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
         end
         
         function set_xK_extend(obj, realState)
@@ -750,7 +745,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function doControl(obj)
-            dk_extend = [ zeros(obj.numberOfBuses, obj.N);
+            dk_extend = [ zeros(obj.numberOfBuses, obj.horizon);
                 obj.Delta_PA_est];
             [obj.result, obj.infeas] = obj.controller{obj.xK_extend, ...
                 dk_extend};
@@ -769,10 +764,10 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         function interpretResult(obj)
             optimalControlOverHorizon = obj.result{1};
             optimalNextControl = optimalControlOverHorizon(:,1);
-            rangeGen = 1:obj.c;
+            rangeGen = 1:obj.numberOfGen;
             optimalCurtControl = optimalNextControl(rangeGen,1);
             obj.ucK_new = optimalCurtControl;
-            rangeBatt = obj.c+1 : obj.c+obj.b;
+            rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
             optimalBattControl = optimalNextControl(rangeBatt,1);
             obj.ubK_new = optimalBattControl;
         end
