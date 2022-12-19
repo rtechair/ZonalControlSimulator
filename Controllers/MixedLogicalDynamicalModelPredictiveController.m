@@ -26,11 +26,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         delayCurt
         delayBatt
         horizon
-
-        operatorStateExtended
-        operatorControlExtended
-        operatorNextPowerGenerationExtended
-        operatorDisturbanceExtended
         
         %% Yalmip
         controller
@@ -68,11 +63,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ... % following: where starts setOtherElements
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit)
-            
-            obj.operatorStateExtended = operatorStateExtended;
-            obj.operatorControlExtended = operatorControlExtended;
-            obj.operatorNextPowerGenerationExtended = operatorNextPowerGenerationExtended;
-            obj.operatorDisturbanceExtended = operatorDisturbanceExtended;
 
             obj.numberOfBuses = numberOfBuses;
             obj.numberOfBranches = numberOfBranches;
@@ -103,10 +93,10 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             
             N = horizonInIterations;
 
-            A_new = obj.operatorStateExtended;
-            B_new = obj.operatorControlExtended;
-            Bz_new = obj.operatorNextPowerGenerationExtended;
-            D_new = obj.operatorDisturbanceExtended;
+            A_new = operatorStateExtended;
+            B_new = operatorControlExtended;
+            Bz_new = operatorNextPowerGenerationExtended;
+            D_new = operatorDisturbanceExtended;
 
 
             % mpc_controller_design
