@@ -190,8 +190,8 @@ classdef MixedLogicalDynamicalModel < handle
             tau_c = obj.delayCurt;
             tau_b = obj.delayBatt;
             h = obj.numberOfBuses;
-            obj.operatorDisturbanceExtended = [obj.operatorDisturbancePowerTransit, obj.operatorDisturbancePowerAvailable;
-                zeros(b*tau_b+c*tau_c,c+h)];
+            obj.operatorDisturbanceExtended = [obj.operatorDisturbancePowerAvailable, obj.operatorDisturbancePowerTransit;
+                                                                       zeros(b*tau_b+c*tau_c,c+h)];
         end
 
         %% GETTER

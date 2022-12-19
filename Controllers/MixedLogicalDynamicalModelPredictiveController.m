@@ -611,8 +611,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
         end
         
         function solveOptimizationProblem(obj)
-            dk_extend = [ zeros(obj.numberOfBuses, obj.horizon);
-                obj.Delta_PA_est];
+            dk_extend = [obj.Delta_PA_est;
+                                  zeros(obj.numberOfBuses, obj.horizon)];
             [obj.result, obj.infeas] = obj.controller{obj.xK_extend, ...
                 dk_extend};
         end
