@@ -75,8 +75,6 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             
             % adapt, overcome
             n = numberOfBranches + 3*numberOfGen + 2*numberOfBatt;
-            nbranchNEW = numberOfBranches;
-            h = numberOfBuses;
             c = numberOfGen;
             b = numberOfBatt;
 
@@ -88,8 +86,8 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             umax_b = - umin_b;
             umax = [umax_c ; umax_b];
 
-            xmin = [- flowLimit * ones(nbranchNEW, 1) ; zeros(c,1); minPowerBattery; 0];
-            xmax = [flowLimit *ones(nbranchNEW,1) ; maxPowerGeneration ; maxPowerBattery ; maxEnergyBattery];
+            xmin = [- flowLimit * ones(obj.numberOfBranches, 1) ; zeros(c,1); minPowerBattery; 0];
+            xmax = [flowLimit *ones(obj.numberOfBranches,1) ; maxPowerGeneration ; maxPowerBattery ; maxEnergyBattery];
             
             N = horizonInIterations;
 
@@ -102,16 +100,16 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             % mpc_controller_design
             u_mpc = sdpvar(b+c,N,'full');  % input trajectory: u0,...,u_{N-1} (columns of U)
             x_mpc = sdpvar(n+b*obj.delayBatt+c*obj.delayCurt,N+1,'full'); % state trajectory: x0,x1,...,xN (columns of X)
-            epsilon1 = sdpvar(nbranchNEW,obj.delayCurt - obj.delayBatt,'full'); % perturbation scale %constraints = [epsilon >=0];
+            epsilon1 = sdpvar(obj.numberOfBranches,obj.delayCurt - obj.delayBatt,'full'); % perturbation scale %constraints = [epsilon >=0];
             d_mpc = binvar(c,N,'full');
-            dk = sdpvar(h+c,N,'full'); % vector of disturbance
+            dk = sdpvar(obj.numberOfGen + obj.numberOfBuses,N,'full'); % vector of disturbance
 
             constraints = [];
-            nbr = 1:nbranchNEW;
+            nbr = 1:obj.numberOfBranches;
             constraints = [constraints, (epsilon1 >= 0) : ['epsilon ']];
              
             for k = 1:obj.delayBatt
-                constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)) : ['dynamics ' num2str(k)]];
+                constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(obj.numberOfBranches+c+2*b+(1:c),k+1) + D_new*dk(:,k)) : ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
                 constraints = [constraints, (u_mpc(:,k) >= umin): ['control min ' num2str(k)]];
@@ -119,7 +117,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
             end
             
             for k = obj.delayBatt+1:obj.delayCurt
-                constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
+                constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(obj.numberOfBranches+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
                 constraints = [constraints, (u_mpc(:,k) >= umin): ['control min ' num2str(k)]];
@@ -127,13 +125,13 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr)  + epsilon1(nbr,k-obj.delayBatt)) : ['branch max ' num2str(k)]];
                 constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr)  - epsilon1(nbr,k-obj.delayBatt)) : ['branch min ' num2str(k)]];
                 
-                constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) <= xmax(nbranchNEW+c+(1:2*b)) ) : ['battery max ' num2str(k)]];
-                constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) >= xmin(nbranchNEW+c+(1:2*b)) ) : ['battery min ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(obj.numberOfBranches+c+(1:2*b),k+1) <= xmax(obj.numberOfBranches+c+(1:2*b)) ) : ['battery max ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(obj.numberOfBranches+c+(1:2*b),k+1) >= xmin(obj.numberOfBranches+c+(1:2*b)) ) : ['battery min ' num2str(k)]];
                 
             end
             
             for k = obj.delayCurt+1:N
-                constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(nbranchNEW+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
+                constraints = [constraints, (x_mpc(:,k+1) == A_new*x_mpc(:,k) + B_new*u_mpc(:,k) + Bz_new*x_mpc(obj.numberOfBranches+c+2*b+(1:c),k+1) + D_new*dk(:,k)): ['dynamics ' num2str(k)]];
                 
                 constraints = [constraints, (u_mpc(:,k) <= umax): ['control max ' num2str(k)]];
                 constraints = [constraints, (u_mpc(:,k) >= umin): ['control min ' num2str(k)]];
@@ -141,25 +139,25 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
                 constraints = [constraints, ( x_mpc(nbr,k+1) <= xmax(nbr) ) : ['branch max ' num2str(k)]];
                 constraints = [constraints, ( x_mpc(nbr,k+1) >= xmin(nbr)  ) : ['branch min ' num2str(k)]];
                 
-                constraints = [constraints, ( x_mpc(nbranchNEW+(1:c),k+1) <= xmax(nbranchNEW+(1:c)) ) : ['curtailment max ' num2str(k)]];
-                constraints = [constraints, ( x_mpc(nbranchNEW+(1:c),k+1) >= xmin(nbranchNEW+(1:c)) ) : ['curtailment min ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(obj.numberOfBranches+(1:c),k+1) <= xmax(obj.numberOfBranches+(1:c)) ) : ['curtailment max ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(obj.numberOfBranches+(1:c),k+1) >= xmin(obj.numberOfBranches+(1:c)) ) : ['curtailment min ' num2str(k)]];
                 
-                constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) <= xmax(nbranchNEW+c+(1:2*b)) ) : ['battery max ' num2str(k)]];
-                constraints = [constraints, ( x_mpc(nbranchNEW+c+(1:2*b),k+1) >= xmin(nbranchNEW+c+(1:2*b)) ) : ['battery min ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(obj.numberOfBranches+c+(1:2*b),k+1) <= xmax(obj.numberOfBranches+c+(1:2*b)) ) : ['battery max ' num2str(k)]];
+                constraints = [constraints, ( x_mpc(obj.numberOfBranches+c+(1:2*b),k+1) >= xmin(obj.numberOfBranches+c+(1:2*b)) ) : ['battery min ' num2str(k)]];
                 
             end
             
                 M = 1000;
             for k = 1 : N
-                constraints = [constraints, implies( x_mpc(nbranchNEW+2*c+2*b+ (1:c),k+1) <= maxPowerGeneration - x_mpc(nbranchNEW + (1:c),k+1) , d_mpc(:,k) ) : ['delta implied ' num2str(k)]];
-                constraints = [constraints, implies( d_mpc(:,k) , x_mpc(nbranchNEW+2*c+2*b+(1:c),k+1) <= maxPowerGeneration - x_mpc(nbranchNEW + (1:c),k+1) ) : ['delta implied ' num2str(k)]];
-                constraints = [constraints, implies( d_mpc(:,k) , x_mpc(nbranchNEW+c+2*b+(1:c),k+1) == x_mpc(nbranchNEW+2*c+2*b+(1:c),k+1) ) : ['generator power ' num2str(k)]];
-                constraints = [constraints, implies(~d_mpc(:,k) , x_mpc(nbranchNEW+c+2*b+(1:c),k+1) == maxPowerGeneration - x_mpc(nbranchNEW + (1:c),k+1) ) : ['generator power ' num2str(k)]];
+                constraints = [constraints, implies( x_mpc(obj.numberOfBranches+2*c+2*b+ (1:c),k+1) <= maxPowerGeneration - x_mpc(obj.numberOfBranches + (1:c),k+1) , d_mpc(:,k) ) : ['delta implied ' num2str(k)]];
+                constraints = [constraints, implies( d_mpc(:,k) , x_mpc(obj.numberOfBranches+2*c+2*b+(1:c),k+1) <= maxPowerGeneration - x_mpc(obj.numberOfBranches + (1:c),k+1) ) : ['delta implied ' num2str(k)]];
+                constraints = [constraints, implies( d_mpc(:,k) , x_mpc(obj.numberOfBranches+c+2*b+(1:c),k+1) == x_mpc(obj.numberOfBranches+2*c+2*b+(1:c),k+1) ) : ['generator power ' num2str(k)]];
+                constraints = [constraints, implies(~d_mpc(:,k) , x_mpc(obj.numberOfBranches+c+2*b+(1:c),k+1) == maxPowerGeneration - x_mpc(obj.numberOfBranches + (1:c),k+1) ) : ['generator power ' num2str(k)]];
                 
                 % This part is to avoid too large initial values of M while using 'implies' function 
-                constraints = [constraints, (zeros(c,1) <= x_mpc(nbranchNEW+(1:c),k+1) <= M*ones(c,1)) : ['lousy warning PC ' num2str(k)]];
-                constraints = [constraints, (zeros(c,1) <= x_mpc(nbranchNEW+c+2*b+ (1:c),k+1) <= M*ones(c,1)) : ['lousy warning PG ' num2str(k)]];
-                constraints = [constraints, (zeros(c,1) <= x_mpc(nbranchNEW+2*c+2*b+ (1:c),k+1) <= M*ones(c,1)) : ['lousy warning PA ' num2str(k)]];
+                constraints = [constraints, (zeros(c,1) <= x_mpc(obj.numberOfBranches+(1:c),k+1) <= M*ones(c,1)) : ['lousy warning PC ' num2str(k)]];
+                constraints = [constraints, (zeros(c,1) <= x_mpc(obj.numberOfBranches+c+2*b+ (1:c),k+1) <= M*ones(c,1)) : ['lousy warning PG ' num2str(k)]];
+                constraints = [constraints, (zeros(c,1) <= x_mpc(obj.numberOfBranches+2*c+2*b+ (1:c),k+1) <= M*ones(c,1)) : ['lousy warning PA ' num2str(k)]];
             end
             
             
