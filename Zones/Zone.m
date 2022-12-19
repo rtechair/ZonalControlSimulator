@@ -72,10 +72,10 @@ classdef Zone < handle
             obj.setTelecom();
             obj.setResult(simulationWindow, duration);
             
-            isControllerApproximateLinearModel = true;
+            isControllerApproximateLinearModel = false;
             isControllerMpcWithUncertainty = false;
             isControllerLimiter = false;
-            isControllerMixedLogicalModel = false;
+            isControllerMixedLogicalModel = true;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = false;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = false;
             isApproximateLinearMPC_PAunknown_DeltaPCreal = false;
@@ -89,7 +89,7 @@ classdef Zone < handle
                 obj.setControllerLimiterSetting();
                 obj.setControllerLimiter();
             elseif isControllerMixedLogicalModel
-                obj.setMixedLogicalDynamicalModelPredictiveController();
+                obj.setMixedLogicalDynamicalMPC();
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal
                 obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal();
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA
@@ -289,7 +289,7 @@ classdef Zone < handle
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
         end
         
-        function setMixedLogicalDynamicalModelPredictiveController(obj)
+        function setMixedLogicalDynamicalMPC(obj)
             basecaseName = 'case6468rte_zone_VG_VTV_BLA';
             busId = obj.setting.getBusId();
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
@@ -324,7 +324,7 @@ classdef Zone < handle
             maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
             flowLimit = obj.setting.getBranchFlowLimit();
             
-            obj.controller = MixedLogicalDynamicalModelPredictiveController(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
+            obj.controller = MixedLogicalDynamicalMPC(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
                 operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);

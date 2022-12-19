@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 %}
-classdef MixedLogicalDynamicalModelPredictiveController < Controller
+classdef MixedLogicalDynamicalMPC< Controller
     
     properties (SetAccess = private)
         %% Parameters
@@ -58,7 +58,7 @@ classdef MixedLogicalDynamicalModelPredictiveController < Controller
     
     
     methods
-        function obj = MixedLogicalDynamicalModelPredictiveController(delayCurtailment, delayBattery, delayTelecom, ...
+        function obj = MixedLogicalDynamicalMPC(delayCurtailment, delayBattery, delayTelecom, ...
                 horizonInIterations, ...
                 operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ... % following: where starts setOtherElements
