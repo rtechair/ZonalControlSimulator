@@ -146,29 +146,20 @@ classdef ApproximateLinearMPC < Controller
         
         function computeControl(obj)
             obj.countControls = obj.countControls + 1;
-
             realDeltaPA = obj.disturbancePowerAvailable;
             realDeltaPT = obj.disturbancePowerTransit;
 
             obj.initializeStatePrediction();
-            
             obj.setAvailablePowerPredictionOverHorizon(realDeltaPA);
-            
-            obj.setTransitPowerDisturbanceOverHorizon(realDeltaPT);
-
+            obj.setTransitPowerDisturbancePredictionOverHorizon(realDeltaPT);
             obj.setDelta_PC_est_over_horizon();
             obj.setPC_est_over_horizon();
-
             obj.setDelta_PG_and_PG_est_over_horizon();
-            
             obj.set_xK_extend();
             
             obj.solveOptimizationProblem();
-            
             obj.checkSolvingFeasibility();
             obj.interpretResult();
-            
-            obj.saveInfeas();
             
             obj.updatePastCurtControls();
             obj.updatePastBattControls();
@@ -409,6 +400,23 @@ classdef ApproximateLinearMPC < Controller
             outputs = {obj.u, obj.x, obj.epsilon};
             obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
         end
+        
+        function initializeStatePrediction(obj)
+            obj.PA_est(:,1) = obj.state.getPowerAvailable();
+            obj.PC_est(:,1) = obj.state.getPowerCurtailment();
+            obj.PG_est(:,1) = obj.state.getPowerGeneration();
+        end
+
+        function setAvailablePowerPredictionOverHorizon(obj, realDeltaPA)
+            Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
+            for k = 1:obj.horizon
+                obj.PA_est(:,k+1) = max( 0, obj.PA_est(:,k) + Delta_PA_est(:,k) );
+            end
+        end
+
+        function setTransitPowerDisturbancePredictionOverHorizon(obj, realDeltaPT)
+            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
+        end
 
         function setDelta_PC_est_over_horizon(obj)
             numberOfStepsAfterDelay = obj.horizon - obj.delayCurt;
@@ -430,23 +438,6 @@ classdef ApproximateLinearMPC < Controller
                 obj.PG_est(:,k+1) = obj.PG_est(:,k) + obj.Delta_PG_est(:,k) - obj.Delta_PC_est(:,k);
             end
         end
-
-        function initializeStatePrediction(obj)
-            obj.PA_est(:,1) = obj.state.getPowerAvailable();
-            obj.PC_est(:,1) = obj.state.getPowerCurtailment();
-            obj.PG_est(:,1) = obj.state.getPowerGeneration();
-        end
-
-        function setAvailablePowerPredictionOverHorizon(obj, realDeltaPA)
-            Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
-            for k = 1:obj.horizon
-                obj.PA_est(:,k+1) = max( 0, obj.PA_est(:,k) + Delta_PA_est(:,k) );
-            end
-        end
-
-        function setTransitPowerDisturbanceOverHorizon(obj, realDeltaPT)
-            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
-        end
         
         function set_xK_extend(obj)
             stateVector = obj.state.getStateAsVector();
@@ -467,10 +458,6 @@ classdef ApproximateLinearMPC < Controller
             if obj.infeas ~= 0
                 disp(yalmiperror(obj.infeas))
             end
-        end
-        
-        function saveInfeas(obj)
-            obj.infeasibilityHistory(end+1) = obj.infeas;
         end
         
         function interpretResult(obj)
