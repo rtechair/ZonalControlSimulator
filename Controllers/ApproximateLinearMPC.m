@@ -150,11 +150,11 @@ classdef ApproximateLinearMPC < Controller
             realDeltaPA = obj.disturbancePowerAvailable;
             realDeltaPT = obj.disturbancePowerTransit;
 
-            obj.initializeStateEstimation();
+            obj.initializeStatePrediction();
             
-            obj.setAvailablePowerPrediction(realDeltaPA);
+            obj.setAvailablePowerPredictionOverHorizon(realDeltaPA);
             
-            obj.setDelta_PT_over_horizon(realDeltaPT);
+            obj.setTransitPowerDisturbanceOverHorizon(realDeltaPT);
 
             obj.setDelta_PC_est_over_horizon();
             obj.setPC_est_over_horizon();
@@ -431,20 +431,20 @@ classdef ApproximateLinearMPC < Controller
             end
         end
 
-        function initializeStateEstimation(obj)
+        function initializeStatePrediction(obj)
             obj.PA_est(:,1) = obj.state.getPowerAvailable();
             obj.PC_est(:,1) = obj.state.getPowerCurtailment();
             obj.PG_est(:,1) = obj.state.getPowerGeneration();
         end
 
-        function setAvailablePowerPrediction(obj, realDeltaPA)
+        function setAvailablePowerPredictionOverHorizon(obj, realDeltaPA)
             Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
             for k = 1:obj.horizon
                 obj.PA_est(:,k+1) = max( 0, obj.PA_est(:,k) + Delta_PA_est(:,k) );
             end
         end
 
-        function setDelta_PT_over_horizon(obj, realDeltaPT)
+        function setTransitPowerDisturbanceOverHorizon(obj, realDeltaPT)
             obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
         end
         
