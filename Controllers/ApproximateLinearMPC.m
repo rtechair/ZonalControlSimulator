@@ -408,7 +408,7 @@ classdef ApproximateLinearMPC < Controller
 
         function setController(obj)
             parameters = {obj.x(:,1), obj.dk_in, obj.dk_out};
-            outputs = {obj.u, obj.epsilon, obj.x};
+            outputs = {obj.u, obj.x, obj.epsilon};
             obj.controller = optimizer(obj.constraints, obj.objective, obj.sdp_setting, parameters, outputs);
         end
 
