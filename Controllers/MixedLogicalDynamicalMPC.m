@@ -40,8 +40,6 @@ classdef MixedLogicalDynamicalMPC< Controller
        Delta_PT_est
        PA_est
        PC_est
-       infeasibilityHistory % #simIterations
-       epsilonHistory % #branch x #horizonPrediction x simIterations
        
        xK_extend % a column vector
        
@@ -505,16 +503,11 @@ classdef MixedLogicalDynamicalMPC< Controller
             obj.setDelta_PA_est_constant_over_horizon();
             obj.setPA_over_horizon();
             obj.setDelta_PT_over_horizon();
-            
             obj.set_xK_extend();
             
             obj.solveOptimizationProblem();
-            
             obj.checkSolvingFeasibility();
             obj.interpretResult();
-            
-            obj.saveInfeas();
-            obj.saveEpsilon();
             
             obj.updatePastCurtControls();
             obj.updatePastBattControls();
@@ -606,10 +599,6 @@ classdef MixedLogicalDynamicalMPC< Controller
             end
         end
         
-        function saveInfeas(obj)
-            obj.infeasibilityHistory(end+1) = obj.infeas;
-        end
-        
         function interpretResult(obj)
             optimalControlOverHorizon = obj.result{1};
             optimalNextControl = optimalControlOverHorizon(:,1);
@@ -619,10 +608,6 @@ classdef MixedLogicalDynamicalMPC< Controller
             rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
             optimalBattControl = optimalNextControl(rangeBatt,1);
             obj.ubK_new = optimalBattControl;
-        end
-        
-        function saveEpsilon(obj)
-            obj.epsilonHistory(end+1,:,:) = obj.result{2};
         end
         
         function updatePastCurtControls(obj)
