@@ -500,15 +500,11 @@ classdef MixedLogicalDynamicalMPC< Controller
         
         function computeControl(obj)
             obj.countControls = obj.countControls + 1;
-            realDeltaPA = obj.disturbancePowerAvailable;
-            realDeltaPT = obj.disturbancePowerTransit;
 
             obj.initializeStateEstimation();
-            
-            obj.setDelta_PA_est_constant_over_horizon(realDeltaPA);
+            obj.setDelta_PA_est_constant_over_horizon();
             obj.setPA_over_horizon();
-            
-            obj.setDelta_PT_over_horizon(realDeltaPT);
+            obj.setDelta_PT_over_horizon();
             
             obj.set_xK_extend();
             
@@ -535,14 +531,13 @@ classdef MixedLogicalDynamicalMPC< Controller
             obj.PC_est(:,1) = obj.state.getPowerCurtailment();
         end
         
-        function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
-            % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
-            areAllDeltaPANonNegative = all(realDeltaPA >= 0);
+        function setDelta_PA_est_constant_over_horizon(obj)
+            areAllDeltaPANonNegative = all(obj.disturbancePowerAvailable >= 0);
             if areAllDeltaPANonNegative
-                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
+                obj.Delta_PA_est = repmat(obj.disturbancePowerAvailable, 1, obj.horizon);
             else
                 for g = 1:obj.numberOfGen
-                    deltaPAOfGen = realDeltaPA(g,1);
+                    deltaPAOfGen = obj.disturbancePowerAvailable(g,1);
                     if deltaPAOfGen >= 0
                         obj.Delta_PA_est(g,1:obj.horizon) = deltaPAOfGen;
                     else
@@ -584,8 +579,8 @@ classdef MixedLogicalDynamicalMPC< Controller
             end
         end
         
-        function setDelta_PT_over_horizon(obj, realDeltaPT)
-            obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
+        function setDelta_PT_over_horizon(obj)
+            obj.Delta_PT_est = repmat(obj.disturbancePowerTransit, 1, obj.horizon);
         end
         
         function set_xK_extend(obj)
