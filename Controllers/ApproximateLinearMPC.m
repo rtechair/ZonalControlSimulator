@@ -62,7 +62,6 @@ classdef ApproximateLinearMPC < Controller
        ucK_new % new curt control decided now by the controller, but will be applied after delay
        ubK_delay % over the prediction horizon
        ubK_new % new battery control decided now by the controller, but delayed
-       Delta_PA_est
        Delta_PC_est
        Delta_PT_est
        PA_est
@@ -153,8 +152,7 @@ classdef ApproximateLinearMPC < Controller
 
             obj.initializeStateEstimation();
             
-            obj.setDelta_PA_est_constant_over_horizon(realDeltaPA);
-            obj.setPA_over_horizon();
+            obj.setAvailablePowerPrediction(realDeltaPA);
             
             obj.setDelta_PT_over_horizon(realDeltaPT);
 
@@ -438,56 +436,14 @@ classdef ApproximateLinearMPC < Controller
             obj.PC_est(:,1) = obj.state.getPowerCurtailment();
             obj.PG_est(:,1) = obj.state.getPowerGeneration();
         end
-        
-        function setDelta_PA_est_constant_over_horizon(obj, realDeltaPA)
-            % Pre-requisite: PA set up, i.e. correct PA_est(:,1)
-            areAllDeltaPANonNegative = all(realDeltaPA >= 0);
-            if areAllDeltaPANonNegative
-                obj.Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
-            else
-                for g = 1:obj.numberOfGen
-                    deltaPAOfGen = realDeltaPA(g,1);
-                    if deltaPAOfGen >= 0
-                        obj.Delta_PA_est(g,1:obj.horizon) = deltaPAOfGen;
-                    else
-                        obj.computeCorrectDisturbanceOfGen(g, deltaPAOfGen);
-                    end
-                end
-            end
-        end
-        
-        function computeCorrectDisturbanceOfGen(obj, genIndex, deltaPAOfGen)
-            realPAOfGen = obj.PA_est(genIndex,1);
-            % n is the last iteration such that deltaPA(gen ,k) = deltaPAOfGen
-            n = floor(realPAOfGen / -deltaPAOfGen);
-            if n >= obj.horizon
-                obj.Delta_PA_est(genIndex, 1:obj.horizon) = deltaPAOfGen;
-            else
-                obj.Delta_PA_est(genIndex, 1:n) = deltaPAOfGen;
-                
-                DeltaPAToReachZero = - realPAOfGen - deltaPAOfGen * n;
-                obj.Delta_PA_est(genIndex, n + 1) = DeltaPAToReachZero;
-                
-                obj.Delta_PA_est(genIndex, n+2 : obj.horizon) = 0;
-            end
-        end
-        
-        function setPA_over_horizon(obj)
-            %{
-            Cautious, the original equation:
-                obj.PA_est(:,k+1) = obj.PA_est(:,k) + obj.Delta_PA_est(:,k)
-            is not used.
-            This is due to the unaccuracy of floating-point data.
-            Using the original equation would result in approximate PA at
-            each iteration which are then used for the computation of the
-            following iteration. Summing these approximations can lead to
-            having some PA < 0 while PA = 0 is desired.
-            %}
+
+        function setAvailablePowerPrediction(obj, realDeltaPA)
+            Delta_PA_est = repmat(realDeltaPA, 1, obj.horizon);
             for k = 1:obj.horizon
-                obj.PA_est(:,k+1) = obj.PA_est(:,1) + sum(obj.Delta_PA_est(:,1:k),2);
+                obj.PA_est(:,k+1) = max( 0, obj.PA_est(:,k) + Delta_PA_est(:,k) );
             end
         end
-        
+
         function setDelta_PT_over_horizon(obj, realDeltaPT)
             obj.Delta_PT_est = repmat(realDeltaPT, 1, obj.horizon);
         end
