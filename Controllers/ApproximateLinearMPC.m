@@ -68,7 +68,6 @@ classdef ApproximateLinearMPC < Controller
        PC_est
        PG_est       % #gen x #iterations
        Delta_PG_est % #gen x predictionHorizon x #simIterations
-       infeasibilityHistory % #simIterations
        
        xK_extend % a column vector
        
