@@ -158,6 +158,8 @@ classdef ApproximateLinearMPC < Controller
             obj.checkSolvingFeasibility();
             obj.interpretResult();
             
+            obj.cheatAboutControls();
+            
             obj.updatePastCurtControls();
             obj.updatePastBattControls();
         end
@@ -173,6 +175,23 @@ classdef ApproximateLinearMPC < Controller
             battControl = obj.ubK_new;
             memory.saveControl(curtControl, battControl);
         end
+
+        function replaceLastPastCurtControl(obj, curtControl)
+            % Function added for the FakeApproximateLinearMPC: indeed, the
+            % simulation is done based on the MLDMPC. The MLDMPC and the
+            % approximate linear MPC runs simultaneously, both solve the
+            % same problem: same zone state and same PAST controls. As a
+            % consequence the approx. linear MPC needs to be informed of
+            % MLDMPC's past controls.
+            remainingCurtControls = obj.ucK_delay(:, 1: obj.delayCurt-1);
+            obj.ucK_delay = [remainingCurtControls curtControl];
+        end
+
+        function replaceLastPastBattControl(obj, battControl)
+            remainingBattControls = obj.ubK_delay(:, 1: obj.delayBatt-1);
+            obj.ubK_delay = [remainingBattControls battControl];
+        end
+
     end
 
     methods (Access = protected)
@@ -453,7 +472,7 @@ classdef ApproximateLinearMPC < Controller
         
         function checkSolvingFeasibility(obj)
             if obj.infeas ~= 0
-                disp(yalmiperror(obj.infeas))
+                disp([yalmiperror(obj.infeas), ' at step: ', num2str(obj.countControls)])
             end
         end
         
@@ -466,6 +485,25 @@ classdef ApproximateLinearMPC < Controller
             rangeBatt = obj.numberOfGen+1 : obj.numberOfGen+obj.numberOfBatt;
             optimalBattControl = optimalNextControl(rangeBatt,1);
             obj.ubK_new = optimalBattControl;
+        end
+
+        function cheatAboutControls(obj)
+            if obj.infeas ~= 0
+                % When using the FakeApproximateLinearMPC, infeasible
+                % problems occur. Substituion controls are applied to continue the simulation.
+                % 
+                % VGsmall (alone): steps 172 and 187. Step here refers to
+                % the value of obj.countControls
+
+                % VTV (alone): 26, 57
+
+                % VGsmall and VTV combined: 26, 172, 61, 63, 66. 172 is for
+                % VGsmall, while 26, 61 63, 66 is for VGsmall. Observe the
+                % number of feasible steps in this 2-zone simulation
+                % compared to the sum of 2 individual zone simulations.
+                obj.ucK_new = zeros(obj.numberOfGen, 1);
+                obj.ubK_new = zeros(obj.numberOfBatt, 1);
+            end
         end
         
         function updatePastCurtControls(obj)

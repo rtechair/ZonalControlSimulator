@@ -20,12 +20,14 @@ classdef FakeApproximateLinearMPC < Controller
     properties (SetAccess = private)
         approxMPC
         MLDMPC
+        countControls
+        zoneName
     end
 
     methods
         function obj = FakeApproximateLinearMPC(basecaseFilename, busId, numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 batteryCoef, timestep, delayCurt, delayBatt, delayTelecom,...
-                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, horizonInIterations)
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, horizonInIterations, name)
 
             obj.setApproximateLinearMPC(basecaseFilename, busId, numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 batteryCoef, timestep, delayCurt, delayBatt, delayTelecom, horizonInIterations,...
@@ -34,6 +36,9 @@ classdef FakeApproximateLinearMPC < Controller
             obj.setMixedLogicalDynamicalMPC(basecaseFilename, busId, numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 batteryCoef, timestep, delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit)
+
+            obj.countControls = 0;
+            obj.zoneName = name;
         end
 
         function setApproximateLinearMPC(obj, basecaseFilename, busId, numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
@@ -76,8 +81,16 @@ classdef FakeApproximateLinearMPC < Controller
         end
 
         function computeControl(obj)
-            obj.approxMPC.computeControl();
+            obj.countControls = obj.countControls + 1;
+            % (obj.zoneName == "VTV") & (obj.countControls >= 26)
             obj.MLDMPC.computeControl();
+            obj.approxMPC.computeControl();
+
+            MIPcontrol = obj.MLDMPC.getControl();
+            MIPcurtControl = MIPcontrol.getControlCurtailment();
+            MIPbattControl = MIPcontrol.getControlBattery();
+            obj.approxMPC.replaceLastPastCurtControl(MIPcurtControl);
+            obj.approxMPC.replaceLastPastBattControl(MIPbattControl);
         end
 
         function object = getControl(obj)
