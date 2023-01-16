@@ -508,6 +508,8 @@ classdef MixedLogicalDynamicalMPC< Controller
             obj.solveOptimizationProblem();
             obj.checkSolvingFeasibility();
             obj.interpretResult();
+            obj.setNonNegativeCurtControl();
+            obj.setNegligeableBattControlDueToNumericalErrorOfSolver();
             
             obj.updatePastCurtControls();
             obj.updatePastBattControls();
@@ -610,6 +612,16 @@ classdef MixedLogicalDynamicalMPC< Controller
             obj.ubK_new = optimalBattControl;
         end
         
+        function setNegligeableBattControlDueToNumericalErrorOfSolver(obj)
+            if abs(obj.ubK_new) < 0.1
+                obj.ubK_new = 0;
+            end
+        end
+
+        function setNonNegativeCurtControl(obj)
+            obj.ucK_new = max(0, obj.ucK_new);
+        end
+
         function updatePastCurtControls(obj)
             leftCurtControls = obj.ucK_delay(:,2 :obj.delayCurt);
             obj.ucK_delay = [leftCurtControls obj.ucK_new];
