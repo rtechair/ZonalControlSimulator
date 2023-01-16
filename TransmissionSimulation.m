@@ -80,9 +80,6 @@ classdef TransmissionSimulation < handle
                 zone.updatePowerTransitModel(obj.grid);
                 zone.updatePowerTransitSimulation(obj.grid);
                 
-                zone.updatePowerTransitModel(obj.grid);
-                zone.updatePowerTransitSimulation(obj.grid);
-                
                 % do not compute disturbance transit initially, as there is not enough data
                 
                 zone.transmitDataZone2Controller();
