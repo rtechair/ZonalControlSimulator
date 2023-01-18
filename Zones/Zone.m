@@ -349,10 +349,23 @@ classdef Zone < handle
             busId = obj.setting.getBusId();
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
             timestep = obj.setting.controlCycleInSeconds();
-
+            
+            %{
+            2022-01-17: Yves and Arnault advise to first sum the delays in seconds, then to get the number of iterations of delays.
+            However, with the current code architecture it results in incorrect actions from the controller. Indeed, there are 2
+            different queues in charge of the delays: the telecommunication
+            queue to transfer the signal from the controller to the zone and the actuation queue in the zone.
+            An example: actuation battery delay = 1sec; telecom delay = 3sec. Then it results in a 2-iteration delay currently:
+            1 in the telecommunication, 1 in the actuation on the zone.
+            latencyCurt = ceil( (obj.setting.getDelayCurtInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep);
+            latencyBatt = ceil( (obj.setting.getDelayBattInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep);
+            %}
             delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
             delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
             delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
+            latencyCurt = delayCurt + delayTelecom;
+            latencyBatt = delayBatt + delayTelecom;
+            
             % TODO: add to the json file the information about hte horizon
             horizonInSeconds = 50;
             horizonInIterations = ceil( horizonInSeconds / timestep);
@@ -366,7 +379,7 @@ classdef Zone < handle
 
             [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
             model = ApproximateLinearModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
-                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
+                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, latencyCurt, latencyBatt);
 
             operatorStateExtended = model.getOperatorStateExtended;
             operatorControlExtended = model.getOperatorControlExtended;
@@ -379,7 +392,7 @@ classdef Zone < handle
             maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
             flowLimit = obj.setting.getBranchFlowLimit();
             
-            obj.controller = ApproximateLinearMPC(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
+            obj.controller = ApproximateLinearMPC(latencyCurt, latencyBatt, horizonInIterations, ...
                 operatorStateExtended, operatorControlExtended, operatorDisturbancePowerGenerationExtended, operatorDisturbancePowerTransitExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);

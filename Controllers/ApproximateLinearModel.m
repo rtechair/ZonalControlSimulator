@@ -28,8 +28,8 @@ classdef ApproximateLinearModel < handle
 
             batteryCoef
             timestep
-            delayCurt
-            delayBatt
+            latencyCurt
+            latencyBatt
 
             operatorState
             operatorControlCurtailment
@@ -47,7 +47,7 @@ classdef ApproximateLinearModel < handle
             % look at buildMathemathicalModel
             function obj = ApproximateLinearModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                     branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep,...
-                    delayCurt, delayBatt)
+                    latencyCurt, latencyBatt)
                 arguments
                     numberOfBuses (1,1) {mustBeInteger, mustBePositive}
                     numberOfBranches (1,1) {mustBeInteger, mustBePositive}
@@ -58,8 +58,8 @@ classdef ApproximateLinearModel < handle
                     branchPerBusOfBattPTDF
                     batteryCoef
                     timestep    (1,1) {mustBeInteger, mustBePositive}
-                    delayCurt
-                    delayBatt
+                    latencyCurt
+                    latencyBatt
                 end
                 obj.numberOfBuses = numberOfBuses;
                 obj.numberOfBranches = numberOfBranches;
@@ -72,8 +72,8 @@ classdef ApproximateLinearModel < handle
 
                 obj.batteryCoef = batteryCoef;
                 obj.timestep = timestep;
-                obj.delayCurt = delayCurt;
-                obj.delayBatt = delayBatt;
+                obj.latencyCurt = latencyCurt;
+                obj.latencyBatt = latencyBatt;
 
                 obj.setOperatorState();
                 obj.setOperatorControlCurtailment();
@@ -111,16 +111,16 @@ classdef ApproximateLinearModel < handle
                 numberOfRows = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
                 obj.operatorControlCurtailment = zeros(numberOfRows, obj.numberOfGen);
 
-                %F(k+1) -= diag(branchPerBusOfGenPTDF)*DeltaPC(k-delayCurt), i.e matrix Mc in the paper
+                %F(k+1) -= diag(branchPerBusOfGenPTDF)*DeltaPC(k-latencyCurt), i.e matrix Mc in the paper
                 rowRange = 1:obj.numberOfBranches;
                 obj.operatorControlCurtailment(rowRange, :) = - obj.branchPerBusOfGenPTDF;
 
-                % PC(k+1) += DeltaPC(k-delayCurt)
+                % PC(k+1) += DeltaPC(k-latencyCurt)
                 firstRow = obj.numberOfBranches + 1;
                 rowRange = firstRow : firstRow+obj.numberOfGen-1;
                 obj.operatorControlCurtailment(rowRange, :) = eye(obj.numberOfGen);
 
-                % PG(k+1) -= DeltaPC(k-delayCurt)
+                % PG(k+1) -= DeltaPC(k-latencyCurt)
                 firstRow = obj.numberOfBranches + obj.numberOfGen + 2*obj.numberOfBatt + 1;
                 obj.operatorControlCurtailment( firstRow:end, :) = - eye(obj.numberOfGen);
             end
@@ -129,16 +129,16 @@ classdef ApproximateLinearModel < handle
                 numberOfRows = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
                 obj.operatorControlBattery = zeros(numberOfRows, obj.numberOfBatt);
 
-                % F(k+1) += diag(branchPerBusOfBattPTDF)*DeltaPb(k-delayBatt), i.e. matrix Mb in the paper
+                % F(k+1) += diag(branchPerBusOfBattPTDF)*DeltaPb(k-latencyBatt), i.e. matrix Mb in the paper
                 rowRange = 1:obj.numberOfBranches;
                 obj.operatorControlBattery(rowRange, :) = obj.branchPerBusOfBattPTDF;
                 
-                % PB(k+1) += DeltaPB(k-delayBatt)
+                % PB(k+1) += DeltaPB(k-latencyBatt)
                 firstRow = obj.numberOfBranches + obj.numberOfGen + 1;
                 rowRange = firstRow : firstRow + obj.numberOfBatt - 1;
                 obj.operatorControlBattery(rowRange, :) = eye(obj.numberOfBatt);
                 
-                % EB(k+1) -= T*diag(cb)*DeltaPB(k-delayBatt), i.e. matrix -Ab in the paper
+                % EB(k+1) -= T*diag(cb)*DeltaPB(k-latencyBatt), i.e. matrix -Ab in the paper
                 firstRow = obj.numberOfBranches + obj.numberOfGen + obj.numberOfBatt + 1;
                 rowRange = firstRow : firstRow + obj.numberOfBatt - 1;
                 obj.operatorControlBattery(rowRange, :) = - obj.timestep * diag(obj.batteryCoef);
@@ -163,16 +163,16 @@ classdef ApproximateLinearModel < handle
             end
 
             function setOperatorExtendedState(obj)
-                block1 = blkdiag([obj.operatorState, obj.operatorControlCurtailment], eye(obj.numberOfGen * (obj.delayCurt - 1) ) );
+                block1 = blkdiag([obj.operatorState, obj.operatorControlCurtailment], eye(obj.numberOfGen * (obj.latencyCurt - 1) ) );
                 numberOfRows = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
                 extendedBlock1 = [block1 ;
-                                               zeros(obj.numberOfGen, numberOfRows + obj.numberOfGen * obj.delayCurt)];
+                                               zeros(obj.numberOfGen, numberOfRows + obj.numberOfGen * obj.latencyCurt)];
                 newCol = [ obj.operatorControlBattery;
-                                 zeros(obj.numberOfGen * obj.delayCurt, obj.numberOfBatt)];
+                                 zeros(obj.numberOfGen * obj.latencyCurt, obj.numberOfBatt)];
                 newFirstBlock = [extendedBlock1 newCol];
-                combineBlock = blkdiag(newFirstBlock, eye(obj.numberOfBatt * (obj.delayBatt - 1)) );
+                combineBlock = blkdiag(newFirstBlock, eye(obj.numberOfBatt * (obj.latencyBatt - 1)) );
                 obj.operatorStateExtended = [combineBlock;
-                                                                zeros(obj.numberOfBatt, numberOfRows + obj.numberOfGen * obj.delayCurt + obj.numberOfBatt * obj.delayBatt)];
+                                                                zeros(obj.numberOfBatt, numberOfRows + obj.numberOfGen * obj.latencyCurt + obj.numberOfBatt * obj.latencyBatt)];
             end
 
             function setOperatorExtendedControl(obj)
@@ -184,23 +184,23 @@ classdef ApproximateLinearModel < handle
             function value = getOperatorExtendedCtrlCurt(obj)
                 numberOfCol = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
                 block1 = zeros(numberOfCol, obj.numberOfGen);
-                block2 = zeros(obj.numberOfGen * (obj.delayCurt - 1), obj.numberOfGen);
+                block2 = zeros(obj.numberOfGen * (obj.latencyCurt - 1), obj.numberOfGen);
                 block3 = eye(obj.numberOfGen);
-                block4 = zeros(obj.numberOfBatt * obj.delayBatt, obj.numberOfGen);
+                block4 = zeros(obj.numberOfBatt * obj.latencyBatt, obj.numberOfGen);
                 value = [block1; block2; block3; block4];
             end
 
             function value = getOperatorExtendedCtrlBatt(obj)
                 numberOfCol = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt;
                 block1 = zeros(numberOfCol, obj.numberOfBatt);
-                block2 = zeros(obj.numberOfGen * obj.delayCurt, obj.numberOfBatt);
-                block3 = zeros(obj.numberOfBatt * (obj.delayBatt - 1), obj.numberOfBatt);
+                block2 = zeros(obj.numberOfGen * obj.latencyCurt, obj.numberOfBatt);
+                block3 = zeros(obj.numberOfBatt * (obj.latencyBatt - 1), obj.numberOfBatt);
                 block4 = eye(obj.numberOfBatt);
                 value = [block1; block2; block3; block4];
             end
 
             function setOperatorExtendedDisturbance(obj)
-                tmpNumberOfRows = obj.numberOfBatt * obj.delayBatt + obj.numberOfGen * obj.delayCurt;
+                tmpNumberOfRows = obj.numberOfBatt * obj.latencyBatt + obj.numberOfGen * obj.latencyCurt;
                 obj.operatorDisturbancePowerGenerationExtended = [obj.operatorDisturbancePowerGeneration;
                                                                                                        zeros(tmpNumberOfRows, obj.numberOfGen)];
                 obj.operatorDisturbancePowerTransitExtended = [obj.operatorDisturbancePowerTransit;

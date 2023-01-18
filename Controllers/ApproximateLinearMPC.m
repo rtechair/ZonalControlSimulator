@@ -23,8 +23,8 @@ classdef ApproximateLinearMPC < Controller
         numberOfBranches
         numberOfGen
         numberOfBatt
-        delayCurt
-        delayBatt
+        latencyCurt
+        latencyBatt
         horizon
 
         maxPowerGeneration
@@ -83,12 +83,12 @@ classdef ApproximateLinearMPC < Controller
     end
     
     methods
-        function obj = ApproximateLinearMPC(delayCurtailment, delayBattery, delayTelecom, ...
+        function obj = ApproximateLinearMPC(latencyCurtailment, latencyBattery, ...
                 horizonInIterations, ...
                 operatorStateExtended, operatorControlExtended, operatorDisturbancePowerGenerationExtended, operatorDisturbancePowerTransitExtended, ...
                 numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit)
-            
+            % latency = actuation delay + telecom delay
             obj.operatorStateExtended = operatorStateExtended;
             obj.operatorControlExtended = operatorControlExtended;
             obj.operatorDisturbancePowerGenerationExtended = operatorDisturbancePowerGenerationExtended;
@@ -99,8 +99,8 @@ classdef ApproximateLinearMPC < Controller
             obj.numberOfGen = numberOfGen;
             obj.numberOfBatt = numberOfBatt;
             
-            obj.delayCurt = delayCurtailment + delayTelecom;
-            obj.delayBatt = delayBattery + delayTelecom;
+            obj.latencyCurt = latencyCurtailment;
+            obj.latencyBatt = latencyBattery;
             obj.horizon = horizonInIterations;
 
             obj.maxPowerGeneration = maxPowerGeneration;
@@ -183,12 +183,12 @@ classdef ApproximateLinearMPC < Controller
             % same problem: same zone state and same PAST controls. As a
             % consequence the approx. linear MPC needs to be informed of
             % MLDMPC's past controls.
-            remainingCurtControls = obj.ucK_delay(:, 1: obj.delayCurt-1);
+            remainingCurtControls = obj.ucK_delay(:, 1: obj.latencyCurt-1);
             obj.ucK_delay = [remainingCurtControls curtControl];
         end
 
         function replaceLastPastBattControl(obj, battControl)
-            remainingBattControls = obj.ubK_delay(:, 1: obj.delayBatt-1);
+            remainingBattControls = obj.ubK_delay(:, 1: obj.latencyBatt-1);
             obj.ubK_delay = [remainingBattControls battControl];
         end
 
@@ -197,16 +197,16 @@ classdef ApproximateLinearMPC < Controller
     methods (Access = protected)
 
         function initializePastCurtControls(obj)
-            obj.ucK_delay = zeros(obj.numberOfGen, obj.delayCurt);
+            obj.ucK_delay = zeros(obj.numberOfGen, obj.latencyCurt);
         end
         
         function initializePastBattControls(obj)
-            obj.ubK_delay = zeros(obj.numberOfBatt, obj.delayBatt);
+            obj.ubK_delay = zeros(obj.numberOfBatt, obj.latencyBatt);
         end
 
         function setYalmipVar(obj)
             yalmip('clear');
-            numberOfExtendedStateVar = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt + obj.numberOfGen*obj.delayCurt + obj.numberOfBatt * obj.delayBatt;
+            numberOfExtendedStateVar = obj.numberOfBranches + 2*obj.numberOfGen + 2*obj.numberOfBatt + obj.numberOfGen*obj.latencyCurt + obj.numberOfBatt * obj.latencyBatt;
             obj.x = sdpvar(numberOfExtendedStateVar, obj.horizon + 1, 'full');
             obj.u = sdpvar(obj.numberOfGen + obj.numberOfBatt, obj.horizon, 'full');
             obj.dk_in = sdpvar(obj.numberOfGen, obj.horizon, 'full');
@@ -239,7 +239,7 @@ classdef ApproximateLinearMPC < Controller
         end
 
         function setConstraintNoOverflowAfterDelayCurt(obj)
-            noOverflowAfterDelayCurt = obj.epsilon(:, obj.delayCurt+1 : end) == 0;
+            noOverflowAfterDelayCurt = obj.epsilon(:, obj.latencyCurt+1 : end) == 0;
             obj.constraints = [obj.constraints, noOverflowAfterDelayCurt];
         end
 
@@ -435,7 +435,7 @@ classdef ApproximateLinearMPC < Controller
         end
 
         function setDelta_PC_est_over_horizon(obj)
-            numberOfStepsAfterDelay = obj.horizon - obj.delayCurt;
+            numberOfStepsAfterDelay = obj.horizon - obj.latencyCurt;
             noCurtControlAfter = zeros(obj.numberOfGen, numberOfStepsAfterDelay);
             obj.Delta_PC_est = [obj.ucK_delay, noCurtControlAfter];
         end
@@ -507,12 +507,12 @@ classdef ApproximateLinearMPC < Controller
         end
         
         function updatePastCurtControls(obj)
-            leftCurtControls = obj.ucK_delay(:,2 :obj.delayCurt);
+            leftCurtControls = obj.ucK_delay(:,2 :obj.latencyCurt);
             obj.ucK_delay = [leftCurtControls obj.ucK_new];
         end
         
         function updatePastBattControls(obj)
-            leftBattControls = obj.ubK_delay(:, 2: obj.delayBatt);
+            leftBattControls = obj.ubK_delay(:, 2: obj.latencyBatt);
             obj.ubK_delay = [leftBattControls obj.ubK_new];
         end
     
