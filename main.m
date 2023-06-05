@@ -37,7 +37,8 @@ transmission.runSimulation();
 isTopologyShown = false;
 isModelResultShown = false;
 isSimulationResultShown = true;
-isSimulationResultSaved = false;
+isSimulationResultSaved = false; % in case of 1 zone
+isMultipleSimulationResultsSaved = false; % in case of at least 2 zones simulated
 
 if isTopologyShown
     transmission.plotZonesTopology();
@@ -54,4 +55,24 @@ end
 if isSimulationResultSaved
     simulationResult = transmission.zones{1,1}.simulationResult;
     save("result.mat", "simulationResult");
+end
+
+if isMultipleSimulationResultsSaved
+    a = 'result_';
+    z1 = 'VGsmall';
+    z2 = 'VTV';
+    
+    %situation = '_Approx';
+    situation = '_FakeApprox';
+    %situation = '_MIP';
+    %situation = '_NoController';
+    b = '.mat';
+
+    nameFileZ1 = string([a z1 situation b]);
+    nameFileZ2 = string([a z2 situation b]);
+
+    simulationResult = transmission.zones{1,1}.simulationResult;
+    save(nameFileZ1,"simulationResult");
+    simulationResult = transmission.zones{2,1}.simulationResult;
+    save(nameFileZ2,"simulationResult");
 end
