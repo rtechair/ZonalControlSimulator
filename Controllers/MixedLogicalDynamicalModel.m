@@ -36,8 +36,8 @@ classdef MixedLogicalDynamicalModel < handle
             operatorDisturbancePowerAvailable
             operatorDisturbancePowerTransit
 
-            delayCurt
-            delayBatt
+            latencyCurt
+            latencyBatt
 
             operatorStateExtended
             operatorControlExtended
@@ -48,7 +48,7 @@ classdef MixedLogicalDynamicalModel < handle
     methods
         function obj = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                     branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep,...
-                    delayCurt, delayBatt)
+                    latencyCurt, latencyBatt)
             arguments
                     numberOfBuses (1,1) {mustBeInteger, mustBePositive}
                     numberOfBranches (1,1) {mustBeInteger, mustBePositive}
@@ -59,8 +59,8 @@ classdef MixedLogicalDynamicalModel < handle
                     branchPerBusOfBattPTDF
                     batteryCoef
                     timestep    (1,1) {mustBeInteger, mustBePositive}
-                    delayCurt
-                    delayBatt
+                    latencyCurt
+                    latencyBatt
             end
             obj.numberOfBuses = numberOfBuses;
                 obj.numberOfBranches = numberOfBranches;
@@ -81,8 +81,8 @@ classdef MixedLogicalDynamicalModel < handle
                 obj.setOperatorDisturbancePowerTransit();
                 obj.setOperatorDisturbancePowerAvailable();
 
-                obj.delayCurt = delayCurt;
-                obj.delayBatt = delayBatt;
+                obj.latencyCurt = latencyCurt;
+                obj.latencyBatt = latencyBatt;
                 obj.setOperatorStateExtended();
                 obj.setOperatorControlExtended();
                 obj.setOperatorNextPowerGenerationExtended();
@@ -140,11 +140,11 @@ classdef MixedLogicalDynamicalModel < handle
         function setOperatorStateExtended(obj)
             %{
             numberOfRows = obj.numberOfBranches + 3*obj.numberOfGen + 2*obj.numberOfBatt;
-            obj.operatorStateExtended = [obj.operatorState, obj.operatorControlCurtailment, zeros(numberOfRows, obj.numberOfGen * (obj.delayCurt -1) );
-                zeros(obj.numberOfGen * (obj.delayCurt - 1), numberOfRows + obj.numberOfGen), eye(obj.numberOfGen * (obj.delayCurt - 1)), zeros(obj.numberOfGen * (obj.delayCurt - 1), obj.numberOfBatt), zeros(obj.numberOfGen * (obj.delayCurt - 1), obj.numberOfBatt * (obj.numberOfBatt - 1));
-                zeros(obj.numberOfGen, numberOfRows + obj.numberOfGen*obj.delayCurt + obj.numberOfBatt*obj.delayBatt);
-                zeros(obj.numberOfBatt*(obj.delayBatt - 1), numberOfRows + obj.numberOfGen*obj.delayCurt + obj.numberOfBatt), eye(obj.numberOfBatt*(obj.delayBatt - 1));
-                zeros(obj.numberOfBatt, numberOfRows + obj.numberOfGen * obj.delayCurt + obj.numberOfBatt * obj.delayBatt)
+            obj.operatorStateExtended = [obj.operatorState, obj.operatorControlCurtailment, zeros(numberOfRows, obj.numberOfGen * (obj.latencyCurt -1) );
+                zeros(obj.numberOfGen * (obj.latencyCurt - 1), numberOfRows + obj.numberOfGen), eye(obj.numberOfGen * (obj.latencyCurt - 1)), zeros(obj.numberOfGen * (obj.latencyCurt - 1), obj.numberOfBatt), zeros(obj.numberOfGen * (obj.latencyCurt - 1), obj.numberOfBatt * (obj.numberOfBatt - 1));
+                zeros(obj.numberOfGen, numberOfRows + obj.numberOfGen*obj.latencyCurt + obj.numberOfBatt*obj.latencyBatt);
+                zeros(obj.numberOfBatt*(obj.latencyBatt - 1), numberOfRows + obj.numberOfGen*obj.latencyCurt + obj.numberOfBatt), eye(obj.numberOfBatt*(obj.latencyBatt - 1));
+                zeros(obj.numberOfBatt, numberOfRows + obj.numberOfGen * obj.latencyCurt + obj.numberOfBatt * obj.latencyBatt)
             ];
             %}
             A_nl = obj.operatorState;
@@ -153,8 +153,8 @@ classdef MixedLogicalDynamicalModel < handle
             n = obj.numberOfBranches + 3*obj.numberOfGen + 2*obj.numberOfBatt;
             c = obj.numberOfGen;
             b = obj.numberOfBatt;
-            tau_c = obj.delayCurt;
-            tau_b = obj.delayBatt;
+            tau_c = obj.latencyCurt;
+            tau_b = obj.latencyBatt;
             
             obj.operatorStateExtended = [   A_nl , Bc_nl           , zeros(n,c*(tau_c-1))  , Bb_nl , zeros(n,b*(tau_b-1));
             zeros(c*(tau_c-1),n+c)  , eye(c*(tau_c-1))      , zeros(c*(tau_c-1),b), zeros(c*(tau_c-1),b*(tau_b-1))
@@ -167,8 +167,8 @@ classdef MixedLogicalDynamicalModel < handle
             n = obj.numberOfBranches + 3*obj.numberOfGen + 2*obj.numberOfBatt;
             c = obj.numberOfGen;
             b = obj.numberOfBatt;
-            tau_c = obj.delayCurt;
-            tau_b = obj.delayBatt;
+            tau_c = obj.latencyCurt;
+            tau_b = obj.latencyBatt;
             obj.operatorControlExtended = [  zeros(n+c*(tau_c-1), c+b);
                 eye(c,c), zeros(c,b);
                 zeros(b*(tau_b-1), c+b);
@@ -178,8 +178,8 @@ classdef MixedLogicalDynamicalModel < handle
         function setOperatorNextPowerGenerationExtended(obj)
             c = obj.numberOfGen;
             b = obj.numberOfBatt;
-            tau_c = obj.delayCurt;
-            tau_b = obj.delayBatt;
+            tau_c = obj.latencyCurt;
+            tau_b = obj.latencyBatt;
             obj.operatorNextPowerGenerationExtended = [  obj.operatorNextPowerGeneration ;
                     zeros(c*tau_c+b*tau_b,c)];
         end
@@ -187,8 +187,8 @@ classdef MixedLogicalDynamicalModel < handle
         function setOperatorDisturbanceExtended(obj)
             c = obj.numberOfGen;
             b = obj.numberOfBatt;
-            tau_c = obj.delayCurt;
-            tau_b = obj.delayBatt;
+            tau_c = obj.latencyCurt;
+            tau_b = obj.latencyBatt;
             h = obj.numberOfBuses;
             obj.operatorDisturbanceExtended = [obj.operatorDisturbancePowerAvailable, obj.operatorDisturbancePowerTransit;
                                                                        zeros(b*tau_b+c*tau_c,c+h)];
