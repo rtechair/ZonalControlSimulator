@@ -7,9 +7,11 @@
         "StartPossibilityForGeneratorInSeconds":
         {
             "1": [975, 925, 875],
-            "2": [750, 550, 600]
+            "2": [750, 550, 600],
+            "3": [550, 875, 750],
+            "4": [550, 750, 875]
         },
-        "startSelected": 2
+        "startSelected": 3
     },
     "batteryConstantPowerReduction": 0.001,
     "controlCycleInSeconds": 15,
