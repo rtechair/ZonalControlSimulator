@@ -13,7 +13,7 @@ The controllers used in the simulation are now described. The order is based on 
 
 0. Controller: Abstract class
 
-1. Limiter: for each zone to simulate, e.g. a zone named *zone1*, a JSON file has to be located in ZonalControlSimulator/Settings/Limiter*zone1*.json. This JSON file corresponds to the setting of this controller. The parameters of the JSON file that can be changed are, they are expressed in percentage, i.e. 0.1 means 10%:
+1. **Limiter**: for each zone to simulate, e.g. a zone named *zone1*, a JSON file has to be located in ZonalControlSimulator/Settings/Limiter*zone1*.json. This JSON file corresponds to the setting of this controller. The parameters of the JSON file that can be changed are, they are expressed in percentage, i.e. 0.1 means 10%:
     - <ins>IncreaseCurtPercentEchelon</ins>: curtailment control value to **increase** the curtailment state of all generators in the zone
     - <ins>DecreaseCurtPercentEchelon</ins>: curtailment control value to **decrease** the curtailment state of all generators in the zone
     - <ins>UpperThresholdPercent</ins>: if at least one line of the zone has its power flow **over** the **upper** threshold, then the controller takes a control to **increase** the curtailment of all generators in the zone. The control is equal to the value of <ins>IncreaseCurtPercentEchelon</ins>
@@ -21,24 +21,21 @@ The controllers used in the simulation are now described. The order is based on 
     
     The situation of no controller in the zone can be represented by providing specific settings to the parameters.
 
-2. ApproximateLinearMPC: based on [[1]](#1),[[2]](#2), [[3]](#3). The mathematical model used by this controller is built by ApproximateLinearModel.m.
+2. **ApproximateLinearMPC**: based on [[1]](#1),[[2]](#2), [[3]](#3). The mathematical model used by this controller is built by ApproximateLinearModel.m.
 
-3. MixedLogicalDynamicalMPC: based on [[1]](#1), [[6]](#6), [[7]](#7). The mathematical model used by this controller is built by MixedLogicalDynamicalModel.m.
+3. **MixedLogicalDynamicalMPC**: based on [[1]](#1), [[6]](#6), [[7]](#7). The mathematical model used by this controller is built by MixedLogicalDynamicalModel.m.
 
-4. MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal: based on [[7]](#7)
+4. **MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal**: based on [[7]](#7)
 
-5. ApproximateLinearMPC_PAunknown_DeltaPCreal: based on [[7]](#7), but not presented in the paper.
+5. **ApproximateLinearMPC_PAunknown_DeltaPCreal**: based on [[7]](#7), but not presented in the paper.
 
-6. FakeApproximateLinearMPC: at each iteration, both ApproximateLinearMPC and MixedLogicalDynamicalMPC are running, the controls applied to the zone are those of MixedLogicalDynamicalMPC and the controls saved in the workspace are those of the ApproximateLinearMPC. The objective is to compare the behavior of ApproximateLinearMPC with MixedLogicalDynamicalMPC based on the same state at each iteration.
+6. **FakeApproximateLinearMPC**: at each iteration, both ApproximateLinearMPC and MixedLogicalDynamicalMPC are running, the controls applied to the zone are those of MixedLogicalDynamicalMPC and the controls saved in the workspace are those of the ApproximateLinearMPC. The objective is to compare the behavior of ApproximateLinearMPC with MixedLogicalDynamicalMPC based on the same state at each iteration.
 
-7. FakeMixedLogicalDynamicalMPC: similar to FakeApproximateLinearMPC, but this time, controls from ApproximateLinearMPC are applied and controls from MixedLogicalDynamicalMPC are saved
+7. **ApproximateLinearMPC_iterative**: obsolete
 
+8. **MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA**: unused and not presented
 
-8. ApproximateLinearMPC_iterative: obsolete
-
-9. MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA: unused and not presented
-
-10. MpcWithUncertainty: deprecated
+9. **MpcWithUncertainty**: deprecated
 
 ## References
 <a id="1">[1]<a>
