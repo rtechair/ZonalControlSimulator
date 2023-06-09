@@ -263,6 +263,8 @@ classdef Zone < handle
             delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
             delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
             delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
+            latencyCurt = delayCurt + delayTelecom;
+            latencyBatt = delayBatt + delayTelecom;
             % TODO: add to the json file the information about hte horizon
             horizonInSeconds = 50;
             horizonInIterations = ceil( horizonInSeconds / timestep);
@@ -375,6 +377,12 @@ classdef Zone < handle
             delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
             delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
             delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
+            
+            latencyCurt = delayCurt + delayTelecom;
+            latencyBatt = delayBatt + delayTelecom;
+            % latencyCurt = ceil( (obj.setting.getDelayCurtInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep);
+            % latencyBatt = ceil( (obj.setting.getDelayBattInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep);
+
             % TODO: add to the json file the information about hte horizon
             horizonInSeconds = 50;
             horizonInIterations = ceil( horizonInSeconds / timestep);
@@ -388,7 +396,7 @@ classdef Zone < handle
 
             [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
             model = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
-                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
+                    branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, latencyCurt, latencyBatt);
 
             operatorStateExtended = model.getOperatorStateExtended();
             operatorControlExtended = model.getOperatorControlExtended();
