@@ -81,7 +81,6 @@ classdef Zone < handle
             isApproximateLinearMPC_PAunknown_DeltaPCreal = false;
             isApproximateLinearMPC_iterative = false;
             isFakeApproximateLinearMPC = false;
-            isFakeMLDMPC = false;
             isFakeApproximateLinearMPC2 = false;
 
             if isControllerApproximateLinearModel
@@ -103,8 +102,6 @@ classdef Zone < handle
                 obj.setApproximateLinearMPC_iterative();
             elseif isFakeApproximateLinearMPC
                 obj.setFakeApproximateLinearMPC();
-            elseif isFakeMLDMPC
-                obj.setFakeMLDMPC();
             elseif isFakeApproximateLinearMPC2
                 obj.setFakeApproximateLinearMPC2();
             else
@@ -284,35 +281,6 @@ classdef Zone < handle
             obj.controller = FakeApproximateLinearMPC(basecaseFilename, busId, numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 batteryCoef, timestep, delayCurt, delayBatt, delayTelecom,...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, horizonInIterations, obj.name);
-        end
-
-        function setFakeMLDMPC(obj)
-            basecaseFilename = 'case6468rte_zone_VG_VTV_BLA';
-            busId = obj.setting.getBusId();
-            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
-            timestep = obj.setting.controlCycleInSeconds();
-
-            delayCurt = ceil(obj.setting.getDelayCurtInSeconds() / timestep);
-            delayBatt = ceil(obj.setting.getDelayBattInSeconds() / timestep);
-            delayTelecom = ceil(obj.setting.getDelayController2ZoneInSeconds() / timestep);
-            % TODO: add to the json file the information about hte horizon
-            horizonInSeconds = 50;
-            horizonInIterations = ceil( horizonInSeconds / timestep);
-
-            numberOfBuses = obj.topology.getNumberOfBuses();
-            numberOfBranches = obj.topology.getNumberOfBranches();
-            numberOfGen = obj.topology.getNumberOfGenOn();
-            numberOfBatt = obj.topology.getNumberOfBattOn();
-            
-            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
-            minPowerBattery = obj.topology.getMinPowerBattery();
-            maxPowerBattery = obj.topology.getMaxPowerBattery();
-            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
-            flowLimit = obj.setting.getBranchFlowLimit();
-
-            obj.controller = FakeMixedLogicalDynamicalMPC(basecaseFilename, busId, numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
-                batteryCoef, timestep, delayCurt, delayBatt, delayTelecom,...
-                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, horizonInIterations);
         end
 
         function setFakeApproximateLinearMPC2(obj)
