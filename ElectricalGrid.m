@@ -38,6 +38,8 @@ classdef ElectricalGrid < handle
         matpowerOption % option for matpower 'runpf' function 
         
         resultPowerFlow
+
+        networkPTDF
     end
     
     methods
@@ -74,6 +76,32 @@ classdef ElectricalGrid < handle
         end
         
         %% OTHER
+        function setNetworkPTDF(obj)
+            obj.networkPTDF = makePTDF(obj.internalMatpowercase);
+        end
+
+        function ptdf = getPTDFGen(obj, branchIdx, genIdx)
+            internalBranchIdx = branchIdx;
+            genBusId = obj.getBuses(genIdx);
+            internalGenBusId = obj.mapBus_id_e2i(genBusId);
+            ptdf = obj.networkPTDF(internalBranchIdx, internalGenBusId);
+        end
+        
+        function ptdf = getPTDFBatt(obj, branchIdx, battIdx)
+            ptdf = obj.getPTDFGen(branchIdx, battIdx);
+        end
+
+        function ptdf = getPTDFBus(obj, branchIdx, busId)
+            internalBranchIdx = branchIdx;
+            internalBusId = obj.mapBus_id_e2i(busId);
+            ptdf = obj.networkPTDF(internalBranchIdx, internalBusId);
+        end
+
+        function ptdf = getPTDFInternal(internalBranchIdx, internalBusId)
+            % Use if you know already all internal informations about your branches and buses
+            ptdf = obj.networkPTDF(internalBranchIdx, internalBusId);
+        end
+
         function [branchZoneIdx, branchBorderIdx] = getInnerAndBorderBranchIdx(obj, busId)
             % Given a zone with its buses id, return the branch indices
             % from the matpowercase of: the branches within the zone (both end buses in zone)
