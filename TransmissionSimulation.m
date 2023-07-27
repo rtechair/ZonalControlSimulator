@@ -45,6 +45,7 @@ classdef TransmissionSimulation < handle
         function setGrid(obj)
             basecase = obj.simulationSetting.getBasecase();
             obj.grid = ElectricalGrid(basecase);
+            obj.grid.setNetworkPTDF();
         end
         
         function setZones(obj)

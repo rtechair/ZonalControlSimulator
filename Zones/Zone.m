@@ -91,7 +91,7 @@ classdef Zone < handle
                 obj.setControllerLimiterSetting();
                 obj.setControllerLimiter();
             elseif isControllerMixedLogicalModel
-                obj.setMixedLogicalDynamicalMPC();
+                obj.setMixedLogicalDynamicalMPC(electricalGrid);
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal
                 obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal();
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA
@@ -368,7 +368,7 @@ classdef Zone < handle
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
         end
         
-        function setMixedLogicalDynamicalMPC(obj)
+        function setMixedLogicalDynamicalMPC(obj, electricalGrid)
             basecaseName = 'case6468rte_zone_VG_VTV_BLA';
             busId = obj.setting.getBusId();
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
@@ -391,10 +391,17 @@ classdef Zone < handle
             numberOfBranches = obj.topology.getNumberOfBranches();
             numberOfGen = obj.topology.getNumberOfGenOn();
             numberOfBatt = obj.topology.getNumberOfBattOn();
+            
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            branchPerBusPTDF = ptdfConstruction.getPTDFBus();
+            branchPerBusOfGenPTDF = ptdfConstruction.getPTDFGen();
+            branchPerBusOfBattPTDF = ptdfConstruction.getPTDFBatt();
 
-            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
-
-            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
             model = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                     branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, latencyCurt, latencyBatt);
 
