@@ -41,7 +41,7 @@ classdef ZoneTopology < handle
         genOnIdx % offline generators within the zone are not considered
         battOnIdx % offline batteries withing the zone are not considered
         
-        busBorderId
+        busBorderId % Border buses are buses OUTSIDE the zone, connecting with the zone
         branchBorderIdx
         
         busWithGenOn
@@ -51,6 +51,7 @@ classdef ZoneTopology < handle
         toBus
         borderFromBus
         borderToBus
+        frontierBus % Frontier buses are buses IN the zone, connecting with the rest of the network
         
         maxPowerGeneration
         maxPowerBattery % if PowerBattery > 0, it consumes the battery
@@ -69,7 +70,7 @@ classdef ZoneTopology < handle
             arguments
                 name
                 zoneBusId (:,1) {mustBeInteger}
-                electricalGrid
+                electricalGrid (1,1) ElectricalGrid
             end
             obj.name = name;
             obj.busId = zoneBusId;
@@ -79,6 +80,7 @@ classdef ZoneTopology < handle
             obj.setBorderEndBus(electricalGrid);
             
             obj.setBusBorderId(electricalGrid);
+            obj.setFrontierBus();
             
             obj.setGenOnIdx(electricalGrid);
             obj.setBattOnIdx(electricalGrid);
@@ -98,6 +100,10 @@ classdef ZoneTopology < handle
         %% GETTER
         function value = getBusId(obj)
             value = obj.busId;
+        end
+
+        function value = getFrontierBusId(obj)
+            value = obj.frontierBus;
         end
         
         function value = getBranchIdx(obj)
@@ -237,6 +243,10 @@ classdef ZoneTopology < handle
         
         function setBusBorderId(obj, electricalGrid)
             obj.busBorderId = electricalGrid.getBusBorderId(obj.busId, obj.branchBorderIdx);
+        end
+
+        function setFrontierBus(obj)
+            obj.frontierBus = intersect(obj.busId, union(obj.borderFromBus, obj.borderToBus));
         end
         
         function setGenOnIdx(obj, electricalGrid)
