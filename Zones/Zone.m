@@ -75,16 +75,16 @@ classdef Zone < handle
             isControllerApproximateLinearModel = false;
             isControllerMpcWithUncertainty = false;
             isControllerLimiter = false;
-            isControllerMixedLogicalModel = true;
+            isControllerMixedLogicalModel = false;
             isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal = false;
-            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = false;
+            isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA = true;
             isApproximateLinearMPC_PAunknown_DeltaPCreal = false;
             isApproximateLinearMPC_iterative = false;
             isFakeApproximateLinearMPC = false;
             isFakeApproximateLinearMPC2 = false;
 
             if isControllerApproximateLinearModel
-                obj.setApproximateLinearMPC();
+                obj.setApproximateLinearMPC(electricalGrid);
             elseif isControllerMpcWithUncertainty
                 obj.setMpcWithUnceritainty();
             elseif isControllerLimiter
@@ -93,9 +93,9 @@ classdef Zone < handle
             elseif isControllerMixedLogicalModel
                 obj.setMixedLogicalDynamicalMPC(electricalGrid);
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal
-                obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal();
+                obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal(electricalGrid);
             elseif isMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA
-                obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA();
+                obj.setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA(electricalGrid);
             elseif isApproximateLinearMPC_PAunknown_DeltaPCreal
                 obj.setApproximateLinearMPC_PAunknown_DeltaPCreal();
             elseif isApproximateLinearMPC_iterative
@@ -314,7 +314,7 @@ classdef Zone < handle
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit, horizonInIterations, obj.name);
         end
 
-        function setApproximateLinearMPC(obj)
+        function setApproximateLinearMPC(obj, electricalGrid)
             basecaseName = 'case6468rte_zone_VG_VTV_BLA';
             busId = obj.setting.getBusId();
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
@@ -345,9 +345,16 @@ classdef Zone < handle
             numberOfGen = obj.topology.getNumberOfGenOn();
             numberOfBatt = obj.topology.getNumberOfBattOn();
 
-            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            branchPerBusPTDF = ptdfConstruction.getPTDFBus();
+            branchPerBusOfGenPTDF = ptdfConstruction.getPTDFGen();
+            branchPerBusOfBattPTDF = ptdfConstruction.getPTDFBatt();
 
-            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
             model = ApproximateLinearModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                     branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, latencyCurt, latencyBatt);
 
@@ -422,7 +429,7 @@ classdef Zone < handle
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
         end
 
-        function setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal(obj)
+        function setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal(obj, electricalGrid)
             basecaseName = 'case6468rte_zone_VG_VTV_BLA';
             busId = obj.setting.getBusId();
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
@@ -440,9 +447,16 @@ classdef Zone < handle
             numberOfGen = obj.topology.getNumberOfGenOn();
             numberOfBatt = obj.topology.getNumberOfBattOn();
 
-            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            branchPerBusPTDF = ptdfConstruction.getPTDFBus();
+            branchPerBusOfGenPTDF = ptdfConstruction.getPTDFGen();
+            branchPerBusOfBattPTDF = ptdfConstruction.getPTDFBatt();
 
-            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
             model = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                     branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
 
@@ -463,7 +477,7 @@ classdef Zone < handle
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, flowLimit);
         end
 
-        function setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA(obj)
+        function setMixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA(obj, electricalGrid)
             basecaseName = 'case6468rte_zone_VG_VTV_BLA';
             busId = obj.setting.getBusId();
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
@@ -481,9 +495,16 @@ classdef Zone < handle
             numberOfGen = obj.topology.getNumberOfGenOn();
             numberOfBatt = obj.topology.getNumberOfBattOn();
 
-            zonePTDFConstructor = ZonePTDFConstructor(basecaseName);
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            branchPerBusPTDF = ptdfConstruction.getPTDFBus();
+            branchPerBusOfGenPTDF = ptdfConstruction.getPTDFGen();
+            branchPerBusOfBattPTDF = ptdfConstruction.getPTDFBatt();
 
-            [branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF] = zonePTDFConstructor.getZonePTDF(busId);
             model = MixedLogicalDynamicalModel(numberOfBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                     branchPerBusPTDF, branchPerBusOfGenPTDF, branchPerBusOfBattPTDF, batteryCoef, timestep, delayCurt, delayBatt);
 
