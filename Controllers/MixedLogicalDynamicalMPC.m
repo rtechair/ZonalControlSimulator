@@ -407,7 +407,7 @@ classdef MixedLogicalDynamicalMPC< Controller
                 
                 idxFirstPB = obj.numberOfBranches + c + 1;
                 idxLastPB = obj.numberOfBranches + c + b;
-                battState = x_mpc(idxFirstPB : idxLastPB, b+1:end);
+                battState = x_mpc(idxFirstPB : idxLastPB, obj.delayBatt+1:end);
                 battStateObj = sum(battState .^ 2, "all");
                 
                 objective = overflowObj + curtCtrlObj + battCtrlObj + battStateObj;
