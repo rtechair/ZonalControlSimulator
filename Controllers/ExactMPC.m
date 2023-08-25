@@ -120,7 +120,7 @@ classdef ExactMPC < Controller
 
             obj.setConstraints();
             obj.setDynamicEquations();
-            obj.setObjectiveGuillaume1();
+            obj.setObjective1();
 
             obj.setController();
             obj.initializePastCurtControls();
@@ -170,7 +170,7 @@ classdef ExactMPC < Controller
 
             obj.setAvailablePowerEstimation();
             obj.solveOptimizationProblem();
-            obj.checkSolvingFeasibility();
+            obj.isFeasible();
             obj.interpretResult();
             obj.checkBatteryCtrlFeasilibility();
             obj.neglectNumericalErrorCurt();
@@ -211,7 +211,6 @@ classdef ExactMPC < Controller
         end
 
         function setConstraints(obj)
-            obj.constraints = [];
             constraintPositiveSlack = [obj.varSlackPowerFlow >= 0]:'slack positivity';
             timeRange = obj.batteryDelay+2 : obj.curtailmentDelay+1; % battDelay +1, ..., , curtDelay, but +1 overall due to the initial state at time 0
             lengthOfRange = obj.curtailmentDelay - obj.batteryDelay;
@@ -229,7 +228,7 @@ classdef ExactMPC < Controller
             constraintFeasibleFutureCurtailmentMin = 0 <= obj.varPowerCurtailment(:, end) + obj.varCurtailmentPowerControl(:, end);
             constraintFeasibleFutureCurtailmentMax = obj.varPowerCurtailment(:, end) + obj.varCurtailmentPowerControl(:, end) <= obj.maxPowerGeneration;
             
-            %constraintPositiveCurtailmentCtrl = obj.varCurtailmentPowerControl >= 0;
+            
 
             constraintMinPowerBattery = [obj.varPowerBattery >= obj.minPowerBattery]:'min battery power';
             constraintMaxPowerBattery = [obj.varPowerBattery <= obj.maxPowerBattery]:'max battery power';
@@ -248,6 +247,8 @@ classdef ExactMPC < Controller
             constraint =  [constraint, constraintMinPowerBattery];
             constraint =  [constraint, constraintMaxPowerBattery];
             
+            
+            %constraintPositiveCurtailmentCtrl = obj.varCurtailmentPowerControl >= 0;
             %constraint = [constraint, constraintPositiveCurtailmentCtrl];
 
             obj.constraints = constraint;
@@ -255,11 +256,10 @@ classdef ExactMPC < Controller
 
         function setDynamicEquations(obj)
             dynamicsPowerCurtailment = [obj.varPowerCurtailment(:, 2:end) == obj.varPowerCurtailment(:, 1: end-1) + obj.varCurtailmentPowerControl]:'curtailment power dynamics';
-            %dynamicsPowerAvailable = [obj.varPowerAvailable(:, 2:end) == obj.varPowerAvailable(:, 1: end-1) + obj.varAvailablePowerDisturbance]:'available power dynamics';
             dynamicsPowerBattery = [obj.varPowerBattery(:, 2:end) == obj.varPowerBattery(:, 1:end-1) + obj.varBatteryPowerControl]:'battery power dynamics';
             
             % Beware of the .* for: batteryCoef .* varPowerBattery, in case of several batteries with each their own battery coef, the equation should work
-            dynamicsEnergyBattery = [obj.varEnergyBattery(:, 2:end) == obj.varEnergyBattery(:, 1: end-1) + obj.timestep * obj.batteryCoef .* obj.varPowerBattery(:, 2:end)]:'battery energy dynamics';
+            dynamicsEnergyBattery = [obj.varEnergyBattery(:, 2:end) == obj.varEnergyBattery(:, 1: end-1) - obj.timestep * obj.batteryCoef .* obj.varPowerBattery(:, 2:end)]:'battery energy dynamics';
 
             dynamicsPowerGeneration = [obj.varPowerGeneration(:, 2:end) == min(obj.varPowerAvailable(:, 2:end), repmat(obj.maxPowerGeneration,1, obj.horizon) - obj.varPowerCurtailment(:, 2:end))]:'generation power dynamics';
             
@@ -268,7 +268,7 @@ classdef ExactMPC < Controller
                                                                                                 + obj.varPtdfBatt * obj.varBatteryPowerControl...
                                                                                                 + obj.varPtdfFrontierBus * obj.varTransitPowerDisturbance_Frontier]:'power flow dynamics';
             constraint = dynamicsPowerCurtailment;
-            %constraint = [constraint, dynamicsPowerAvailable];
+            
             constraint = [constraint, dynamicsPowerBattery];
             constraint = [constraint, dynamicsEnergyBattery];
             constraint = [constraint, dynamicsPowerGeneration];
@@ -277,7 +277,7 @@ classdef ExactMPC < Controller
             obj.constraints = [obj.constraints, constraint];
         end
 
-        function setObjectiveGuillaume1(obj)
+        function setObjective1(obj)
             % Alessio's desired behavior, i.e. battery controls spread over the horizon
             highCoef = obj.horizon * obj.minPowerBattery^2; %TODO: if there are several batteries in the zone, is minPowerBattery a scalar or a vector?
             
@@ -341,14 +341,6 @@ classdef ExactMPC < Controller
             PF = obj.state.getPowerFlow();
             PC = obj.state.getPowerCurtailment();
             PB = obj.state.getPowerBattery();
-            % 2023-08-22: Due to the numerical error of the solver,
-            % the battery power can exceed than its threshold. 
-            if PB < obj.minPowerBattery
-                incorrectDiff = PB - obj.minPowerBattery;
-                a = ['At countControls=' num2str(obj.countControls) ' , incorrect PB, difference is:' num2str(incorrectDiff) ' , PB now rounded at:' num2str(obj.minPowerBattery)];
-                disp(a)
-                PB = obj.minPowerBattery;
-            end
             EB = obj.state.getEnergyBattery();
             PG = obj.state.getPowerGeneration();
             transitPowerDisturbEstim = repmat(obj.disturbPowerTransit, 1, obj.horizon);
@@ -358,7 +350,7 @@ classdef ExactMPC < Controller
                 obj.PTDFFrontierBus, obj.PTDFGen, obj.PTDFBatt};
         end
 
-        function checkSolvingFeasibility(obj)
+        function isFeasible(obj)
             if obj.infeasibility ~= 0
                     disp(yalmiperror(obj.infeasibility))
             end
