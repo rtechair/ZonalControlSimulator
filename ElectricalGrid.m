@@ -317,6 +317,16 @@ classdef ElectricalGrid < handle
             obj.matpowercase = obj.internalMatpowercase;
         end
 
+        function setBranchStatus(obj, branchIdx, boolean)
+            arguments
+                obj
+                branchIdx
+                boolean {logical}
+            end
+        obj.matpowercase.branch(branchIdx, 11) = boolean;
+        internalBranchIdx = branchIdx;
+        obj.internalMatpowercase.branch(internalBranchIdx, 11) = boolean;
+        end
     end
     
     methods (Access = protected)
