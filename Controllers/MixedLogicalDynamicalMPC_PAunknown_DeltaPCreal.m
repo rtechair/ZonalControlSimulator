@@ -515,7 +515,7 @@ classdef MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal < Controller
             % in the following, where starts setOtherElements method
             parameters      = {x_mpc(:,1), dk};
             outputs         = {u_mpc ,  x_mpc , epsilon1 , d_mpc};
-            solverName = 'cplex'; %'cplex'
+            solverName = 'gurobi';
             options         = sdpsettings('solver',solverName);
             obj.controller      = optimizer(constraints, objective , options , parameters, outputs);
 

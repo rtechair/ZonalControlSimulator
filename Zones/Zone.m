@@ -413,7 +413,7 @@ classdef Zone < handle
             maxPowerFlow = obj.setting.getBranchFlowLimit() * ones(numberOfBranches, 1);
             minPowerFlow = - maxPowerFlow;
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
-            solverName = 'cplex';
+            solverName = 'gurobi';
 
             obj.controller = ExactMPC(curtDelay, battDelay, horizonInIterations, ...
                 numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...

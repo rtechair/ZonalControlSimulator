@@ -464,7 +464,7 @@ classdef MixedLogicalDynamicalMPC< Controller
 
             parameters      = {x_mpc(:,1), dk};
             outputs         = {u_mpc ,  x_mpc , epsilon1 , d_mpc};
-            solverName = 'cplex'; %'cplex'
+            solverName = 'gurobi';
             options         = sdpsettings('solver',solverName);
             obj.controller      = optimizer(constraints, objective , options , parameters, outputs);
 
