@@ -17,6 +17,9 @@ limitations under the License.
 %}
 classdef ExactMPC < Controller
     % The optimization problem is written based on Guillaume Ganet--Lepage's ECC2023 paper
+    % check if the available power is measurable, if not, a version should
+    % be done which estimate the available power and its associated
+    % disturbance, like in ECC2023.
     properties (SetAccess = private)
         curtailmentDelay
         batteryDelay
@@ -247,9 +250,11 @@ classdef ExactMPC < Controller
             constraint =  [constraint, constraintMinPowerBattery];
             constraint =  [constraint, constraintMaxPowerBattery];
             
-            
-            %constraintPositiveCurtailmentCtrl = obj.varCurtailmentPowerControl >= 0;
-            %constraint = [constraint, constraintPositiveCurtailmentCtrl];
+            isDeltaPCPositiveOnly = true;
+            if isDeltaPCPositiveOnly
+                constraintPositiveCurtailmentCtrl = obj.varCurtailmentPowerControl >= 0;
+                constraint = [constraint, constraintPositiveCurtailmentCtrl];
+            end
 
             obj.constraints = constraint;
         end
