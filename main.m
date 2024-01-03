@@ -37,8 +37,14 @@ transmission.runSimulation();
 isTopologyShown = false;
 isModelResultShown = false;
 isSimulationResultShown = true;
-isSimulationResultSaved = false; % in case of 1 zone
-isMultipleSimulationResultsSaved = false; % in case of at least 2 zones simulated
+
+% in case of 1 zone:
+isSimulationResultSaved = false;
+isPtdfEstimationSaved = false;
+
+% in case of at least 2 zones simulated
+isMultipleSimulationResultsSaved = false;
+
 
 if isTopologyShown
     transmission.plotZonesTopology();
@@ -54,8 +60,17 @@ end
 
 if isSimulationResultSaved
     simulationResult = transmission.zones{1,1}.simulationResult;
-    save("result.mat", "simulationResult");
+    save("resultSimulation.mat", "simulationResult");
 end
+
+if isPtdfEstimationSaved
+    ptdfEstimation.ptdfGen = transmission.zones{1,1}.controller.ptdfGen;
+    ptdfEstimation.ptdfBatt = transmission.zones{1,1}.controller.ptdfBatt;
+    ptdfEstimation.ptdf_G_matpower =  transmission.zones{1,1}.controller.ptdf_G_matpower;
+    ptdfEstimation.ptdf_B_matpower = transmission.zones{1,1}.controller.ptdf_Batt_matpower;
+    save("resultPtdfEstimation.mat", "ptdfEstimation");
+end
+
 
 if isMultipleSimulationResultsSaved
     a = 'result_';

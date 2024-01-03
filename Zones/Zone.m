@@ -83,7 +83,9 @@ classdef Zone < handle
             isFakeApproximateLinearMPC = false;
             isFakeApproximateLinearMPC2 = false;
 
-            isExactMPC = true;
+            isExactMPC = false;
+            isApproximateMPC = false;
+            isMPCLeastSquaresEstimPtdf = true;
 
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC(electricalGrid);
@@ -108,6 +110,10 @@ classdef Zone < handle
                 obj.setFakeApproximateLinearMPC2();
             elseif isExactMPC
                 obj.setExactMPC(electricalGrid);
+            elseif isApproximateMPC
+                obj.setApproximateMPC(electricalGrid);
+            elseif isMPCLeastSquaresEstimPtdf
+                obj.setMPCLeastSquaresEstimPtdf(electricalGrid);
             else
                 except = MException('ControllerSelection:NoSelection', ...
                     'No controller selected, one of the controller must be selected in Zone.m');
@@ -420,6 +426,96 @@ classdef Zone < handle
                 ptdfBus, ptdfFrontierBus, ptdfGen, ptdfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, minPowerFlow, maxPowerFlow, ...
                 batteryCoef, timestep, solverName);
+        end
+
+        function setApproximateMPC(obj, electricalGrid)
+            timestep = obj.setting.controlCycleInSeconds();
+            curtDelay = ceil( (obj.setting.getDelayCurtInSeconds() + obj.setting.getDelayController2ZoneInSeconds() )/timestep ) ;
+            battDelay = ceil( (obj.setting.getDelayBattInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep );
+            
+            horizonInSeconds = 50;
+            horizonInIterations = ceil( horizonInSeconds / timestep);
+
+            busId = obj.topology.getBusId();
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            ptdfBus = ptdfConstruction.getPTDFBus();
+            ptdfFrontierBus = ptdfConstruction.getPTDFFrontierBus();
+            ptdfGen = ptdfConstruction.getPTDFGen();
+            ptdfBatt = ptdfConstruction.getPTDFBatt();
+            
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfFrontierBuses = length(frontierBusId);
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
+            maxPowerFlow = obj.setting.getBranchFlowLimit() * ones(numberOfBranches, 1);
+            minPowerFlow = - maxPowerFlow;
+            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
+            solverName = 'gurobi';
+
+            obj.controller = ApproximateMPC(curtDelay, battDelay, horizonInIterations, ...
+                numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                ptdfBus, ptdfFrontierBus, ptdfGen, ptdfBatt, ...
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, minPowerFlow, maxPowerFlow, ...
+                batteryCoef, timestep, solverName);
+        end
+
+        function setMPCLeastSquaresEstimPtdf(obj, electricalGrid)
+            timestep = obj.setting.controlCycleInSeconds();
+            curtDelay = ceil( (obj.setting.getDelayCurtInSeconds() + obj.setting.getDelayController2ZoneInSeconds() )/timestep ) ;
+            battDelay = ceil( (obj.setting.getDelayBattInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep );
+            
+            horizonInSeconds = 50;
+            horizonInIterations = ceil( horizonInSeconds / timestep);
+
+            busId = obj.topology.getBusId();
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            ptdfBus = ptdfConstruction.getPTDFBus();
+            ptdfFrontierBus = ptdfConstruction.getPTDFFrontierBus();
+            ptdfGen = ptdfConstruction.getPTDFGen();
+            ptdfBatt = ptdfConstruction.getPTDFBatt();
+            
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfFrontierBuses = length(frontierBusId);
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
+            maxPowerFlow = obj.setting.getBranchFlowLimit() * ones(numberOfBranches, 1);
+            minPowerFlow = - maxPowerFlow;
+            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
+            solverName = 'gurobi';
+            pastHorizonInStepsList = [240, 30, 10];
+            pastHorizonInSteps = pastHorizonInStepsList(1);
+            nameMethodList = ["LeastSquaresRegularizedWithTopology", "matpower", "LeastSquaresWithTopology", "LeastSquaresNoTopology"];
+            nameMethod = nameMethodList(2);
+
+            obj.controller = MPCLeastSquaresEstimPtdf(curtDelay, battDelay, horizonInIterations, ...
+                numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                ptdfBus, ptdfFrontierBus, ptdfGen, ptdfBatt, ...
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, minPowerFlow, maxPowerFlow, ...
+                batteryCoef, timestep, solverName, pastHorizonInSteps, nameMethod);
         end
         
         function setMixedLogicalDynamicalMPC(obj, electricalGrid)
