@@ -105,6 +105,14 @@ classdef TransmissionSimulation < handle
             duration = obj.simulationSetting.getDuration();
             
             for time = start:step:duration
+                
+                isBranchSwitchedOff = false;
+                if isBranchSwitchedOff && time == duration/2
+                    statusBranchOff = 0;
+                    branchIdxToSwitchOff = 4764;
+                    obj.grid.setBranchStatus(branchIdxToSwitchOff, statusBranchOff);
+                end
+
                 for i = 1:obj.numberOfZones
                     zone = obj.zones{i};
                     updateZone = zone.isItTimeToUpdate(time, step);
