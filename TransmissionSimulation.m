@@ -106,10 +106,17 @@ classdef TransmissionSimulation < handle
             
             for time = start:step:duration
                 
-                isBranchSwitchedOff = false;
-                if isBranchSwitchedOff && time == duration/2
+                isBranch4764Off = false;
+                isBranch2859Off = false;
+                if isBranch4764Off && time == duration/2
                     statusBranchOff = 0;
                     branchIdxToSwitchOff = 4764;
+                    obj.grid.setBranchStatus(branchIdxToSwitchOff, statusBranchOff);
+                end
+
+                if isBranch2859Off && time == 300
+                    statusBranchOff = 0;
+                    branchIdxToSwitchOff = 2859;
                     obj.grid.setBranchStatus(branchIdxToSwitchOff, statusBranchOff);
                 end
 
