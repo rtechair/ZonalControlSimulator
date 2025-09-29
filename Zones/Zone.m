@@ -83,9 +83,9 @@ classdef Zone < handle
             isFakeApproximateLinearMPC = false;
             isFakeApproximateLinearMPC2 = false;
 
-            isExactMPC = false;
+            isExactMPC = true;
             isApproximateMPC = false;
-            isMPCLeastSquaresEstimPtdf = true;
+            isMPCLeastSquaresEstimPtdf = false;
 
             if isControllerApproximateLinearModel
                 obj.setApproximateLinearMPC(electricalGrid);
@@ -419,7 +419,7 @@ classdef Zone < handle
             maxPowerFlow = obj.setting.getBranchFlowLimit() * ones(numberOfBranches, 1);
             minPowerFlow = - maxPowerFlow;
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
-            solverName = 'gurobi';
+            solverName = 'cplex';
 
             obj.controller = ExactMPC(curtDelay, battDelay, horizonInIterations, ...
                 numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
@@ -462,7 +462,7 @@ classdef Zone < handle
             maxPowerFlow = obj.setting.getBranchFlowLimit() * ones(numberOfBranches, 1);
             minPowerFlow = - maxPowerFlow;
             batteryCoef = obj.setting.getBatteryConstantPowerReduction();
-            solverName = 'gurobi';
+            solverName = '';
 
             obj.controller = ApproximateMPC(curtDelay, battDelay, horizonInIterations, ...
                 numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
@@ -508,14 +508,69 @@ classdef Zone < handle
             solverName = 'gurobi';
             pastHorizonInStepsList = [240, 30, 10];
             pastHorizonInSteps = pastHorizonInStepsList(1);
-            nameMethodList = ["LeastSquaresRegularizedWithTopology", "matpower", "LeastSquaresWithTopology", "LeastSquaresNoTopology"];
+            nameMethodList = ["LeastSquaresRegularizedWithTopology", "matpower", "LeastSquaresWithTopology", "LeastSquaresNoTopology", "Method2", "Method3"];
             nameMethod = nameMethodList(2);
+            isMatpowerPtdfUsed = false;
 
             obj.controller = MPCLeastSquaresEstimPtdf(curtDelay, battDelay, horizonInIterations, ...
                 numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 ptdfBus, ptdfFrontierBus, ptdfGen, ptdfBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, minPowerFlow, maxPowerFlow, ...
+                batteryCoef, timestep, solverName, pastHorizonInSteps, nameMethod, isMatpowerPtdfUsed);
+        end
+
+        function setDoubleController(obj, electricalGrid)
+            % similar to setMPCLeastSquaresEstimPtdf, but here 2
+            % controllers are used: the one considered for the simulation
+            % is based on Matpower's PTDF, while the PTDF estimation are
+            % done in parralel. The goal is to improve the estimation
+            % method
+            timestep = obj.setting.controlCycleInSeconds();
+            curtDelay = ceil( (obj.setting.getDelayCurtInSeconds() + obj.setting.getDelayController2ZoneInSeconds() )/timestep ) ;
+            battDelay = ceil( (obj.setting.getDelayBattInSeconds() + obj.setting.getDelayController2ZoneInSeconds() ) / timestep );
+            
+            horizonInSeconds = 50;
+            horizonInIterations = ceil( horizonInSeconds / timestep);
+
+            busId = obj.topology.getBusId();
+            frontierBusId = obj.topology.getFrontierBusId();
+            branchIdx = obj.topology.getBranchIdx();
+            genIdx = obj.topology.getGenOnIdx();
+            battIdx =  obj.topology.getBattOnIdx();
+
+            ptdfConstruction = PTDFConstruction(busId, frontierBusId, branchIdx, genIdx, battIdx);
+            ptdfConstruction.setPTDF(electricalGrid);
+            ptdfBus = ptdfConstruction.getPTDFBus();
+            ptdfFrontierBus = ptdfConstruction.getPTDFFrontierBus();
+            ptdfGen = ptdfConstruction.getPTDFGen();
+            ptdfBatt = ptdfConstruction.getPTDFBatt();
+            
+            numberOfBuses = obj.topology.getNumberOfBuses();
+            numberOfFrontierBuses = length(frontierBusId);
+            numberOfBranches = obj.topology.getNumberOfBranches();
+            numberOfGen = obj.topology.getNumberOfGenOn();
+            numberOfBatt = obj.topology.getNumberOfBattOn();
+
+            maxPowerGeneration = obj.topology.getMaxPowerGeneration();
+            minPowerBattery = obj.topology.getMinPowerBattery();
+            maxPowerBattery = obj.topology.getMaxPowerBattery();
+            maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
+            maxPowerFlow = obj.setting.getBranchFlowLimit() * ones(numberOfBranches, 1);
+            minPowerFlow = - maxPowerFlow;
+            batteryCoef = obj.setting.getBatteryConstantPowerReduction();
+
+            solverName = 'gurobi';
+            pastHorizonInStepsList = [240, 30, 10];
+            pastHorizonInSteps = pastHorizonInStepsList(3);
+            nameMethodList = ["LeastSquaresRegularizedWithTopology", "matpower", "LeastSquaresWithTopology", "LeastSquaresNoTopology"];
+            nameMethod = nameMethodList(1);
+
+            obj.controller = DoubleMPC(curtDelay, battDelay, horizonInIterations, ...
+                numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
+                ptdfBus, ptdfFrontierBus, ptdfGen, ptdfBatt, ...
+                maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, minPowerFlow, maxPowerFlow, ...
                 batteryCoef, timestep, solverName, pastHorizonInSteps, nameMethod);
+
         end
         
         function setMixedLogicalDynamicalMPC(obj, electricalGrid)
@@ -662,7 +717,7 @@ classdef Zone < handle
             maxEnergyBattery = 10000; %arbitrary, TODO: write it in the json of the zone
             flowLimit = obj.setting.getBranchFlowLimit();
 
-            coefficientDeltaPA = 0.25;
+            coefficientDeltaPA = 1; %0.25 %before
 
             obj.controller = MixedLogicalDynamicalMPC_PAunknown_DeltaPCreal_coefDeltaPA(delayCurt, delayBatt, delayTelecom, horizonInIterations, ...
                 operatorStateExtended, operatorControlExtended, operatorNextPowerGenerationExtended, operatorDisturbanceExtended, ...
@@ -786,7 +841,7 @@ classdef Zone < handle
         
         function simulate(obj)
             obj.controller.computeControl();
-            
+
             obj.transmitDataController2Zone();
             
             obj.modelEvolution.applyControlFromController();

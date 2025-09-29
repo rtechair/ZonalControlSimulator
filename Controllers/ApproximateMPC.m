@@ -234,8 +234,8 @@ classdef ApproximateMPC < Controller
             constraint =  [constraint, constraintMinPowerBattery];
             constraint =  [constraint, constraintMaxPowerBattery];
             
-            %constraintPositiveCurtailmentCtrl = obj.varCurtailmentPowerControl >= 0;
-            %constraint = [constraint, constraintPositiveCurtailmentCtrl];
+            constraintPositiveCurtailmentCtrl = obj.varCurtailmentPowerControl >= 0;
+            constraint = [constraint, constraintPositiveCurtailmentCtrl];
 
             obj.constraints = constraint;
         end
@@ -336,7 +336,8 @@ classdef ApproximateMPC < Controller
 
             % TODO:
             estimCurtCtrl = [obj.pastCurtCtrls zeros(obj.nGen, obj.horizon - obj.curtailmentDelay)];
-            f = obj.estimPowerAvailable(:, 2:end) - estimPowerGeneration(:, 2:end) - estimCurtCtrl;
+            f = obj.estimPowerAvailable(:, 2:end) - estimPowerGeneration(:, 1: end-1) - estimCurtCtrl;
+            f2 =  obj.estimPowerAvailable(:, 2:end) - estimPowerGeneration(:, 2: end) - estimCurtCtrl;
             g = obj.maxPowerGeneration - obj.estimPowerCurtailment(:, 1: end-1) - estimPowerGeneration(:, 1: end-1);
             obj.estimDisturbPowerGeneration = min(f, g);
         end
@@ -381,6 +382,7 @@ classdef ApproximateMPC < Controller
 
         function isFeasible(obj)
              if obj.infeasibility ~= 0
+                    disp(['CountControls: ', num2str(obj.countControls)])
                     disp(yalmiperror(obj.infeasibility))
             end
         end

@@ -23,7 +23,7 @@ classdef MPCLeastSquaresEstimPtdf < Controller
         PF
         PG
         PB
-
+ 
         deltaPF
         deltaPG
         deltaPB
@@ -40,6 +40,7 @@ classdef MPCLeastSquaresEstimPtdf < Controller
 
         nameMethod
         currentStep
+        isMatpowerPtdfUsed
     end
 
     methods
@@ -47,7 +48,7 @@ classdef MPCLeastSquaresEstimPtdf < Controller
                 numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
                 PTDFBus, PTDFFrontierBus, PTDFGen, PTDFBatt, ...
                 maxPowerGeneration, minPowerBattery, maxPowerBattery, maxEnergyBattery, minPowerFlow, maxPowerFlow, ...
-                batteryCoef, timestepInSeconds, solverName, pastHorizonInSteps, nameMethod)
+                batteryCoef, timestepInSeconds, solverName, pastHorizonInSteps, nameMethod, isMatpowerPtdfUsed)
 
             obj.controller = ExactMPC(curtailmentDelay, batteryDelay, horizonInIterations, ...
                 numberOfBuses, numberOfFrontierBuses, numberOfBranches, numberOfGen, numberOfBatt, ...
@@ -70,9 +71,31 @@ classdef MPCLeastSquaresEstimPtdf < Controller
 
             obj.nameMethod = nameMethod;
             obj.currentStep = 0;
+
+            obj.isMatpowerPtdfUsed = isMatpowerPtdfUsed;
         end
 
         function computeControl(obj)
+            if obj.isMatpowerPtdfUsed
+                obj.computeControlUsingMatpowerPtdf();
+            else
+                % to do
+                obj.computeControlWithEstimate();
+            end
+        end
+
+        function computeControlUsingMatpowerPtdf(obj)
+                % Our goal is to get estimates of Ptdf in open-loop, without using the result
+                obj.estimatePtdf();
+                
+                currentPtdfGen = obj.ptdf_G_matpower;
+                currentPtdfBatt = obj.ptdf_Batt_matpower;
+                obj.controller.setPtdfGen( currentPtdfGen );
+                obj.controller.setPtdfBatt( currentPtdfBatt );
+                obj.controller.computeControl();
+        end
+
+        function computeControlWithEstimate(obj)
             obj.estimatePtdf();
             currentPtdfGen = obj.ptdfGen(:,:, obj.currentStep);
             obj.controller.setPtdfGen( currentPtdfGen );
@@ -131,6 +154,62 @@ classdef MPCLeastSquaresEstimPtdf < Controller
             obj.ptdfBatt(:,:, obj.currentStep) = newPtdfBatt;
         end
 
+        function estimMethod2(obj)
+            % least-squares, regularized, with topology, using the past
+            % value. Not applicable until enough time steps have been applied
+            t_ini = max(1, obj.currentStep - obj.window);
+            deltaPF_used = obj.deltaPF(:, t_ini : (obj.currentStep-1) );
+            deltaPG_used = obj.deltaPG(:, t_ini: (obj.currentStep-1) );
+            deltaPB_used = obj.deltaPB(:, t_ini: (obj.currentStep-1) );
+            coef = 10^(-1);
+            
+            oldPtdfGen = obj.ptdfGen(:,:, obj.currentStep - 1);
+            oldPtdfBatt = obj.ptdfBatt(:,:, obj.currentStep - 1);
+
+            [variationPtdf_G, variationPtdf_Batt] = leastSquares_SumPtdf_DefaultValue(deltaPF_used, deltaPG_used, deltaPB_used, ...
+            oldPtdfGen, oldPtdfBatt, coef);
+
+            newPtdfGen = variationPtdf_G + oldPtdfGen;
+            obj.ptdfGen(:,:, obj.currentStep) = newPtdfGen;
+
+            newPtdfBatt = variationPtdf_Batt + oldPtdfBatt;
+            obj.ptdfBatt(:,:, obj.currentStep) = newPtdfBatt;
+        end
+
+        function estimMethod3(obj)
+            % Similar to method 2, however, an upper-bound on the variation
+            % is fixed, to avoid brutal variations of the PTDF.
+            UPPER_BOUND = 0.1;
+
+            t_ini = max(1, obj.currentStep - obj.window);
+            deltaPF_used = obj.deltaPF(:, t_ini : (obj.currentStep-1) );
+            deltaPG_used = obj.deltaPG(:, t_ini: (obj.currentStep-1) );
+            deltaPB_used = obj.deltaPB(:, t_ini: (obj.currentStep-1) );
+            coef = 10^(-1);
+            
+            oldPtdfGen = obj.ptdfGen(:,:, obj.currentStep - 1);
+            oldPtdfBatt = obj.ptdfBatt(:,:, obj.currentStep - 1);
+
+            [variationPtdf_G, variationPtdf_Batt] = leastSquares_SumPtdf_DefaultValue(deltaPF_used, deltaPG_used, deltaPB_used, ...
+            oldPtdfGen, oldPtdfBatt, coef);
+
+            overIndexG = variationPtdf_G > UPPER_BOUND;
+            underIndexG = variationPtdf_G < - UPPER_BOUND;
+            variationPtdf_G(overIndexG) = UPPER_BOUND;
+            variationPtdf_G(underIndexG) = - UPPER_BOUND;
+
+            overIndexB = variationPtdf_Batt > UPPER_BOUND;
+            underIndexB = variationPtdf_Batt < - UPPER_BOUND;
+            variationPtdf_Batt(overIndexB) = UPPER_BOUND;
+            variationPtdf_Batt(underIndexB) = - UPPER_BOUND;
+            
+            newPtdfGen = variationPtdf_G + oldPtdfGen;
+            obj.ptdfGen(:,:, obj.currentStep) = newPtdfGen;
+
+            newPtdfBatt = variationPtdf_Batt + oldPtdfBatt;
+            obj.ptdfBatt(:,:, obj.currentStep) = newPtdfBatt;
+        end
+
         function estimPtdfLeastSquaresWithTopology(obj)
             t_ini = max(1, obj.currentStep - obj.window);
             deltaPF_used = obj.deltaPF(:, t_ini : (obj.currentStep-1) );
@@ -150,6 +229,24 @@ classdef MPCLeastSquaresEstimPtdf < Controller
             obj.ptdfGen(:,:, obj.currentStep) = newPtdfGen;
             obj.ptdfBatt(:,:, obj.currentStep) = newPtdfBatt;
         end
+        
+        function estimPtdfLSTopologyMemory(obj)
+            t_ini = max(1, obj.currentStep - obj.window);
+            deltaPF_used = obj.deltaPF(:, t_ini : (obj.currentStep-1) );
+            deltaPG_used = obj.deltaPG(:, t_ini: (obj.currentStep-1) );
+            deltaPB_used = obj.deltaPB(:, t_ini: (obj.currentStep-1) );
+            if obj.currentStep >= 10
+                previousPtdfGen = obj.ptdfGen(:,:, obj.currentStep -1);
+                previousPtdfBatt = obj.ptdfBatt(:,:, obj.currentStep -1);
+            [newPtdfGen, newPtdfBatt] = leastSquares_SumPtdf_DefaultValue(deltaPF_used, deltaPG_used, deltaPB_used, ...
+                previousPtdfGen, previousPtdfBatt);
+            else
+                newPtdfGen = obj.ptdf_G_matpower;
+                newPtdfBatt = obj.ptdf_Batt_matpower;
+            end
+            obj.ptdfGen(:,:, obj.currentStep) = newPtdfGen;
+            obj.ptdfBatt(:,:, obj.currentStep) = newPtdfBatt; 
+        end
 
         function estimatePtdf(obj)
             if obj.currentStep <= 2
@@ -164,6 +261,10 @@ classdef MPCLeastSquaresEstimPtdf < Controller
                         obj.estimPtdfLeastSquaresWithTopology();
                     case "LeastSquaresNoTopology"
                         obj.estimPtdfLeastSquaresNoTopology();
+                    case "Method2"
+                        obj.estimMethod2();
+                    case "Method3"
+                        obj.estimMethod3();
                     otherwise
                         disp('nameMethod does not have a valid value, give a valid name to pick an estimation method')
                 end
