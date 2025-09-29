@@ -218,7 +218,8 @@ classdef ZoneTopology < handle
             P.EdgeColor = 'k';
             P.LineWidth = 3;
             P.EdgeLabelColor = 'k';
-            P.ShowArrows = 0;
+            P.ArrowSize = 10;
+            %P.ShowArrows = 0;
         end
         
     end

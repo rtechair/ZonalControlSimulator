@@ -71,23 +71,24 @@ classdef ResultGraphic < Result
             numberOfRowsOfGraph = ceil(sqrt(obj.numberOfBuses));
             figName = ['Zone ' obj.zoneName ': ' ...
                 'Disturbance of Power Available DeltaPA, ' ...
-                'Disturbance of Power Generation DeltaPG, '...
                 'Taken Control of Power Curtailment DeltaPC, '...
-                'Applied Control DeltaPC(step + delayCurt+ delayTelecom)'];
+                'Applied Control DeltaPC(step + delayCurt+ delayTelecom)'...
+                'Disturbance of Power Generation DeltaPG, '];
             figDeltaGenOn = figure('Name', figName, 'NumberTitle', 'off', 'WindowState', 'maximize');
             for gen = 1:obj.numberOfGen
                 subplot(numberOfRowsOfGraph, numberOfRowsOfGraph, gen);
                 hold on;
-                stairs(time, obj.disturbanceAvailable(gen, :), ':'); % DeltaPA
-                stairs(time, obj.disturbanceGeneration(gen, :)); % DeltaPG
+                stairs(time, obj.disturbanceAvailable(gen, :), ':', "LineWidth", 1.5); % DeltaPA
                 stairs(time, obj.controlCurtailment(gen, :), '--', "LineWidth", 2.0); % DeltaPC: control taken by the controller
+                
                 delayForZone = obj.delayCurt + obj.delayController2Zone;
                 controlCurtApplied = [zeros(1, delayForZone) ...
                     obj.controlCurtailment(gen, 1: obj.numberOfIterations-delayForZone)];
-                stairs(time, controlCurtApplied, '-.'); % DeltaPC: control applied on the zone
+                stairs(time, controlCurtApplied, '-.',  "LineWidth", 1.0); % DeltaPC: control applied on the zone
+                stairs(time, obj.disturbanceGeneration(gen, :),  "LineWidth", 0.7); % DeltaPG
                         
-                legend({'\DeltaPA', '\DeltaPG', '\DeltaPC', ...
-                    '\DeltaPC(step+delayCurt + delayTelecom)'}, 'Location', 'Best');
+                legend({'\DeltaPA', '\DeltaPC', ...
+                    '\DeltaPC(step+delayCurt + delayTelecom)', '\DeltaPG'}, 'Location', 'Best');
                 xlabel(xlegend)
                 ylabel('Power [MW]')
                 genIdx = obj.genOnIdx(gen);
